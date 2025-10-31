@@ -1,0 +1,44 @@
+# Binaries
+smpe_ls
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# VSCode extension
+client/vscode-smpe/node_modules/
+client/vscode-smpe/out/
+client/vscode-smpe/*.vsix
+
+# Build artifacts
+dist/
+build/
+
+# Others
+.claude/
+syntax_diagrams/
+DEVELOPMENT_PLAN.md
+

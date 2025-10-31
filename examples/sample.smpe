@@ -1,0 +1,43 @@
+* Sample SMP/E MCS Statements
+* This file demonstrates the syntax for Release 0.1.0
+
+* ++APAR - Service SYSMOD for temporary fixes
+++APAR(AB12345) DESCRIPTION('Critical security fix')
+FILES(5) RFDSNPFX(SMPE.FIX)
+REWORK(001)
+
+* ++ASSIGN - Source ID Assignment
+++ASSIGN SOURCEID(SRC001) TO(AB12345,CD67890)
+
+* ++DELETE - Delete Load Module
+++DELETE(OLDPGM) SYSLIB(ALL)
+
+++DELETE(TESTMOD) SYSLIB(ALIAS(ALIAS1))
+
+* ++FEATURE - SYSMOD Set Description
+++FEATURE(FEAT01) DESCRIPTION('New feature set') FMID(HBB7790)
+PRODUCT(5655HAL01) 2.4.0.0 REWORK(002)
+
+* ++FUNCTION - Base Function SYSMOD
+++FUNCTION(HBB7790) DESCRIPTION('Base function for z/OS')
+FESN(ABC1234567)
+FILES(100) RFDSNPFX(SMPE.BASE)
+REWORK(001)
+
+* ++HOLD - Exception Status
+++HOLD(AB12345) FMID(HBB7790) REASON(ACTION)
+ERROR
+CLASS(A) DATE(25305)
+COMMENT('Action required before install')
+
+* More complex ++HOLD with FIXCAT
+++HOLD(CD67890) FMID(HBB7791) REASON(DB2BIND)
+FIXCAT CATEGORY(IBM.SYSTEM) RESOLVER(FIXCAT)
+SYSTEM
+CLASS(B) COMMENT('Database binding issue')
+
+* ++HOLD with USER error type
+++HOLD(EF11111) FMID(HBB7792) REASON(DOC)
+USER
+COMMENT('Documentation update required')
+COMMENT('See installation guide section 4.2')

@@ -1,0 +1,53 @@
+.PHONY: all build install clean test
+
+# Build configuration
+BINARY_NAME=smpe_ls
+BUILD_DIR=.
+INSTALL_DIR=$(HOME)/.local/bin
+DATA_DIR=data
+
+all: build
+
+build:
+	@echo "Building $(BINARY_NAME)..."
+	go build -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/smpe_ls
+	@echo "Build complete: $(BUILD_DIR)/$(BINARY_NAME)"
+
+install: build
+	@echo "Installing $(BINARY_NAME) to $(INSTALL_DIR)..."
+	@mkdir -p $(INSTALL_DIR)
+	@cp $(BUILD_DIR)/$(BINARY_NAME) $(INSTALL_DIR)/
+	@chmod +x $(INSTALL_DIR)/$(BINARY_NAME)
+	@echo "Installed to $(INSTALL_DIR)/$(BINARY_NAME)"
+	@echo ""
+	@echo "Note: The server expects data/smpe.json to be in the working directory"
+	@echo "or specify the path with --data flag"
+
+clean:
+	@echo "Cleaning build artifacts..."
+	@rm -f $(BUILD_DIR)/$(BINARY_NAME)
+	@rm -rf client/vscode-smpe/out
+	@rm -rf client/vscode-smpe/node_modules
+	@echo "Clean complete"
+
+test:
+	@echo "Running tests..."
+	go test -v ./...
+
+vscode-deps:
+	@echo "Installing VSCode extension dependencies..."
+	cd client/vscode-smpe && npm install
+
+vscode-compile: vscode-deps
+	@echo "Compiling VSCode extension..."
+	cd client/vscode-smpe && npm run compile
+
+vscode: build vscode-compile
+	@echo "VSCode extension ready for testing"
+	@echo ""
+	@echo "To test in VSCode:"
+	@echo "1. Open the client/vscode-smpe directory in VSCode"
+	@echo "2. Press F5 to launch Extension Development Host"
+	@echo "3. Open a .smpe file to activate the extension"
+
+.PHONY: vscode-deps vscode-compile vscode

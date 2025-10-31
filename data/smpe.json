@@ -1,0 +1,257 @@
+[        
+    {
+        "name": "++APAR",
+        "description": "The ++APAR MCS identifies a service SYSMOD. This type of SYSMOD is a temporary corrective fix to the  elements of target system and distribution libraries. All other MCSs for this SYSMOD follow this header MCS. The parameter SYSMOD ID specifies a unique 7-character system modification identifier for the APAR fix. The IBM® convention for the SYSMOD ID of a service SYSMOD (APAR, APAR fix, PTF) or USERMOD is tannnnn, where:\nt - identifies the type of SYSMOD. It is a single alphanumeric character. These are the values used by IBM:\nA-K - Used by IBM for various levels of an APAR fix\nL-T - Available for users\nU - Used by IBM for PTFs\nV-Z\nUsed by IBM for various levels of an APAR fix\na - is any alphabetic character(A-Z). Any valid character can be used for user SYSMODs.\nnnnnn - is an additional identifier for the SYSMOD. For PTFs and APAR fixes supplied by IBM, it is a number from 00001 to 99999. Any valid characters can be used for user SYSMODs.",
+        "parameter": "SYSMOD-ID",
+        "type": "MCS", 
+        "operands": [ 
+            {
+                "name": "DESCRIPTION|DESC",
+                "parameter": "DESCRIPTION",
+                "type": "string",
+                "length": 64,
+                "description": "Specifies a descriptive name to be associated with this SYSMOD. The DESCRIPTION value can contain up to 64 bytes of data, including blanks. Extra blanks, as well as leading and trailing blanks, are   deleted."
+            },
+            {
+                "name": "FILES",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Specifies the number of relative files belonging to this APAR fix. It can be a decimalnumber from 1 to 9999."
+            },
+            {
+                "name": "REWORK",
+                "parameter": "LEVEL",
+                "type": "integer",
+                "length": 8,
+                "description": "Specifies the level of this SYSMOD, which was reworked for minor changes. Up to eightnumeric characters can be specified. For SYSMODs supplied by IBM®, the REWORK level is yyyyddd, whereyyyy is the year the SYSMOD was reworked and ddd is the Julian date. REWORK allows an updated SYSMOD tobe automatically received again, as long as it is more recent than the version that has already beenreceived. This takes the place of rejecting the SYSMOD and receiving it again."
+            },
+            {
+                "name": "RFDSNPFX",
+                "parameter": "RFDSNPFX",
+                "type": "string",
+                "length": 8,
+                "allowed_if": "FILES",
+                "description": "Identifies to SMP/E the prefix used in the relative file data set names for this SYSMOD.SMP/E uses this prefix when allocating data set names for the SYSMOD's relative files during RECEIVEprocessing. The prefix can be from 1 to 8 alphanumeric or national ($, #, @) characters or a dash (-). This operand can be specified only if the FILES operand is also specified."
+            }
+        ]
+    },
+    {
+        "name": "++ASSIGN",
+        "type": "MCS", 
+        "description": "The ++ASSIGN MCS assigns a source identifier (source ID) to one or more specified SYSMODs, as long  as those SYSMODs are in the SMPPTS data set by the end of RECEIVE processing.",
+        "operands": [
+           {
+               "name": "SOURCEID",
+               "parameter": "SOURCE-ID",
+               "type": "string",
+               "length": 64,
+               "description": "Is a 1- to 64-character string identifying the source of the SYSMODs being processed. SMP/E   associates the SOURCEID value with the SYSMODs named on the ++ASSIGN MCS. The SOURCEID value can consist o any nonblank character (X'41' through X'FE') except single quotation mark ('), asterisk (*), percent (%) comma (,), left parenthesis (() and right parenthesis ())."
+           },
+           {
+               "name": "TO",
+               "parameter":"SYSMOD-IDs",
+               "type": "string",
+               "length": 7,
+               "description": "Specifies the SYSMODs with which the source ID is to be associated."
+           }
+        ]
+    },
+    {
+        "name": "++DELETE",
+        "parameter": "NAME",
+        "description": "The Parameter NAME specifies the name of the load module to be deleted. During APPLY processing, the ++DELETE MCS deletes a load module and any known alias or symbolic link names from a target library and the associated target zone. It can also delete alias or symbolic link names without deleting the load module itself. During ACCEPT processing, if inline JCLIN was processed, the distribution zone's entries are updated to reflect the ++DELETE changes. The target libraries and target zone entries are not updated.",
+        "operands": [
+           {
+               "name": "ALIAS",
+               "parameter": "ALIAS",
+               "type": "string",
+               "length": 1023,
+               "description": "Specifies that only the indicated alias or symbolic link names are to be deleted, but not the load module. An alias name can have up to 1023 characters. Although a load module residing in a PDSE can have an alias name greater than 8 characters, the ++DELETE statement cannot be used to delete such an alias value. To delete such an alias value without deleting the load module, you need to resupply JCLIN to define the load module without providing an ALIAS statement for the alias value to be deleted. Make sure to also include a ++MOD statement for a module in the load module to force SMP/E to relink the load module."
+           },
+           {
+               "name": "SYSLIB",
+               "parameter": "DDNAME|ALL",
+               "type": "string",
+               "length": 64,
+               "description": "Specifies the DDNAMEs of the target library where the load module resides. If ALL is specified, the load module is deleted from all target libraries defined in the target zone."
+           },
+           {
+               "name": "TO",
+               "type": "string",
+               "length": 7,
+               "description": "Specifies the SYSMODs with which the source ID is to be associated."
+           }
+        ]
+    },
+    {
+        "name": "++FEATURE",
+        "parameter": "NAME",
+        "type": "MCS", 
+        "description": "The ++FEATURE MCS is used to describe a set of function SYSMODs that are collectively referred to as a FEATURE. It introduces descriptive information about a new or replacement set of functions into the global zone. A ++FEATURE MCS may be associated with an orderable software feature. The Parameter NAME is a 1- to 8-character feature name. It can contain uppercase alphabetic, numeric, or national characters ($, #, @).",
+        "operands": [
+           {
+                "name": "DESCRIPTION|DESC",
+                "parameter": "DESCRIPTION",
+                "type": "string",
+                "length": 64,
+                "description": "Describes the feature that represents this collection of function SYSMODs.. The DESCRIPTION value can contain up to 64 bytes of data, including blanks. Extra blanks, as well as leading and trailing blanks, are deleted."
+            }, 
+            {
+                "name": "FMID",
+                "parameter": "FMID",
+                "type": "string",
+                "length": 7,
+                "description": "Specifies the list of all function SYSMODs that make up this feature. Each FMID is 7 characters long and must be a valid SYSMOD ID. That is, it must contain uppercase alphabetic, numeric, or national characters ($, @, #). If multiple FMIDs are specified, they must be separated by commas."
+            },
+            {
+                "name": "PRODUCT",
+                "parameter": "PRODID, vv.rr.mm",
+                "type": "string",
+                "length": 64,
+                "description": "Identifies the prodid and vv.rr.mm of the product with which this feature is associated."
+            },
+            {
+                "name": "REWORK",
+                "parameter": "LEVEL",
+                "type": "integer",
+                "length": 8,
+                "description": "Specifies the level of this feature, which was reworked for minor changes. Up to eightnumeric characters can be specified. For SYSMODs supplied by IBM®, the REWORK level is yyyyddd, whereyyyy is the year the SYSMOD was reworked and ddd is the Julian date. REWORK allows an updated SYSMOD tobe automatically received again, as long as it is more recent than the version that has already beenreceived. This takes the place of rejecting the SYSMOD and receiving it again."
+            }
+        ]
+    },
+    {
+        "name": "++FUNCTION",
+        "parameter": "SYSMOD-ID",
+        "type": "MCS", 
+        "description": "The ++FUNCTION MCS identifies a SYSMOD as a base function or dependent function. This type of SYSMOD introduces a new or replacement function into target system and distribution libraries. All other MCSs follow this header MCS statement.",
+        "operands": [
+           {
+                "name": "DESCRIPTION|DESC",
+                "parameter": "DESCRIPTION",
+                "type": "string",
+                "length": 64,
+                "description": "Describes the function that represents this collection of function SYSMODs. The DESCRIPTION value can be in single-byte characters (such as English alphanumeric) or double-byte characters (such as Kanji). The DESCRIPTION value can contain up to 64 bytes of data, including blanks. Extra blanks, as well as leading and trailing blanks are deleted. The DESCRIPTION value can span multiple 80-byte records. Data must continue up to and including column 72 and begin in column 1 of the next line. All data past column 72 is ignored. The break does not translate to a blank unless a blank is explicitly coded in column 72 of the first line or in column 1 of the second line. If DESCRIPTION is specified, it must contain at least one non-blank character. If parentheses are included in the text, they must be in matched pairs."
+            }, 
+            {
+                "name": "FESN",
+                "parameter": "FIELD-ENGINEERING-SERVICE-NUMBER",
+                "type": "string",
+                "length": 7,
+                "description": "Is a 7-character field engineering (FE) service number."
+            },
+            {
+                "name": "FILES",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Specifies the number of relative files belonging to this function. It can be a decimalnumber from 1 to 9999."
+            },
+            {
+                "name": "REWORK",
+                "parameter": "LEVEL",
+                "type": "integer",
+                "length": 8,
+                "description": "Specifies the level of this sysmod, which was reworked for minor changes. Up to eightnumeric characters can be specified. For SYSMODs supplied by IBM®, the REWORK level is yyyyddd, whereyyyy is the year the SYSMOD was reworked and ddd is the Julian date. REWORK allows an updated SYSMOD tobe automatically received again, as long as it is more recent than the version that has already beenreceived. This takes the place of rejecting the SYSMOD and receiving it again."
+            },
+            {
+                "name": "RFDSNPFX",
+                "parameter": "RFDSNPFX",
+                "type": "string",
+                "length": 8,
+                "allowed_if": "FILES",
+                "description": "Identifies to SMP/E the prefix used in the relative file data set names for this SYSMOD.SMP/E uses this prefix when allocating data set names for the SYSMOD's relative files during RECEIVEprocessing. The prefix can be from 1 to 8 alphanumeric or national ($, #, @) characters or a dash (-). This operand can be specified only if the FILES operand is also specified."
+            }
+        ]
+    },
+    {
+        "name": "++HOLD",
+        "parameter": "SYSMOD-ID",
+        "type": "MCS", 
+        "description": "The ++HOLD MCS identifies a SYSMOD to be placed into exception SYSMOD status (signifying that special SMP/E processing is required before it can be applied or accepted). ++HOLD statements can occur within a SYSMOD (internal HOLDDATA), or they can be read directly from the SMPHOLD file during RECEIVE processing (external HOLDDATA).",
+        "operands": [
+           {
+                "name": "CATEGORY",
+                "parameter": "category",
+                "type": "string",
+                "length": 64,
+                "description": "A 1- to 64-character string that specifies a Fix Category. There can be one or more Fix Category values. A Fix Category value associates the reason ID APAR to a particular category of fixes. A Fix Category might be used to identify a group of APAR fixes required to support a particular hardware device, or to provide a particular software capability. The Fix Category values are used during RECEIVE command processing to create source IDs for the SYSMODs that will resolve the specified reason ID APAR. During APPLY and ACCEPT command processing the Fix Category values are used to determine if the HOLDDATA is applicable to the current command by comparing the values in the HOLDDATA to those in the active Fix Category interest list. The active Fix Category interest list is specified on the APPLY and ACCEPT command, or within the active OPTIONS entry. A category value might contain any nonblank character in the range X'41' - X'FE' except single quotation mark ('), asterisk (*), percent (%), comma (,), left parenthesis ((), and right parenthesis ())."
+            }, 
+            {
+                "name": "CLASS",
+                "parameter": "CLASS",
+                "type": "string",
+                "length": 7,
+                "description": "A 1- to 7-character string indicating an alternative reason to release an exception SYSMOD for processing. A class name is specified along with a reason ID to identify a condition when the reason ID need not be resolved. The same class name can be specified on any number of ++HOLD statements in any number of SYSMODs.",
+                "values": [
+                    {
+                        "name": "ERREL",
+                        "description": "The SYSMOD is held for an error reason ID but should be installed anyway. IBM has determined that the problem the SYSMOD resolves is significantly more critical than the error reflected by the holding APAR."
+                    },
+                    {
+                        "name": "HIPER",
+                        "description": "The SYSMOD is held with a hold class of HIPER (High Impact)"
+                    },
+                    {
+                        "name": "PE",
+                        "description": "The SYSMOD is held with a hold class of 'PTF in Error'."
+                    },
+                    {
+                        "name": "SECINT",
+                        "description": "The reason ID SYSMOD identifies a fix for a security or integrity error. HOLDDATA for security or integrity fixes is available through the z Systems Security Portal."
+                    },
+                    {
+                        "name": "UCLREL",
+                        "description": "UCLIN needed for the SYSMOD has been handled by IBM and no longer requires your attention."
+                    },
+                    {
+                        "name": "YR2000",
+                        "description": "Identifies PTFs that provide Year 2000 function, or fix a Year 2000-related problem."
+                    }
+                ]
+            },
+            {
+                "name": "COMMENT",
+                "parameter": "TEXT",
+                "type": "string",
+                "length": 64,
+                "description": "Free-form text to be used to describe the problem identified by the REASON operand. The comments supplied are associated only with the reason ID supplied."
+            },
+            {
+                "name": "COMMENT",
+                "parameter": "ENHANCED-HOLDDATA",
+                "type": "string",
+                "length": 64,
+                "description": "Contains IBM–supplied Enhanced HOLDDATA."
+            },
+            {
+                "name": "DATE",
+                "parameter": "DATE",
+                "type": "integer",
+                "length": 8,
+                "description": "Specifies the date that the ++HOLD statement was generated. The date is specified as yyddd, where yy is the last two digits of the year and ddd is the Julian date."
+            },
+            {
+                "name": "ERROR|FIXCAT|SYSTEM|USER",
+                "type": "string",
+                "length": 6,
+                "description": "Specifies the hold category into which the SYSMOD is to be put. At least one of the values must be specified."
+            },
+            {
+                "name": "FMID",
+                "parameter": "FMID",
+                "type": "string",
+                "length": 7,
+                "description": "Specifies the FMID to which the held SYSMOD is applicable. For external HOLDDATA (a ++HOLD statement not within a SYSMOD), this information allows SMP/E to receive only those statements associated with FMIDs defined in the user's global zone. This operand is required."
+            },
+            {
+                "name": "REASON",
+                "parameter": "RFDSNPFX",
+                "type": "string",
+                "length": 8,
+                "allowed_if": "FILES",
+                "description": "Identifies to SMP/E the prefix used in the relative file data set names for this SYSMOD.SMP/E uses this prefix when allocating data set names for the SYSMOD's relative files during RECEIVEprocessing. The prefix can be from 1 to 8 alphanumeric or national ($, #, @) characters or a dash (-). This operand can be specified only if the FILES operand is also specified."
+            }
+        ]
+    }
+]

@@ -1,0 +1,71 @@
+{
+  "name": "vscode-smpe",
+  "displayName": "SMP/E Language Support",
+  "description": "Language support for SMP/E MCS statements",
+  "version": "0.1.0",
+  "publisher": "cybersorcerer",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:smpe"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "smpe",
+        "aliases": [
+          "SMP/E",
+          "smpe"
+        ],
+        "extensions": [
+          ".smpe",
+          ".mcs",
+          ".smp"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "smpe",
+        "scopeName": "source.smpe",
+        "path": "./syntaxes/smpe.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "SMP/E Language Server",
+      "properties": {
+        "smpe.serverPath": {
+          "type": "string",
+          "default": "smpe_ls",
+          "description": "Path to the smpe_ls executable"
+        },
+        "smpe.debug": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable debug logging"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.75.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^8.1.0"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "SMP/E",
+  "scopeName": "source.smpe",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#mcs-statements"
+    },
+    {
+      "include": "#operands"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#numbers"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.asterisk.smpe",
+          "match": "^\\*.*$"
+        }
+      ]
+    },
+    "mcs-statements": {
+      "patterns": [
+        {
+          "name": "keyword.control.smpe",
+          "match": "\\+\\+(APAR|ASSIGN|DELETE|FEATURE|FUNCTION|HOLD|VER|MOD|MAC|JCLIN|SRC|ZAP)\\b"
+        }
+      ]
+    },
+    "operands": {
+      "patterns": [
+        {
+          "name": "keyword.other.smpe",
+          "match": "\\b(DESCRIPTION|FILES|RFDSNPFX|REWORK|SOURCEID|TO|SYSLIB|ALIAS|FMID|PRODUCT|FESN|REASON|ERROR|FIXCAT|SYSTEM|USER|CATEGORY|RESOLVER|CLASS|DATE|COMMENT|DISTLIB|RELFILE|TXLIB|FROMDS|NUMBER|VOL|UNIT|RMID|VERSION)\\b"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.single.smpe",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.smpe",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.smpe",
+          "match": "\\b[0-9]+\\b"
+        }
+      ]
+    }
+  }
+}
