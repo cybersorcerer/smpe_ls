@@ -1,9 +1,10 @@
-.PHONY: all build install clean test
+.PHONY: all build install clean clean-all test
 
 # Build configuration
 BINARY_NAME=smpe_ls
 BUILD_DIR=.
 INSTALL_DIR=$(HOME)/.local/bin
+DATA_INSTALL_DIR=$(HOME)/.local/share/smpe_ls
 DATA_DIR=data
 
 all: build
@@ -18,17 +19,27 @@ install: build
 	@mkdir -p $(INSTALL_DIR)
 	@cp $(BUILD_DIR)/$(BINARY_NAME) $(INSTALL_DIR)/
 	@chmod +x $(INSTALL_DIR)/$(BINARY_NAME)
-	@echo "Installed to $(INSTALL_DIR)/$(BINARY_NAME)"
+	@echo "Installed binary to $(INSTALL_DIR)/$(BINARY_NAME)"
 	@echo ""
-	@echo "Note: The server expects data/smpe.json to be in the working directory"
-	@echo "or specify the path with --data flag"
+	@echo "Installing data files to $(DATA_INSTALL_DIR)..."
+	@mkdir -p $(DATA_INSTALL_DIR)
+	@cp $(DATA_DIR)/smpe.json $(DATA_INSTALL_DIR)/
+	@echo "Installed data to $(DATA_INSTALL_DIR)/smpe.json"
+	@echo ""
+	@echo "Installation complete!"
+	@echo "Server will use: $(DATA_INSTALL_DIR)/smpe.json"
 
 clean:
 	@echo "Cleaning build artifacts..."
 	@rm -f $(BUILD_DIR)/$(BINARY_NAME)
+	@echo "Clean complete"
+
+clean-all:
+	@echo "Cleaning all build artifacts including extension..."
+	@rm -f $(BUILD_DIR)/$(BINARY_NAME)
 	@rm -rf client/vscode-smpe/out
 	@rm -rf client/vscode-smpe/node_modules
-	@echo "Clean complete"
+	@echo "Clean all complete"
 
 test:
 	@echo "Running tests..."

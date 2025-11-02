@@ -6,10 +6,22 @@ A Language Server Protocol (LSP) implementation for SMP/E (System Modification P
 
 Release 0.1.0 provides:
 
-- **Syntax Highlighting** - Color coding for MCS statements and operands
-- **Code Completion** - Context-aware suggestions for statements and operands
-- **Diagnostics** - Real-time syntax error detection
-- **Hover Information** - Documentation and details for statements and operands
+- **Syntax Highlighting** - Color coding for MCS statements, operands, and comments (`/* */`)
+- **Context-Aware Code Completion**
+  - MCS statement completion with parameter placeholders
+  - Operand completion based on statement type
+  - Context-sensitive value completion (e.g., SYSMOD IDs from document)
+  - Special handling for ++HOLD REASON operand based on hold type (ERROR, SYSTEM, FIXCAT, USER)
+- **Diagnostics** - Real-time validation including:
+  - Missing or malformed statement terminators (`.`)
+  - Missing required statement parameters
+  - Missing required operands (derived from syntax diagrams)
+  - Empty operand parameters
+  - Unknown operands
+  - Duplicate operands
+  - Dependency violations (e.g., RFDSNPFX requires FILES)
+  - Unknown statement types
+- **Hover Information** - Documentation and parameter details for statements and operands
 
 ## Supported MCS Statements in 0.1.0
 
@@ -19,6 +31,7 @@ Release 0.1.0 provides:
 - `++FEATURE` - SYSMOD Set Description
 - `++FUNCTION` - Function SYSMOD
 - `++HOLD` - Exception Status
+- `++IF` - Conditional Processing
 
 ## Installation
 
@@ -145,15 +158,31 @@ Uses a **Recursive Descent Parser** with no external dependencies:
 ### Example SMP/E File
 
 ```smpe
-* Sample SMP/E MCS statements
-++APAR(AB12345) DESCRIPTION('Fix for issue') FILES(5)
-REWORK(001)
+/* Sample SMP/E MCS statements */
+++APAR(AB12345)
+    DESCRIPTION(Fix for security vulnerability)
+    FILES(5)
+    RFDSNPFX(APARA12)
+    REWORK(20250101)
+    .
 
-++FUNCTION(HBB7790) DESCRIPTION('Base function')
-FILES(100) RFDSNPFX(SMPE.FIX)
+++FUNCTION(HBB7790)
+    DESCRIPTION(Base function for product XYZ)
+    FILES(100)
+    RFDSNPFX(FUNC123)
+    .
 
-++HOLD(AB12345) FMID(HBB7790) REASON(ACTION)
-ERROR
+++HOLD(AB12345)
+    FMID(HBB7790)
+    REASON(B12345)
+    ERROR
+    COMMENT(Critical security fix required before apply)
+    .
+
+++IF FMID(HBB7790)
+    THEN
+    REQ(FEATURE)
+    .
 ```
 
 ## Troubleshooting
@@ -202,6 +231,16 @@ ERROR
 - Code Actions
 - Formatting
 - Neovim plugin
+
+## Acknowledgments
+
+Statement and operand descriptions, hover information, and documentation content are derived from:
+
+**IBM z/OS 3.1 SMP/E Reference**
+© Copyright IBM Corporation
+<https://www.ibm.com/docs/en/zos/3.1.0?topic=smpe-zos-reference>
+
+SMP/E is a registered trademark of International Business Machines Corporation.
 
 ## License
 

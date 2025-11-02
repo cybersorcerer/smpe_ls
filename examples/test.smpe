@@ -1,0 +1,273 @@
+/************************************************/
+/* SMP/E MCS Test File                          */
+/* Tests all statement types and features       */
+/************************************************/
+
+/************************************************/
+/* ++APAR - Service SYSMOD                      */
+/************************************************/
+
+++APAR(A471100)
+    DESCRIPTION(Fix for security vulnerability in authentication module)
+    FILES(2)
+    RFDSNPFX(APARA12)
+    REWORK(20250101)
+    .
+
+/* APAR without optional operands */
+++APAR(A23456)
+    DESCRIPTION(Simple fix)
+    .
+
+/* APAR with multi-line description */
+++APAR(A34567)
+    DESCRIPTION(This is a very long description
+                that spans multiple lines because
+                it contains detailed information
+                about the fix)
+    .
+
+/************************************************/
+/* ++ASSIGN - Source ID Assignment              */
+/************************************************/
+
+++ASSIGN
+    SOURCEID(MYSOURCE)
+    TO(SYSMOD1,SYSMOD2,SYSMOD3)
+    .
+
+/* ASSIGN with multi-line TO list */
+++ASSIGN
+    SOURCEID(PROD2025)
+    TO(
+        A12345,
+        A23456,
+        A34567,
+        U45678
+    )
+    .
+
+/* ASSIGN with comments */
+++ASSIGN /* Assign source ID */
+    SOURCEID(TESTSRC) /* Source identifier */
+    TO(
+        A12345, /* First APAR */
+        A23456  /* Second APAR */
+    ) /* End of list */
+    .
+
+/************************************************/
+/* ++DELETE - Delete Load Module               */
+/************************************************/
+
+++DELETE(MYMODULE)
+    SYSLIB(SYSLIB1)
+    .
+
+/* DELETE from all libraries */
+++DELETE(OLDMOD)
+    SYSLIB(ALL)
+    .
+
+/* DELETE with multiple libraries */
+++DELETE(TESTMOD)
+    SYSLIB(SYSLIB1,SYSLIB2,SYSLIB3)
+    .
+
+/* DELETE with alias */
+++DELETE(MAINMOD)
+    SYSLIB(SYSLIB1)
+    ALIAS(ALIAS1,ALIAS2)
+    .
+
+/************************************************/
+/* ++FEATURE - SYSMOD Set Description           */
+/************************************************/
+
+++FEATURE(FEATURE1)
+    DESCRIPTION(New security feature set)
+    FMID(HDP1234)
+    PRODUCT(5655ABC,01.02.00)
+    .
+
+/* FEATURE with multiple FMIDs */
+++FEATURE(FEATURE2)
+    DESCRIPTION(Database enhancement package)
+    FMID(HDP1234,HDP1235,HDP1236)
+    REWORK(20250115)
+    .
+
+/* FEATURE minimal */
+++FEATURE(FEATURE3)
+    DESCRIPTION(Basic feature)
+    .
+
+/************************************************/
+/* ++FUNCTION - Function SYSMOD                 */
+/************************************************/
+
+++FUNCTION(HDP1234)
+    DESCRIPTION(Base function for product XYZ)
+    FESN(FE12345)
+    FILES(5)
+    RFDSNPFX(FUNC123)
+    REWORK(20250201)
+    .
+
+/* FUNCTION minimal */
+++FUNCTION(HDP2345)
+    DESCRIPTION(Simple function)
+    .
+
+/* FUNCTION with multi-line description */
+++FUNCTION(HDP3456)
+    DESCRIPTION(This function provides
+                core capabilities for
+                the system infrastructure)
+    FILES(3)
+    RFDSNPFX(FUNC345)
+    .
+
+/************************************************/
+/* ++HOLD - Exception Status                    */
+/************************************************/
+
+++HOLD(U12345)
+    FMID(HDP1234)
+    REASON(B23456)
+    ERROR
+    CLASS(HIPER)
+    DATE(25032)
+    COMMENT(Critical fix required before apply)
+    .
+
+/* HOLD with FIXCAT */
+++HOLD(U23456)
+    FMID(HDP1234)
+    REASON(B34567)
+    FIXCAT
+    CATEGORY(SECURITY)
+    CLASS(SECINT)
+    .
+++HOLD(U00001) ERROR REASON()
+/* HOLD with SYSTEM */
+++HOLD(U34567)
+    FMID(HDP1234)
+    REASON(SYSTEM Reason-IDs)
+    SYSTEM
+    .
+
+/* HOLD with USER */
+++HOLD(U45678)
+    FMID(HDP1234)
+    REASON(B45678)
+    USER
+    COMMENT(User modification required)
+    .
+
+/* HOLD with multi-line comment */
+++HOLD(U56789)
+    FMID(HDP1234)
+    REASON(B56789)
+    ERROR
+    COMMENT(This is a very detailed comment
+            that explains the hold condition
+            and required actions)
+    .
+
+/************************************************/
+/* Complex Examples with Comments              */
+/************************************************/
+
+/* Multiple statements in sequence */
+++APAR(A99999) /* Critical fix */
+    DESCRIPTION(Emergency patch) /* Short description */
+    .
+
+++ASSIGN /* Assign to production source */
+    SOURCEID(PROD) /* Production source */
+    TO(A99999) /* The critical fix */
+    .
+
+/* Test various comment positions */
+++FUNCTION /* Start */ (HDP9999) /* After name */
+    DESCRIPTION /* Before paren */ (Test function) /* After paren */
+    . /* End of statement */
+
+/************************************************/
+/* Edge Cases                                   */
+/************************************************/
+
+/* Minimal statements */
+++APAR(A00001).
+++FUNCTION(HDP0001).
+
+/* Statement with only required operands */
+++ASSIGN SOURCEID(TEST) TO(SYSMOD1).
+
+++DELETE(MODULE1) SYSLIB(LIB1).
+
+++FEATURE(FEAT001) DESCRIPTION(Minimal feature).
+
+++HOLD(U00001) FMID(HDP0001) REASON(B00001) ERROR.
+
+/************************************************/
+/* Test Cases for Diagnostics                  */
+/************************************************/
+
+/* ERROR: Statement without terminator (missing .) */
+++APAR(A88888)
+    DESCRIPTION(Missing terminator)
+
+/* ERROR: Statement parameter missing */
+++APAR
+    DESCRIPTION(Missing parameter)
+    .
+
+/* ERROR: Required operands missing for ++ASSIGN */
+++ASSIGN
+    SOURCEID(TEST)
+    .
+
+/* ERROR: Unknown operand */
+++APAR(A77777)
+    INVALID_OPERAND(test)
+    .
+
+/* ERROR: Duplicate operand */
+++APAR(A66666)
+    DESCRIPTION(First description)
+    DESCRIPTION(Second description)
+    .
+
+++IF FMID(MYFMID)
+
+/* ERROR: Dependency violation - RFDSNPFX without FILES */
+++APAR(A55555)
+    RFDSNPFX(TEST123)
+    .
+
+
+/* ERROR: Unknown statement type */
+++UNKNOWN(TEST)
+    .
+
+/* ERROR: Malformed parentheses */
+++APAR(A44444
+    DESCRIPTION(Missing closing paren)
+    .
+
+/* ERROR: Multiple missing terminators */
+++APAR(A33333)
+    DESCRIPTION(No terminator 1)
+
+++APAR(A22222)
+    DESCRIPTION(No terminator 2)
+
+++APAR(A11111)
+    DESCRIPTION(This one has terminator)
+    .
+
+/************************************************/
+/* End of test file                             */
+/************************************************/

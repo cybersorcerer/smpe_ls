@@ -39,8 +39,6 @@ func NewServer(reader io.Reader, writer io.Writer, handler Handler) *Server {
 
 // Start starts the server
 func (s *Server) Start() error {
-	logger.Info("LSP server starting")
-
 	for {
 		msg, err := s.readMessage()
 		if err != nil {
@@ -102,23 +100,32 @@ func (s *Server) readMessage() ([]byte, error) {
 
 // handleMessage handles a message from the client
 func (s *Server) handleMessage(msg []byte) error {
-	// Try to parse as request
-	var req Request
-	if err := json.Unmarshal(msg, &req); err == nil && req.Method != "" {
+	// Parse as generic message to check for ID
+	var genericMsg map[string]interface{}
+	if err := json.Unmarshal(msg, &genericMsg); err != nil {
+		return fmt.Errorf("invalid JSON: %v", err)
+	}
+
+	// If message has an "id" field, it's a request
+	if _, hasID := genericMsg["id"]; hasID {
+		var req Request
+		if err := json.Unmarshal(msg, &req); err != nil {
+			return fmt.Errorf("invalid request: %v", err)
+		}
 		return s.handleRequest(&req)
 	}
 
-	// Try to parse as notification
+	// Otherwise it's a notification
 	var notif Notification
-	if err := json.Unmarshal(msg, &notif); err == nil && notif.Method != "" {
-		return s.handleNotification(&notif)
+	if err := json.Unmarshal(msg, &notif); err != nil {
+		return fmt.Errorf("invalid notification: %v", err)
 	}
-
-	return fmt.Errorf("invalid message format")
+	return s.handleNotification(&notif)
 }
 
 // handleRequest handles a request from the client
 func (s *Server) handleRequest(req *Request) error {
+	logger.Info("Handling request: method=%s, id=%v", req.Method, req.ID)
 	logger.Debug("Handling request: %s", req.Method)
 
 	switch req.Method {
@@ -164,7 +171,25 @@ func (s *Server) handleRequest(req *Request) error {
 	case "shutdown":
 		return s.sendResponse(req.ID, nil)
 
+	// Optional capabilities - respond with null to indicate not supported
+	case "textDocument/documentSymbol",
+		"textDocument/definition",
+		"textDocument/references",
+		"textDocument/formatting",
+		"textDocument/rangeFormatting",
+		"textDocument/onTypeFormatting",
+		"textDocument/codeAction",
+		"textDocument/codeLens",
+		"textDocument/rename",
+		"textDocument/signatureHelp",
+		"textDocument/documentHighlight",
+		"workspace/symbol",
+		"workspace/executeCommand":
+		logger.Debug("Unsupported method: %s", req.Method)
+		return s.sendResponse(req.ID, nil)
+
 	default:
+		logger.Debug("Unknown method: %s", req.Method)
 		return s.sendErrorResponse(req.ID, MethodNotFound, "Method not found")
 	}
 }

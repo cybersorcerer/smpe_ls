@@ -34,7 +34,7 @@ func Init(debug bool) error {
 	}
 
 	// Create/overwrite log file
-	logPath := filepath.Join(logDir, "log")
+	logPath := filepath.Join(logDir, "smpe_ls.log")
 	logFile, err = os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to create log file: %w", err)
@@ -99,5 +99,5 @@ func GetLogPath() string {
 	if err != nil {
 		return ""
 	}
-	return filepath.Join(homeDir, ".local", "share", "smpe_ls", "log")
+	return filepath.Join(homeDir, ".local", "share", "smpe_ls", "smpe_ls.log")
 }

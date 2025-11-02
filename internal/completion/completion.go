@@ -1,23 +1,72 @@
 package completion
 
 import (
+	"encoding/json"
+	"os"
 	"strings"
 
+	"github.com/cybersorcerer/smpe_ls/internal/parser"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
+// MCSStatement represents a MCS statement definition from smpe.json
+type MCSStatement struct {
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Parameter   string    `json:"parameter,omitempty"`
+	Type        string    `json:"type"`
+	Operands    []Operand `json:"operands,omitempty"`
+}
+
+// Operand represents an operand definition
+type Operand struct {
+	Name        string         `json:"name"`
+	Parameter   string         `json:"parameter,omitempty"`
+	Type        string         `json:"type,omitempty"`
+	Length      int            `json:"length,omitempty"`
+	Description string         `json:"description"`
+	AllowedIf   string         `json:"allowed_if,omitempty"`
+	Values      []AllowedValue `json:"values,omitempty"`
+}
+
+// AllowedValue represents an allowed value for an operand
+type AllowedValue struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 // Provider provides code completion
 type Provider struct {
-	// TODO: Load from smpe.json
+	statements map[string]MCSStatement
 }
 
 // NewProvider creates a new completion provider
-func NewProvider() *Provider {
-	return &Provider{}
+func NewProvider(dataPath string) (*Provider, error) {
+	// Load MCS definitions from smpe.json
+	data, err := os.ReadFile(dataPath)
+	if err != nil {
+		return nil, err
+	}
+
+	var statements []MCSStatement
+	if err := json.Unmarshal(data, &statements); err != nil {
+		return nil, err
+	}
+
+	// Build lookup map
+	stmtMap := make(map[string]MCSStatement)
+	for _, stmt := range statements {
+		stmtMap[stmt.Name] = stmt
+	}
+
+	return &Provider{
+		statements: stmtMap,
+	}, nil
 }
 
 // GetCompletions returns completion items for the given position
 func (p *Provider) GetCompletions(text string, line, character int) []lsp.CompletionItem {
+	// Convert line/character to absolute position
 	lines := strings.Split(text, "\n")
 	if line < 0 || line >= len(lines) {
 		return nil
@@ -28,144 +77,677 @@ func (p *Provider) GetCompletions(text string, line, character int) []lsp.Comple
 		return nil
 	}
 
-	// Get the text before cursor
+	// Calculate absolute cursor position
+	cursorPos := 0
+	for i := 0; i < line; i++ {
+		cursorPos += len(lines[i]) + 1 // +1 for newline
+	}
+	cursorPos += character
+
+	// Get cursor context using statement boundary detection
+	ctx := parser.GetCursorContext(text, cursorPos)
+
+	// Check if we're typing a MCS statement (at start or after +)
 	textBefore := currentLine[:character]
+	trimmedBefore := strings.TrimSpace(textBefore)
 
-	// Check if we're at the start of a line (MCS statement)
-	if strings.TrimSpace(textBefore) == "" || strings.HasPrefix(strings.TrimSpace(textBefore), "+") {
-		return p.getMCSCompletions()
+	// If we're typing + or ++, offer MCS completions with proper TextEdit
+	if trimmedBefore == "" || (strings.HasPrefix(trimmedBefore, "+") && len(trimmedBefore) <= 2) {
+		// Calculate how many + characters were typed
+		plusCount := 0
+		for i := len(textBefore) - 1; i >= 0 && textBefore[i] == '+'; i-- {
+			plusCount++
+		}
+
+		// Calculate the range to replace (the + characters)
+		startChar := character - plusCount
+		replaceRange := lsp.Range{
+			Start: lsp.Position{Line: line, Character: startChar},
+			End:   lsp.Position{Line: line, Character: character},
+		}
+
+		return p.getMCSCompletions(&replaceRange)
 	}
 
-	// Check if we're after a MCS statement (operands)
-	if strings.Contains(textBefore, "++") {
-		return p.getOperandCompletions(textBefore)
+	// If no statement type detected, offer MCS statement completions
+	if ctx.StatementType == "" {
+		return p.getMCSCompletions(nil)
 	}
 
-	return nil
+	// If statement type is incomplete (just +), offer MCS completions
+	if strings.HasPrefix(ctx.StatementType, "+") && len(ctx.StatementType) < 3 {
+		return p.getMCSCompletions(nil)
+	}
+
+	// Get statement definition
+	stmt, ok := p.statements[ctx.StatementType]
+	if !ok {
+		// Unknown statement type, offer all MCS statements
+		return p.getMCSCompletions(nil)
+	}
+
+	// Check cursor position within statement
+	// IMPORTANT: Only use text UP TO the cursor, not the entire statement
+	// This prevents seeing operands that come AFTER the cursor position
+	statementTextBefore := ""
+	if ctx.CursorOffset < len(ctx.StatementText) {
+		statementTextBefore = ctx.StatementText[:ctx.CursorOffset]
+	} else {
+		statementTextBefore = ctx.StatementText
+	}
+
+	// Additional safety: Use the current line text instead of full statement
+	// This handles the case where we're typing on a line that's part of an unterminated statement
+	// Example: "++IF FMID(MYFMID)" without "." - if cursor is after "++IF ", we should only see "++IF "
+	// not the full "++IF FMID(MYFMID)"
+	if len(currentLine) > 0 && character <= len(currentLine) {
+		lineTextBefore := currentLine[:character]
+		// If the current line starts with ++, use line text instead of statement text
+		if strings.HasPrefix(strings.TrimSpace(lineTextBefore), "++") {
+			statementTextBefore = lineTextBefore
+		}
+	}
+
+	// If cursor is inside statement parameter parentheses, no completion
+	// BUT: if cursor is inside OPERAND parameter parentheses, offer value completion
+	if ctx.InParameter {
+		// Check if we're inside an operand parameter (not statement parameter)
+		// Pattern: OPERAND(cursor)
+		operandName, inOperandParam := p.detectOperandParameter(currentLine, character)
+		if inOperandParam {
+			// Offer operand value completions
+			return p.getOperandValueCompletions(stmt, operandName, text, line, character)
+		}
+		return nil
+	}
+
+	// Get operand completions based on statement type and context
+	// This will be triggered when:
+	// 1. After statement parameter: ++APAR(A12345) <cursor>
+	// 2. After an operand: ++APAR(A12345) FILES(2) <cursor>
+	// 3. While typing an operand name: ++APAR(A12345) FI<cursor>
+
+	// Debug: Log the statement text being analyzed
+	// logger.Debug("Statement text for completion: %q", statementTextBefore)
+
+	return p.getOperandCompletions(stmt, statementTextBefore, line, character)
+}
+
+// detectOperandParameter checks if cursor is inside an operand parameter
+// Returns (operandName, true) if inside operand parameter, ("", false) otherwise
+// Pattern: OPERAND(cursor) or OPERAND(partial_text|cursor)
+func (p *Provider) detectOperandParameter(line string, character int) (string, bool) {
+	if character <= 0 || character > len(line) {
+		return "", false
+	}
+
+	// Search backwards from cursor to find opening (
+	parenPos := -1
+	for i := character - 1; i >= 0; i-- {
+		if line[i] == '(' {
+			parenPos = i
+			break
+		} else if line[i] == ')' {
+			// We're outside or in a closed parameter
+			return "", false
+		}
+	}
+
+	if parenPos == -1 {
+		return "", false
+	}
+
+	// Extract operand name before (
+	nameEnd := parenPos
+	nameStart := nameEnd - 1
+
+	// Skip whitespace before (
+	for nameStart >= 0 && (line[nameStart] == ' ' || line[nameStart] == '\t') {
+		nameStart--
+	}
+
+	// Read operand name backwards
+	for nameStart >= 0 && isOperandChar(line[nameStart]) {
+		nameStart--
+	}
+	nameStart++ // Adjust to first character of name
+
+	if nameStart >= nameEnd {
+		return "", false
+	}
+
+	operandName := strings.TrimSpace(line[nameStart:nameEnd])
+
+	// Verify it looks like an operand name (all uppercase)
+	if !isOperandName(operandName) {
+		return "", false
+	}
+
+	// Make sure we're not in the statement parameter
+	// Check if this is after ++ at the start of line
+	beforeOperand := strings.TrimSpace(line[:nameStart])
+	if strings.HasPrefix(beforeOperand, "++") && !strings.Contains(beforeOperand, ")") {
+		// This is the statement parameter, not an operand parameter
+		return "", false
+	}
+
+	return operandName, true
+}
+
+// getOperandValueCompletions returns value completions for operand parameters
+// This is highly context-sensitive, especially for ++HOLD REASON operand
+func (p *Provider) getOperandValueCompletions(stmt MCSStatement, operandName string, fullText string, line int, character int) []lsp.CompletionItem {
+	var items []lsp.CompletionItem
+
+	// Find the operand definition
+	var operandDef *Operand
+	for i := range stmt.Operands {
+		names := strings.Split(stmt.Operands[i].Name, "|")
+		for _, name := range names {
+			if name == operandName {
+				operandDef = &stmt.Operands[i]
+				break
+			}
+		}
+		if operandDef != nil {
+			break
+		}
+	}
+
+	if operandDef == nil {
+		return nil
+	}
+
+	// Special handling for ++HOLD REASON operand - context-dependent
+	if stmt.Name == "++HOLD" && operandName == "REASON" {
+		return p.getReasonCompletions(operandDef, fullText, line)
+	}
+
+	// Special handling for ++HOLD RESOLVER operand - show all SYSMOD IDs
+	if stmt.Name == "++HOLD" && operandName == "RESOLVER" {
+		sysmodIDs := extractSysmodIDs(fullText)
+		for _, id := range sysmodIDs {
+			items = append(items, lsp.CompletionItem{
+				Label:         id,
+				Kind:          lsp.CompletionItemKindValue,
+				Detail:        "SYSMOD ID",
+				Documentation: "SYSMOD identifier from document",
+			})
+		}
+		return items
+	}
+
+	// For operands with predefined values, offer them
+	if len(operandDef.Values) > 0 {
+		for _, value := range operandDef.Values {
+			items = append(items, lsp.CompletionItem{
+				Label:         value.Name,
+				Kind:          lsp.CompletionItemKindValue,
+				Documentation: value.Description,
+			})
+		}
+	}
+
+	return items
+}
+
+// getReasonCompletions returns context-sensitive completions for ++HOLD REASON operand
+// Behavior depends on which hold type is set: ERROR, SYSTEM, FIXCAT, or USER
+func (p *Provider) getReasonCompletions(operandDef *Operand, fullText string, currentLine int) []lsp.CompletionItem {
+	var items []lsp.CompletionItem
+
+	// Parse the current statement to find hold type
+	// We need to look backwards from currentLine to find the statement start
+	lines := strings.Split(fullText, "\n")
+
+	// Find statement boundaries
+	stmtStart := currentLine
+	for stmtStart >= 0 {
+		trimmed := strings.TrimSpace(lines[stmtStart])
+		if strings.HasPrefix(trimmed, "++HOLD") {
+			break
+		}
+		stmtStart--
+	}
+
+	if stmtStart < 0 {
+		return nil
+	}
+
+	// Scan from statement start to current line to find hold type flags
+	hasError := false
+	hasSystem := false
+	hasFixcat := false
+	hasUser := false
+
+	for i := stmtStart; i <= currentLine && i < len(lines); i++ {
+		line := strings.ToUpper(strings.TrimSpace(lines[i]))
+
+		// Check for hold type keywords
+		if strings.Contains(line, "ERROR") && !strings.Contains(line, "/*") {
+			hasError = true
+		}
+		if strings.Contains(line, "SYSTEM") && !strings.Contains(line, "/*") {
+			hasSystem = true
+		}
+		if strings.Contains(line, "FIXCAT") && !strings.Contains(line, "/*") {
+			hasFixcat = true
+		}
+		if strings.Contains(line, "USER") && !strings.Contains(line, "/*") {
+			hasUser = true
+		}
+	}
+
+	// Context-sensitive completion based on hold type
+	if hasError {
+		// ERROR hold type → show APAR IDs from document
+		sysmodIDs := extractSysmodIDs(fullText)
+		for _, id := range sysmodIDs {
+			// Filter for APAR-like IDs (typically start with 'A' or similar pattern)
+			if strings.HasPrefix(id, "A") {
+				items = append(items, lsp.CompletionItem{
+					Label:         id,
+					Kind:          lsp.CompletionItemKindValue,
+					Detail:        "APAR ID",
+					Documentation: "APAR identifier from document (error reason)",
+				})
+			}
+		}
+	} else if hasSystem {
+		// SYSTEM hold type → show predefined system reason IDs from JSON
+		for _, value := range operandDef.Values {
+			items = append(items, lsp.CompletionItem{
+				Label:         value.Name,
+				Kind:          lsp.CompletionItemKindValue,
+				Detail:        "System Reason ID",
+				Documentation: value.Description,
+			})
+		}
+	} else if hasFixcat {
+		// FIXCAT hold type → show all SYSMOD IDs from document
+		sysmodIDs := extractSysmodIDs(fullText)
+		for _, id := range sysmodIDs {
+			items = append(items, lsp.CompletionItem{
+				Label:         id,
+				Kind:          lsp.CompletionItemKindValue,
+				Detail:        "SYSMOD ID",
+				Documentation: "SYSMOD identifier from document (fix category reason)",
+			})
+		}
+	} else if hasUser {
+		// USER hold type → no predefined suggestions (user-defined)
+		// Return empty list
+		return items
+	} else {
+		// No hold type specified yet - offer all possibilities as hints
+		// Show predefined values from JSON (system reason IDs)
+		for _, value := range operandDef.Values {
+			items = append(items, lsp.CompletionItem{
+				Label:         value.Name,
+				Kind:          lsp.CompletionItemKindValue,
+				Detail:        "System Reason ID",
+				Documentation: value.Description,
+			})
+		}
+	}
+
+	return items
+}
+
+// extractSysmodIDs scans the entire document for SYSMOD IDs (APAR, FUNCTION, USERMOD, etc.)
+func extractSysmodIDs(text string) []string {
+	var ids []string
+	seen := make(map[string]bool)
+
+	lines := strings.Split(text, "\n")
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+
+		// Skip empty lines and comments
+		if trimmed == "" || strings.HasPrefix(trimmed, "/*") || strings.HasPrefix(trimmed, "*") {
+			continue
+		}
+
+		// Look for MCS statements with IDs: ++APAR(ID), ++FUNCTION(ID), ++USERMOD(ID)
+		if strings.HasPrefix(trimmed, "++") {
+			// Find opening parenthesis
+			if idx := strings.Index(trimmed, "("); idx != -1 {
+				// Find matching closing parenthesis
+				parenCount := 1
+				paramStart := idx + 1
+				paramEnd := paramStart
+
+				for paramEnd < len(trimmed) && parenCount > 0 {
+					if trimmed[paramEnd] == '(' {
+						parenCount++
+					} else if trimmed[paramEnd] == ')' {
+						parenCount--
+					}
+					if parenCount > 0 {
+						paramEnd++
+					}
+				}
+
+				if paramEnd < len(trimmed) && paramEnd > paramStart {
+					id := strings.TrimSpace(trimmed[paramStart:paramEnd])
+					if id != "" && !seen[id] {
+						ids = append(ids, id)
+						seen[id] = true
+					}
+				}
+			}
+		}
+	}
+
+	return ids
 }
 
 // getMCSCompletions returns MCS statement completions
-func (p *Provider) getMCSCompletions() []lsp.CompletionItem {
-	return []lsp.CompletionItem{
-		{
-			Label:         "++APAR",
-			Kind:          lsp.CompletionItemKindKeyword,
-			Detail:        "Service SYSMOD",
-			Documentation: "Identifies a temporary fix (APAR)",
-			InsertText:    "++APAR($1)",
-		},
-		{
-			Label:         "++ASSIGN",
-			Kind:          lsp.CompletionItemKindKeyword,
-			Detail:        "Source ID Assignment",
-			Documentation: "Assigns source IDs to SYSMODs",
-			InsertText:    "++ASSIGN SOURCEID($1) TO($2)",
-		},
-		{
-			Label:         "++DELETE",
-			Kind:          lsp.CompletionItemKindKeyword,
-			Detail:        "Delete Load Module",
-			Documentation: "Deletes load modules from target libraries",
-			InsertText:    "++DELETE($1) SYSLIB($2)",
-		},
-		{
-			Label:         "++FEATURE",
-			Kind:          lsp.CompletionItemKindKeyword,
-			Detail:        "SYSMOD Set Description",
-			Documentation: "Describes a set of SYSMODs as a feature",
-			InsertText:    "++FEATURE($1) DESCRIPTION($2)",
-		},
-		{
-			Label:         "++FUNCTION",
-			Kind:          lsp.CompletionItemKindKeyword,
-			Detail:        "Function SYSMOD",
-			Documentation: "Identifies a base or dependent function SYSMOD",
-			InsertText:    "++FUNCTION($1)",
-		},
-		{
-			Label:         "++HOLD",
-			Kind:          lsp.CompletionItemKindKeyword,
-			Detail:        "Exception Status",
-			Documentation: "Places a SYSMOD in exception status",
-			InsertText:    "++HOLD($1) FMID($2) REASON($3)",
-		},
+func (p *Provider) getMCSCompletions(replaceRange *lsp.Range) []lsp.CompletionItem {
+	var items []lsp.CompletionItem
+
+	// Order statements for consistent display
+	order := []string{"++APAR", "++ASSIGN", "++DELETE", "++FEATURE", "++FUNCTION", "++HOLD", "++IF"}
+
+	for _, name := range order {
+		stmt, ok := p.statements[name]
+		if !ok {
+			continue
+		}
+
+		// Create insert text with parameter placeholder if needed
+		// Use snippet format to position cursor inside parentheses
+		insertText := name
+		if stmt.Parameter != "" {
+			insertText += "($1)" // $1 = cursor position inside parentheses
+		}
+
+		item := lsp.CompletionItem{
+			Label:            name,
+			Kind:             lsp.CompletionItemKindKeyword,
+			Detail:           stmt.Type,
+			Documentation:    stmt.Description,
+			InsertTextFormat: lsp.InsertTextFormatSnippet, // Enable snippet support
+		}
+
+		// If we have a range to replace (typed + characters), use TextEdit
+		if replaceRange != nil {
+			item.TextEdit = &lsp.TextEdit{
+				Range:   *replaceRange,
+				NewText: insertText,
+			}
+		} else {
+			item.InsertText = insertText
+		}
+
+		items = append(items, item)
 	}
+
+	return items
 }
 
-// getOperandCompletions returns operand completions based on context
-func (p *Provider) getOperandCompletions(textBefore string) []lsp.CompletionItem {
-	// Determine which MCS statement we're in
-	if strings.Contains(textBefore, "++APAR") {
-		return p.getAparOperands()
-	} else if strings.Contains(textBefore, "++ASSIGN") {
-		return p.getAssignOperands()
-	} else if strings.Contains(textBefore, "++DELETE") {
-		return p.getDeleteOperands()
-	} else if strings.Contains(textBefore, "++FEATURE") {
-		return p.getFeatureOperands()
-	} else if strings.Contains(textBefore, "++FUNCTION") {
-		return p.getFunctionOperands()
-	} else if strings.Contains(textBefore, "++HOLD") {
-		return p.getHoldOperands()
+// getOperandCompletions returns operand completions based on statement and context
+func (p *Provider) getOperandCompletions(stmt MCSStatement, textBefore string, line int, character int) []lsp.CompletionItem {
+	var items []lsp.CompletionItem
+
+	// Parse which operands are already present
+	presentOperands := p.parseOperands(textBefore)
+
+	// Debug: log which operands were found
+	// DEBUG: Uncomment to see what operands are detected
+	/*
+	var opNames []string
+	for op := range presentOperands {
+		opNames = append(opNames, op)
+	}
+	logger.Debug("Present operands in %q: %v", textBefore, opNames)
+	*/
+
+	// Check if we're typing an operand name (for TextEdit range calculation)
+	// Find the word being typed at cursor position
+	wordStart := character
+	if len(textBefore) > 0 {
+		for wordStart > 0 && isOperandChar(textBefore[wordStart-1]) {
+			wordStart--
+		}
 	}
 
-	return nil
+	// Calculate range to replace if we're in the middle of typing
+	var replaceRange *lsp.Range
+	if wordStart < character {
+		replaceRange = &lsp.Range{
+			Start: lsp.Position{Line: line, Character: wordStart},
+			End:   lsp.Position{Line: line, Character: character},
+		}
+	}
+
+	for _, operand := range stmt.Operands {
+		// Get operand names (may have aliases like "DESCRIPTION|DESC")
+		names := strings.Split(operand.Name, "|")
+		primaryName := names[0]
+
+		// Skip if operand already present (avoid duplicates)
+		if _, exists := presentOperands[primaryName]; exists {
+			continue
+		}
+
+		// Check if operand has dependency (e.g., RFDSNPFX depends on FILES)
+		if operand.AllowedIf != "" {
+			// Check if dependency is present
+			if _, exists := presentOperands[operand.AllowedIf]; !exists {
+				continue // Skip this operand as its dependency is not met
+			}
+		}
+
+		// Create insert text with parameter placeholder if needed
+		// Use snippet format to position cursor inside parentheses
+		insertText := primaryName
+		if operand.Parameter != "" {
+			insertText += "($1)" // $1 = first tab stop (cursor position)
+		}
+
+		// Create documentation with type and length info
+		doc := operand.Description
+		if operand.Type != "" {
+			doc = "Type: " + operand.Type + "\n\n" + doc
+		}
+
+		item := lsp.CompletionItem{
+			Label:            primaryName,
+			Kind:             lsp.CompletionItemKindProperty,
+			Detail:           operand.Parameter,
+			Documentation:    doc,
+			InsertTextFormat: lsp.InsertTextFormatSnippet, // Enable snippet support
+		}
+
+		// Use TextEdit if we're replacing typed characters
+		if replaceRange != nil {
+			item.TextEdit = &lsp.TextEdit{
+				Range:   *replaceRange,
+				NewText: insertText,
+			}
+		} else {
+			item.InsertText = insertText
+		}
+
+		items = append(items, item)
+
+		// Add aliases as separate items
+		for i := 1; i < len(names); i++ {
+			aliasName := names[i]
+			aliasInsertText := aliasName
+			if operand.Parameter != "" {
+				aliasInsertText += "($1)" // Cursor inside parentheses
+			}
+
+			aliasItem := lsp.CompletionItem{
+				Label:            aliasName,
+				Kind:             lsp.CompletionItemKindProperty,
+				Detail:           "alias for " + primaryName,
+				Documentation:    doc,
+				InsertTextFormat: lsp.InsertTextFormatSnippet, // Enable snippet support
+			}
+
+			if replaceRange != nil {
+				aliasItem.TextEdit = &lsp.TextEdit{
+					Range:   *replaceRange,
+					NewText: aliasInsertText,
+				}
+			} else {
+				aliasItem.InsertText = aliasInsertText
+			}
+
+			items = append(items, aliasItem)
+		}
+	}
+
+	return items
 }
 
-func (p *Provider) getAparOperands() []lsp.CompletionItem {
-	return []lsp.CompletionItem{
-		{Label: "DESCRIPTION", Kind: lsp.CompletionItemKindProperty, InsertText: "DESCRIPTION($1)"},
-		{Label: "FILES", Kind: lsp.CompletionItemKindProperty, InsertText: "FILES($1)"},
-		{Label: "RFDSNPFX", Kind: lsp.CompletionItemKindProperty, InsertText: "RFDSNPFX($1)"},
-		{Label: "REWORK", Kind: lsp.CompletionItemKindProperty, InsertText: "REWORK($1)"},
-	}
+// isOperandChar checks if a character is valid in an operand name
+func isOperandChar(ch byte) bool {
+	return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')
 }
 
-func (p *Provider) getAssignOperands() []lsp.CompletionItem {
-	return []lsp.CompletionItem{
-		{Label: "SOURCEID", Kind: lsp.CompletionItemKindProperty, InsertText: "SOURCEID($1)"},
-		{Label: "TO", Kind: lsp.CompletionItemKindProperty, InsertText: "TO($1)"},
+// parseOperands extracts operand names from statement text
+// Returns a map of operand names that are present or being typed
+func (p *Provider) parseOperands(text string) map[string]bool {
+	operands := make(map[string]bool)
+
+	// Remove statement name and its parameter (if present)
+	// Pattern: ++STATEMENTNAME or ++STATEMENTNAME(param)
+	text = strings.TrimSpace(text)
+	if idx := strings.Index(text, "++"); idx >= 0 {
+		text = text[idx+2:]
+
+		// Skip the statement name itself (e.g., ASSIGN, APAR, etc.)
+		i := 0
+		for i < len(text) && (isOperandChar(text[i])) {
+			i++
+		}
+
+		// If we found a '(' immediately after the statement name,
+		// this is the statement's parameter, skip it
+		if i < len(text) && text[i] == '(' {
+			parenCount := 1
+			i++ // skip opening (
+			for i < len(text) && parenCount > 0 {
+				if text[i] == '(' {
+					parenCount++
+				} else if text[i] == ')' {
+					parenCount--
+				}
+				i++
+			}
+		}
+
+		text = text[i:]
 	}
+
+	// Use a more sophisticated parser that tracks operand name + optional parameter
+	// Pattern: OPERAND_NAME or OPERAND_NAME(...)
+	i := 0
+	for i < len(text) {
+		// Skip whitespace
+		for i < len(text) && (text[i] == ' ' || text[i] == '\t' || text[i] == '\n' || text[i] == '\r') {
+			i++
+		}
+		if i >= len(text) {
+			break
+		}
+
+		// Read operand name (uppercase letters/numbers)
+		nameStart := i
+		for i < len(text) && isOperandChar(text[i]) {
+			i++
+		}
+
+		if i > nameStart {
+			operandName := text[nameStart:i]
+			// Only add if it looks like an operand (all uppercase) AND is not a statement name
+			if isOperandName(operandName) && !p.isStatementName(operandName) {
+				operands[operandName] = true
+			}
+
+			// Skip optional parameter in parentheses
+			if i < len(text) && text[i] == '(' {
+				parenCount := 1
+				i++ // skip opening (
+				for i < len(text) && parenCount > 0 {
+					if text[i] == '(' {
+						parenCount++
+					} else if text[i] == ')' {
+						parenCount--
+					}
+					i++
+				}
+			}
+		} else {
+			// Not an operand character, skip it
+			i++
+		}
+	}
+
+	return operands
 }
 
-func (p *Provider) getDeleteOperands() []lsp.CompletionItem {
-	return []lsp.CompletionItem{
-		{Label: "SYSLIB", Kind: lsp.CompletionItemKindProperty, InsertText: "SYSLIB($1)"},
-		{Label: "ALIAS", Kind: lsp.CompletionItemKindProperty, InsertText: "ALIAS($1)"},
+// tokenize splits text into tokens, respecting parentheses
+func tokenize(text string) []string {
+	var tokens []string
+	var current strings.Builder
+	inParens := 0
+
+	for i := 0; i < len(text); i++ {
+		ch := text[i]
+
+		switch ch {
+		case '(':
+			if current.Len() > 0 {
+				tokens = append(tokens, current.String())
+				current.Reset()
+			}
+			inParens++
+		case ')':
+			inParens--
+		case ' ', '\t', '\n', '\r':
+			if inParens == 0 && current.Len() > 0 {
+				tokens = append(tokens, current.String())
+				current.Reset()
+			}
+		default:
+			if inParens == 0 {
+				current.WriteByte(ch)
+			}
+		}
 	}
+
+	if current.Len() > 0 {
+		tokens = append(tokens, current.String())
+	}
+
+	return tokens
 }
 
-func (p *Provider) getFeatureOperands() []lsp.CompletionItem {
-	return []lsp.CompletionItem{
-		{Label: "DESCRIPTION", Kind: lsp.CompletionItemKindProperty, InsertText: "DESCRIPTION($1)"},
-		{Label: "FMID", Kind: lsp.CompletionItemKindProperty, InsertText: "FMID($1)"},
-		{Label: "PRODUCT", Kind: lsp.CompletionItemKindProperty, InsertText: "PRODUCT($1)"},
-		{Label: "REWORK", Kind: lsp.CompletionItemKindProperty, InsertText: "REWORK($1)"},
+// isOperandName checks if a token looks like an operand name
+// isOperandName checks if a token is a valid operand name
+// It must be uppercase AND not a statement name
+func isOperandName(token string) bool {
+	if len(token) == 0 {
+		return false
 	}
+
+	// Operand names are typically all uppercase letters
+	for _, ch := range token {
+		if !((ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')) {
+			return false
+		}
+	}
+
+	return true
 }
 
-func (p *Provider) getFunctionOperands() []lsp.CompletionItem {
-	return []lsp.CompletionItem{
-		{Label: "DESCRIPTION", Kind: lsp.CompletionItemKindProperty, InsertText: "DESCRIPTION($1)"},
-		{Label: "FESN", Kind: lsp.CompletionItemKindProperty, InsertText: "FESN($1)"},
-		{Label: "FILES", Kind: lsp.CompletionItemKindProperty, InsertText: "FILES($1)"},
-		{Label: "RFDSNPFX", Kind: lsp.CompletionItemKindProperty, InsertText: "RFDSNPFX($1)"},
-		{Label: "REWORK", Kind: lsp.CompletionItemKindProperty, InsertText: "REWORK($1)"},
-	}
-}
-
-func (p *Provider) getHoldOperands() []lsp.CompletionItem {
-	return []lsp.CompletionItem{
-		{Label: "FMID", Kind: lsp.CompletionItemKindProperty, InsertText: "FMID($1)"},
-		{Label: "REASON", Kind: lsp.CompletionItemKindProperty, InsertText: "REASON($1)"},
-		{Label: "ERROR", Kind: lsp.CompletionItemKindProperty, InsertText: "ERROR"},
-		{Label: "FIXCAT", Kind: lsp.CompletionItemKindProperty, InsertText: "FIXCAT"},
-		{Label: "SYSTEM", Kind: lsp.CompletionItemKindProperty, InsertText: "SYSTEM"},
-		{Label: "USER", Kind: lsp.CompletionItemKindProperty, InsertText: "USER"},
-		{Label: "CATEGORY", Kind: lsp.CompletionItemKindProperty, InsertText: "CATEGORY($1)"},
-		{Label: "RESOLVER", Kind: lsp.CompletionItemKindProperty, InsertText: "RESOLVER($1)"},
-		{Label: "CLASS", Kind: lsp.CompletionItemKindProperty, InsertText: "CLASS($1)"},
-		{Label: "DATE", Kind: lsp.CompletionItemKindProperty, InsertText: "DATE($1)"},
-		{Label: "COMMENT", Kind: lsp.CompletionItemKindProperty, InsertText: "COMMENT($1)"},
-	}
+// isStatementName checks if a token is a known MCS statement name
+func (p *Provider) isStatementName(token string) bool {
+	_, exists := p.statements["++"+token]
+	return exists
 }

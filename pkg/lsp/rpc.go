@@ -8,18 +8,15 @@ import (
 // Request represents a JSON-RPC request
 type Request struct {
 	JSONRPC string          `json:"jsonrpc"`
-	ID      interface{}     `json:"id,omitempty"`
+	ID      interface{}     `json:"id"`
 	Method  string          `json:"method"`
 	Params  json.RawMessage `json:"params,omitempty"`
 }
 
 // Response represents a JSON-RPC response
-type Response struct {
-	JSONRPC string      `json:"jsonrpc"`
-	ID      interface{} `json:"id,omitempty"`
-	Result  interface{} `json:"result,omitempty"`
-	Error   *Error      `json:"error,omitempty"`
-}
+// Note: We use map[string]interface{} directly instead of structs
+// to ensure all fields (especially "id") are always included in JSON output
+type Response map[string]interface{}
 
 // Notification represents a JSON-RPC notification
 type Notification struct {
@@ -45,22 +42,22 @@ const (
 )
 
 // NewResponse creates a new successful response
-func NewResponse(id interface{}, result interface{}) *Response {
-	return &Response{
-		JSONRPC: "2.0",
-		ID:      id,
-		Result:  result,
+func NewResponse(id interface{}, result interface{}) Response {
+	return Response{
+		"jsonrpc": "2.0",
+		"id":      id,
+		"result":  result,
 	}
 }
 
 // NewErrorResponse creates a new error response
-func NewErrorResponse(id interface{}, code int, message string) *Response {
-	return &Response{
-		JSONRPC: "2.0",
-		ID:      id,
-		Error: &Error{
-			Code:    code,
-			Message: message,
+func NewErrorResponse(id interface{}, code int, message string) Response {
+	return Response{
+		"jsonrpc": "2.0",
+		"id":      id,
+		"error": map[string]interface{}{
+			"code":    code,
+			"message": message,
 		},
 	}
 }

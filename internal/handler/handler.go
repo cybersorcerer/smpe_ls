@@ -28,12 +28,24 @@ func New(version string, dataPath string) (*Handler, error) {
 		return nil, err
 	}
 
+	// Create completion provider with access to MCS data
+	completionProvider, err := completion.NewProvider(dataPath)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create diagnostics provider with access to MCS data
+	diagnosticsProvider, err := diagnostics.NewProvider(dataPath)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Handler{
 		version:             version,
 		documents:           make(map[string]string),
-		completionProvider:  completion.NewProvider(),
+		completionProvider:  completionProvider,
 		hoverProvider:       hoverProvider,
-		diagnosticsProvider: diagnostics.NewProvider(),
+		diagnosticsProvider: diagnosticsProvider,
 	}, nil
 }
 
@@ -50,7 +62,7 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 		Capabilities: lsp.ServerCapabilities{
 			TextDocumentSync: lsp.TextDocumentSyncFull,
 			CompletionProvider: &lsp.CompletionOptions{
-				TriggerCharacters: []string{"+", "("},
+				TriggerCharacters: []string{"+", "(", " "},
 			},
 			HoverProvider: true,
 		},

@@ -246,11 +246,120 @@
             },
             {
                 "name": "REASON",
-                "parameter": "RFDSNPFX",
+                "parameter": "REASON_ID",
                 "type": "string",
-                "length": 8,
-                "allowed_if": "FILES",
-                "description": "Identifies to SMP/E the prefix used in the relative file data set names for this SYSMOD.SMP/E uses this prefix when allocating data set names for the SYSMOD's relative files during RECEIVEprocessing. The prefix can be from 1 to 8 alphanumeric or national ($, #, @) characters or a dash (-). This operand can be specified only if the FILES operand is also specified."
+                "length": 7,
+                "description": "A 1 to 7 character string used to help users identify the reason why the SYSMOD is being put into exception SYSMOD status. The reason IDs that can be specified depend on the type of hold. An error reason ID is the APAR number that caused the SYSMOD to be placed in exception status. A system reason ID identifies some special processing the SYSMOD requires. A user reason ID is defined by the user. A Fix Category reason ID is the SYSMOD ID for the APAR that caused the SYSMOD to be placed into exception status. The APAR reason ID is associated to one or more categories of fixes.",
+				"values": [
+                    {
+                        "name": "ACTION",
+                        "description": "The SYSMOD needs special handling before or during APPLY processing, ACCEPT processing, or both."
+                    },
+                    {
+                        "name": "AO",
+                        "description": "The SYSMOD may require action to change automated operations procedures and associated data sets and user exits in products or in customer applications. The PTF cover letter describes any changes (such as to operator message text, operator command syntax, or expected actions for operator messages and commands) that can affect automation routines."
+                    },
+                    {
+                        "name": "DB2BIND",
+                        "description": "A DB2 application REBIND is required for the SYSMOD to become effective."
+                    },
+                    {
+                        "name": "DDDEF",
+                        "description": "Data set changes or additions are required."
+                    },
+                    {
+                        "name": "DELETE",
+                        "description": "The SYSMOD contains a ++DELETE MCS, which deletes a load module from the system."
+                    },
+                    {
+                        "name": "DEP",
+                        "description": "The SYSMOD has a software dependency."
+                    },
+                    {
+                        "name": "DOC",
+                        "description": "The SYSMOD has a documentation change that should be read before the SYSMOD is installed."
+                    },
+                    {
+                        "name": "DOWNLD",
+                        "description": "Code that is shipped with maintenance that needs to be downloaded."
+                    },
+                    {
+                        "name": "DYNACT",
+                        "description": "The changes supplied by the SYSMOD may be activated dynamically without requiring an IPL. The HOLD statement describes the instructions required for dynamic activation. If those instructions are not followed, then an IPL is required for the SYSMOD to take effect."
+                    },
+                    {
+                        "name": "EC",
+                        "description": "The SYSMOD needs a related engineering change."
+                    },
+                    {
+                        "name": "ENH",
+                        "description": "The SYSMOD contains an enhancement, new option or function. The HOLD statement provides information to the user regarding the implementation and use of the enhancement."
+                    },
+                    {
+                        "name": "EXIT",
+                        "description": "The SYSMOD contains changes that may affect a user exit. For example, the interface for an exit may be changed, an exit may need to be reassembled, or a sample exit may be changed."
+                    },
+                    {
+                        "name": "EXRF",
+                        "description": "The SYSMOD must be installed in both the active and the alternative Extended Recovery Facility (XRF) systems at the same time to maintain system compatibility. (If you are not running XRF, you should bypass this reason ID.)"
+                    },
+                    {
+                        "name": "FULLGEN",
+                        "description": "The SYSMOD needs a complete system or subsystem generation to take effect."
+                    },
+                    {
+                        "name": "IOGEN",
+                        "description": "The SYSMOD needs a system or subsystem I/O generation to take effect."
+                    },
+                    {
+                        "name": "MSGSKEL",
+                        "description": "This SYSMOD contains message changes that must be compiled for translated versions of the message changes to become operational on extended TSO consoles. If you want to use translated versions of the messages, you must run the message compiler once for the library containing the English message outlines, and once for each additional language you want to be available on your system."
+                    },
+                    {
+                        "name": "MULTSYS",
+                        "description": "Identifies fixes that need to be applied to multiple systems, in one of three cases: preconditioning, coexistence, or exploitation."
+                    },
+                    {
+                        "name": "RESTART",
+                        "description": "To become effective, the SYSMOD requires a special subsystem restart operation. The HOLD statement contains information regarding the required restart actions."
+                    }
+                ]
+            },
+			{
+                "name": "RESOLVER",
+                "parameter": "SYSMOD_ID",
+                "type": "string",
+                "length": 7,
+                "description": "Identifies the SYSMOD that resolves the held SYSMOD. More specifically, the resolving SYSMOD supersedes the reason ID APAR that caused the SYSMOD to be held."
+            }
+        ]
+    },
+	{
+        "name": "++IF",
+        "parameter": "",
+        "type": "MCS",
+        "description": "The ++IF MCS specifies requisites that must be installed with a SYSMOD if a certain function is installed. If the specified function is installed in the zone that SMP/E is trying to install this SYSMOD into, the requisite must also be installed in that zone; otherwise SMP/E does not install the SYSMOD containing the ++IF MCS. If the specified function is not yet installed in the zone where SMP/E is trying to install this SYSMOD, SMP/E saves the information from the ++IF MCS in case the specified function is installed later.",
+        "operands": [
+		   {
+               "name": "FMID",
+               "parameter": "SYSMOD_ID",
+               "type": "string",
+               "length": 7,
+               "description": "Specifies the function that is to be checked to determine whether it is installed in one of the following:\n - The target libraries (for APPLY processing)\n - The distribution libraries (for ACCEPT processing)\n\nThis operand is required. It is not satisfied by superseded FMIDs."
+           },
+           {
+                "name": "REQ",
+                "parameter": "SYSMOD_ID",
+                "type": "string",
+                "length": 7,
+                "description": "Specifies the SYSMODs that are needed if the function SYSMOD specified on the FMID operand of the ++IF MCS is installed. This operand is required."
+            },
+            {
+                "name": "THEN",
+                "parameter": "",
+                "type": "string",
+                "length": 7,
+                "description": "Specifies that the requisite for the ++IF MCS follows."
             }
         ]
     }

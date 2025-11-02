@@ -64,13 +64,21 @@ type TextDocumentContentChangeEvent struct {
 	Text        string `json:"text"`
 }
 
+// TextEdit represents a text edit
+type TextEdit struct {
+	Range   Range  `json:"range"`
+	NewText string `json:"newText"`
+}
+
 // CompletionItem represents a completion item
 type CompletionItem struct {
-	Label         string `json:"label"`
-	Kind          int    `json:"kind,omitempty"`
-	Detail        string `json:"detail,omitempty"`
-	Documentation string `json:"documentation,omitempty"`
-	InsertText    string `json:"insertText,omitempty"`
+	Label            string    `json:"label"`
+	Kind             int       `json:"kind,omitempty"`
+	Detail           string    `json:"detail,omitempty"`
+	Documentation    string    `json:"documentation,omitempty"`
+	InsertText       string    `json:"insertText,omitempty"`
+	InsertTextFormat int       `json:"insertTextFormat,omitempty"`
+	TextEdit         *TextEdit `json:"textEdit,omitempty"`
 }
 
 // CompletionItemKind values
@@ -90,6 +98,12 @@ const (
 	CompletionItemKindEnum        = 13
 	CompletionItemKindKeyword     = 14
 	CompletionItemKindSnippet     = 15
+)
+
+// InsertTextFormat values
+const (
+	InsertTextFormatPlainText = 1
+	InsertTextFormatSnippet   = 2
 )
 
 // Hover represents hover information

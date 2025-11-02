@@ -15,7 +15,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Get configuration
     const config = vscode.workspace.getConfiguration('smpe');
     const serverPath = config.get<string>('serverPath') || 'smpe_ls';
-    const debug = config.get<boolean>('debug') || false;
+    const debug = config.get<boolean>('debug') ?? true; // Default to true during development
 
     // Determine the full path to the server
     let executable = serverPath;
@@ -31,9 +31,12 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     // Server options
+    // Server will use default data path: ~/.local/share/smpe_ls/smpe.json
+    const args = debug ? ['--debug'] : [];
+
     const serverExecutable: Executable = {
         command: executable,
-        args: debug ? ['--debug'] : [],
+        args: args,
         options: {
             env: process.env
         }

@@ -39,6 +39,8 @@ build/
 
 # Others
 .claude/
+docs/
 syntax_diagrams/
 DEVELOPMENT_PLAN.md
+
 

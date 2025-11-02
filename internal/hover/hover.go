@@ -22,11 +22,11 @@ type MCSStatement struct {
 
 // Operand represents an operand of a MCS statement
 type Operand struct {
-	Name        string   `json:"name"`
-	Parameter   string   `json:"parameter"`
-	Type        string   `json:"type"`
-	Length      string   `json:"length,omitempty"`
-	Description string   `json:"description"`
+	Name          string   `json:"name"`
+	Parameter     string   `json:"parameter"`
+	Type          string   `json:"type"`
+	Length        json.Number `json:"length,omitempty"`
+	Description   string   `json:"description"`
 	AllowedValues []string `json:"allowedValues,omitempty"`
 }
 
@@ -194,8 +194,8 @@ func (p *Provider) createOperandHover(operand Operand) *lsp.Hover {
 		content += fmt.Sprintf("**Type:** %s\n\n", operand.Type)
 	}
 
-	if operand.Length != "" {
-		content += fmt.Sprintf("**Length:** %s\n\n", operand.Length)
+	if operand.Length.String() != "" {
+		content += fmt.Sprintf("**Length:** %s\n\n", operand.Length.String())
 	}
 
 	if len(operand.AllowedValues) > 0 {
