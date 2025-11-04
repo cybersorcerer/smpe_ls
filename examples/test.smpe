@@ -149,7 +149,7 @@
     CATEGORY(SECURITY)
     CLASS(SECINT)
     .
-++HOLD(U00001) ERROR REASON()
+++HOLD(U00001) ERROR REASON(ID) .
 /* HOLD with SYSTEM */
 ++HOLD(U34567)
     FMID(HDP1234)
@@ -188,6 +188,37 @@
     SOURCEID(PROD) /* Production source */
     TO(A99999) /* The critical fix */
     .
+
+++JAR(ABCTTT) DISTLIB(AABCBIN) SYSLIB(SABCBIN) RELFILE(2)
+  PARM(PATHMODE(0,6,4,4))
+  LINK('../TicTacToe.jar')
+  SYMLINK('../../../../../usr/lib/TicTacToe.jar')
+  SYMPATH('../../usr/lpp/abc/bin/TicTacToe.jar').
+
+/* Test ++JCLIN with inline JCL data - CORRECT */
+++JCLIN.
+//SMPMCS   JOB (ACCT),'INSTALL',CLASS=A,MSGCLASS=X
+//STEP1    EXEC PGM=IEWL
+//SYSLMOD  DD DSN=SYS1.LINKLIB,DISP=SHR
+//SYSLIN   DD *
+ INCLUDE SYSLIB(MODULE01)
+ ENTRY   MODULE01
+ NAME    MODULE01(R)
+/*
+
+/* Test ++JCLIN with RELFILE - external data */
+++JCLIN RELFILE(5).
+
+/************************************************/
+/* ++JCLIN Error Test Cases                     */
+/************************************************/
+
+/* ERROR: ++JCLIN without terminator */
+++JCLIN
+//JOB1 JOB
+
+/* ERROR: ++JCLIN with mutually exclusive operands */
+++JCLIN FROMDS(DSN(MY.DATA.SET) NUMBER(1)) RELFILE(2).
 
 /* Test various comment positions */
 ++FUNCTION /* Start */ (HDP9999) /* After name */

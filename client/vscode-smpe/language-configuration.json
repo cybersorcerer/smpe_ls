@@ -13,6 +13,7 @@
     ["(", ")"],
     ["'", "'"]
   ],
+  "wordPattern": "[A-Z0-9]+",
   "folding": {
     "markers": {
       "start": "^\\+\\+",

@@ -20,12 +20,13 @@ type MCSStatement struct {
 
 // Operand represents an operand definition
 type Operand struct {
-	Name        string `json:"name"`
-	Parameter   string `json:"parameter,omitempty"`
-	Type        string `json:"type,omitempty"`
-	Required    bool   `json:"required,omitempty"`
-	AllowedIf   string `json:"allowed_if,omitempty"`
-	Description string `json:"description"`
+	Name              string `json:"name"`
+	Parameter         string `json:"parameter,omitempty"`
+	Type              string `json:"type,omitempty"`
+	Required          bool   `json:"required,omitempty"`
+	AllowedIf         string `json:"allowed_if,omitempty"`
+	MutuallyExclusive string `json:"mutually_exclusive,omitempty"`
+	Description       string `json:"description"`
 }
 
 // Provider provides diagnostics
@@ -77,16 +78,25 @@ func (p *Provider) Analyze(text string) []lsp.Diagnostic {
 			))
 		}
 
-		// Check for missing statement parameter
+		// Check for missing or malformed statement parameter
 		if stmt.StatementType != "" && stmt.StatementType != "++ASSIGN" {
 			stmtDef, ok := p.statements[stmt.StatementType]
-			if ok && stmtDef.Parameter != "" && stmt.Parameter == "" {
-				diagnostics = append(diagnostics, p.createDiagnostic(
-					stmt.StartLine, stmt.StartCol,
-					stmt.StartLine, stmt.StartCol+len(stmt.StatementType),
-					lsp.SeverityError,
-					"Missing required parameter: "+stmtDef.Parameter,
-				))
+			if ok && stmtDef.Parameter != "" {
+				if stmt.Parameter == "MALFORMED_MISSING_CLOSE_PAREN" {
+					diagnostics = append(diagnostics, p.createDiagnostic(
+						stmt.StartLine, stmt.StartCol,
+						stmt.StartLine, stmt.StartCol+len(stmt.StatementType),
+						lsp.SeverityError,
+						"Statement parameter has malformed syntax: missing closing parenthesis ')'",
+					))
+				} else if stmt.Parameter == "" {
+					diagnostics = append(diagnostics, p.createDiagnostic(
+						stmt.StartLine, stmt.StartCol,
+						stmt.StartLine, stmt.StartCol+len(stmt.StatementType),
+						lsp.SeverityError,
+						"Missing required parameter: "+stmtDef.Parameter,
+					))
+				}
 			}
 		}
 
@@ -145,6 +155,33 @@ func (p *Provider) findAllStatements(text string) []StatementInfo {
 			stmt := p.parseStatement(lines, i)
 			statements = append(statements, stmt)
 			i = stmt.StartLine + 1 // Move past this statement
+
+			// Special handling for ++JCLIN with inline data:
+			// If ++JCLIN has NO FROMDS/RELFILE/TXLIB operands, then inline JCLIN data follows
+			// (even with terminator '.'), and continues until next ++ statement
+			if stmt.StatementType == "++JCLIN" {
+				// Check if this is inline JCLIN (no FROMDS, RELFILE, or TXLIB operands)
+				hasExternalData := false
+				for operandName := range stmt.Operands {
+					if operandName == "FROMDS" || operandName == "RELFILE" || operandName == "TXLIB" {
+						hasExternalData = true
+						break
+					}
+				}
+
+				if !hasExternalData {
+					// This is inline JCLIN - skip all lines until we find the next ++ statement or EOF
+					// Inline JCLIN data must not contain lines starting with ++
+					for i < len(lines) {
+						nextLine := strings.TrimSpace(lines[i])
+						if strings.HasPrefix(nextLine, "++") {
+							break // Found next MCS statement
+						}
+						i++
+					}
+					continue
+				}
+			}
 
 			// Skip to next statement or end
 			for i < len(lines) {
@@ -248,15 +285,23 @@ func (p *Provider) parseStatement(lines []string, startLine int) StatementInfo {
 					}
 				}
 
-				if paramEnd <= len(cleanLine) {
+				// Check if parentheses are balanced
+				if parenCount > 0 {
+					// Missing closing parenthesis - mark as malformed
+					stmt.Parameter = "MALFORMED_MISSING_CLOSE_PAREN"
+				} else if paramEnd <= len(cleanLine) {
 					stmt.Parameter = strings.TrimSpace(cleanLine[paramStart:paramEnd])
 				}
 			}
 		}
 	}
 
-	// Parse operands from this line and subsequent lines
+	// Collect all lines belonging to this statement into one string
+	// This is needed to properly handle multi-line operand parameters
+	var statementLines []string
+	var lineNumbers []int // Track which source line each collected line came from
 	currentLine := startLine
+
 	for currentLine < len(lines) {
 		textLine := lines[currentLine]
 		trimmedLine := strings.TrimSpace(textLine)
@@ -267,16 +312,15 @@ func (p *Provider) parseStatement(lines []string, startLine int) StatementInfo {
 			continue
 		}
 
-		// If this is a new statement (and not the first line), stop parsing
+		// If this is a new statement (and not the first line), stop collecting
 		if currentLine > startLine && strings.HasPrefix(trimmedLine, "++") {
 			break
 		}
 
-		// Parse operands from this line FIRST
-		p.parseOperandsFromLine(trimmedLine, currentLine, &stmt)
+		statementLines = append(statementLines, trimmedLine)
+		lineNumbers = append(lineNumbers, currentLine)
 
-		// Check for terminator AFTER parsing operands
-		// Use removeComments to handle both inline and block comments correctly
+		// Check for terminator AFTER collecting the line
 		lineWithoutComments := removeComments(trimmedLine)
 		if strings.Contains(lineWithoutComments, ".") {
 			stmt.HasTerminator = true
@@ -286,10 +330,127 @@ func (p *Provider) parseStatement(lines []string, startLine int) StatementInfo {
 		currentLine++
 	}
 
+	// Parse operands from the complete statement text
+	// Join all lines with spaces to create a single text to parse
+	completeStatement := strings.Join(statementLines, " ")
+	p.parseOperandsFromText(completeStatement, lineNumbers, &stmt)
+
 	return stmt
 }
 
-// parseOperandsFromLine extracts operands from a single line
+// parseOperandsFromText extracts operands from the complete statement text
+// lineNumbers maps the position in statementLines to the actual source line number
+func (p *Provider) parseOperandsFromText(text string, lineNumbers []int, stmt *StatementInfo) {
+	// First, remove comments from the text
+	text = removeComments(text)
+
+	// Remove statement type and its parameter if present
+	if strings.HasPrefix(text, "++") {
+		// Skip the statement name
+		i := 2 // skip ++
+		for i < len(text) && isOperandChar(text[i]) {
+			i++
+		}
+
+		// Skip whitespace
+		for i < len(text) && (text[i] == ' ' || text[i] == '\t') {
+			i++
+		}
+
+		// If this statement has a parameter, skip past it
+		// We know it has a parameter if stmt.Parameter is not empty
+		if stmt.Parameter != "" && i < len(text) && text[i] == '(' {
+			// Find the matching closing parenthesis
+			parenCount := 1
+			i++ // skip opening (
+			for i < len(text) && parenCount > 0 {
+				if text[i] == '(' {
+					parenCount++
+				} else if text[i] == ')' {
+					parenCount--
+				}
+				i++
+			}
+		}
+
+		text = text[i:]
+	}
+
+	i := 0
+	for i < len(text) {
+		// Skip whitespace
+		for i < len(text) && (text[i] == ' ' || text[i] == '\t') {
+			i++
+		}
+		if i >= len(text) {
+			break
+		}
+
+		// Read operand name
+		nameStart := i
+		for i < len(text) && isOperandChar(text[i]) {
+			i++
+		}
+
+		if i > nameStart {
+			operandName := text[nameStart:i]
+
+			// Only process if it looks like an operand (uppercase)
+			// Also skip the statement type itself (e.g., "ASSIGN" in "++ASSIGN SOURCEID(...) TO(...)")
+			if isOperandName(operandName) && !strings.HasPrefix("++"+operandName, stmt.StatementType) {
+				operandValue := ""
+
+				// Skip whitespace after operand name to check for parameter
+				// This allows both TO(...) and TO (...) syntax
+				for i < len(text) && (text[i] == ' ' || text[i] == '\t') {
+					i++
+				}
+
+				// Check for parameter
+				if i < len(text) && text[i] == '(' {
+					parenCount := 1
+					i++ // skip opening (
+					paramStart := i
+					for i < len(text) && parenCount > 0 {
+						if text[i] == '(' {
+							parenCount++
+						} else if text[i] == ')' {
+							parenCount--
+						}
+						if parenCount > 0 {
+							i++
+						}
+					}
+
+					// Check if parentheses are balanced
+					if parenCount > 0 {
+						// Missing closing parenthesis - store as malformed operand
+						// The operand value will be everything from paramStart to end of text
+						operandValue = "MALFORMED_MISSING_CLOSE_PAREN"
+					} else {
+						operandValue = strings.TrimSpace(text[paramStart:i])
+						i++ // skip closing )
+					}
+
+					// Store operand only if it was followed by (...)
+					// This avoids treating IDs inside parameter lists as operands
+					// Use the first line number as the operand's line
+					operandLineNum := stmt.StartLine
+					if len(lineNumbers) > 0 {
+						operandLineNum = lineNumbers[0]
+					}
+					stmt.Operands[operandName] = operandValue
+					stmt.OperandLines[operandName] = operandLineNum
+				}
+			}
+		} else {
+			i++
+		}
+	}
+}
+
+// parseOperandsFromLine extracts operands from a single line (DEPRECATED - kept for reference)
+// Use parseOperandsFromText instead for proper multi-line parameter support
 func (p *Provider) parseOperandsFromLine(line string, lineNum int, stmt *StatementInfo) {
 	// First, remove comments from the line
 	text := removeComments(line)
@@ -432,15 +593,27 @@ func (p *Provider) validateOperands(stmt StatementInfo) []lsp.Diagnostic {
 		}
 	}
 
-	// Check for empty operand parameters
+	// Check for empty operand parameters and malformed parentheses
 	// If an operand has a parameter defined in smpe.json, it should not be empty
 	for _, op := range stmtDef.Operands {
 		names := strings.Split(op.Name, "|")
 		for _, name := range names {
 			if opValue, exists := stmt.Operands[name]; exists {
+				lineNum := stmt.OperandLines[name]
+
+				// Check for malformed parentheses (missing closing paren)
+				if opValue == "MALFORMED_MISSING_CLOSE_PAREN" {
+					diagnostics = append(diagnostics, p.createDiagnostic(
+						lineNum, 0,
+						lineNum, len(name),
+						lsp.SeverityError,
+						"Operand '"+name+"' has malformed parameter: missing closing parenthesis ')'",
+					))
+					continue // Don't check for empty parameter if it's malformed
+				}
+
 				// Check if this operand expects a parameter
 				if op.Parameter != "" && strings.TrimSpace(opValue) == "" {
-					lineNum := stmt.OperandLines[name]
 					diagnostics = append(diagnostics, p.createDiagnostic(
 						lineNum, 0,
 						lineNum, len(name),
@@ -514,6 +687,40 @@ func (p *Provider) validateOperands(stmt StatementInfo) []lsp.Diagnostic {
 		}
 	}
 
+	// Check for mutually exclusive operands
+	for _, op := range stmtDef.Operands {
+		names := strings.Split(op.Name, "|")
+		primaryName := names[0]
+
+		if op.MutuallyExclusive != "" {
+			// Check if this operand is present
+			operandPresent := false
+			var operandLine int
+			for _, name := range names {
+				if _, exists := stmt.Operands[name]; exists {
+					operandPresent = true
+					operandLine = stmt.OperandLines[name]
+					break
+				}
+			}
+
+			if operandPresent {
+				// Check if any mutually exclusive operand is also present
+				exclusiveOperands := strings.Split(op.MutuallyExclusive, "|")
+				for _, exclusive := range exclusiveOperands {
+					if _, exists := stmt.Operands[exclusive]; exists {
+						diagnostics = append(diagnostics, p.createDiagnostic(
+							operandLine, 0,
+							operandLine, len(primaryName),
+							lsp.SeverityError,
+							primaryName+" is mutually exclusive with "+exclusive,
+						))
+					}
+				}
+			}
+		}
+	}
+
 	// Check for duplicate operands
 	seen := make(map[string]int)
 	for opName, opLine := range stmt.OperandLines {
@@ -578,6 +785,25 @@ func getRequiredOperands(statementType string) []string {
 	case "++DELETE":
 		// From syntax_diagrams/delete.png: SYSLIB is required
 		return []string{"SYSLIB"}
+	case "++JAR":
+		// From syntax_diagrams/jar-add.png and jar-delete.png:
+		// No operands are strictly required beyond the name parameter
+		// DISTLIB and SYSLIB are important but not enforced as required here
+		// The statement itself requires either add mode (DISTLIB/SYSLIB) or delete mode (DELETE)
+		return []string{}
+	case "++JARUPD":
+		// From syntax_diagrams/jar-upd.png:
+		// No operands are strictly required beyond the name parameter
+		return []string{}
+	case "++VER":
+		// From syntax_diagrams/ver.png:
+		// No operands are strictly required, all are optional
+		return []string{}
+	case "++ZAP":
+		// From syntax_diagrams/zap.png:
+		// No operands are strictly required beyond the name parameter
+		// DALIAS and TALIAS are mutually exclusive
+		return []string{}
 	default:
 		// No required operands for other statements (based on current syntax diagrams)
 		return []string{}

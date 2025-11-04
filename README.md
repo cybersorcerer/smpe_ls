@@ -4,7 +4,30 @@ A Language Server Protocol (LSP) implementation for SMP/E (System Modification P
 
 ## Features
 
-Release 0.1.0 provides:
+### Release 0.2.0 (Current)
+
+**New Features:**
+
+- **Multiline Parameter Support** - Correctly parses operand parameters spanning multiple lines
+- **Malformed Parenthesis Detection** - Diagnostics for missing closing parentheses in statement and operand parameters
+- **Flexible Whitespace Handling** - Supports both `OPERAND(...)` and `OPERAND (...)` syntax
+- **++JCLIN Statement Support** - Full support including inline JCL data handling
+- **++JAR Statement Support** - JAR file management operations
+- **++JARUPD Statement Support** - JAR update operations
+- **++VER Statement Support** - Version specification
+- **++ZAP Statement Support** - Superzap operations
+- **Improved Completion** - mutually_exclusive operands now shown in completion (validated via diagnostics)
+
+**Enhanced Diagnostics:**
+
+- Detects unbalanced parentheses in statement parameters (e.g., `++APAR(A12345`)
+- Detects unbalanced parentheses in operand parameters (e.g., `TO(A12345, A23456`)
+- Validates mutually exclusive operands (e.g., ++JCLIN FROMDS vs RELFILE)
+- Properly handles ++JCLIN inline data (skips diagnostics for JCL lines)
+
+### Release 0.1.0
+
+Core features:
 
 - **Syntax Highlighting** - Color coding for MCS statements, operands, and comments (`/* */`)
 - **Context-Aware Code Completion**
@@ -23,7 +46,9 @@ Release 0.1.0 provides:
   - Unknown statement types
 - **Hover Information** - Documentation and parameter details for statements and operands
 
-## Supported MCS Statements in 0.1.0
+## Supported MCS Statements
+
+Version 0.2.0 supports 12 MCS statements:
 
 - `++APAR` - Service SYSMOD (temporary fix)
 - `++ASSIGN` - Source ID Assignment
@@ -32,6 +57,11 @@ Release 0.1.0 provides:
 - `++FUNCTION` - Function SYSMOD
 - `++HOLD` - Exception Status
 - `++IF` - Conditional Processing
+- `++JAR` - JAR file management (NEW in 0.2.0)
+- `++JARUPD` - JAR update operations (NEW in 0.2.0)
+- `++JCLIN` - Job Control Language Input with inline JCL support (NEW in 0.2.0)
+- `++VER` - Version specification (NEW in 0.2.0)
+- `++ZAP` - Superzap operations (NEW in 0.2.0)
 
 ## Installation
 
@@ -182,6 +212,29 @@ Uses a **Recursive Descent Parser** with no external dependencies:
 ++IF FMID(HBB7790)
     THEN
     REQ(FEATURE)
+    .
+
+/* NEW in 0.2.0: Multiline parameters */
+++ASSIGN
+    SOURCEID(PROD2025)
+    TO(
+        AB12345,
+        AB23456,
+        AB34567
+    )
+    .
+
+/* NEW in 0.2.0: ++JCLIN with inline JCL data */
+++JCLIN.
+//SMPMCS   JOB (ACCT),'INSTALL',CLASS=A,MSGCLASS=X
+//STEP1    EXEC PGM=IEWL
+//SYSLMOD  DD DSN=SYS1.LINKLIB,DISP=SHR
+/*
+
+/* NEW in 0.2.0: ++JAR statement */
+++JAR(MYJAR) DISTLIB(AJARLIB) SYSLIB(SJARLIB) RELFILE(2)
+    PARM(PATHMODE(0,6,4,4))
+    LINK('../myapp.jar')
     .
 ```
 

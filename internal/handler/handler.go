@@ -58,11 +58,17 @@ func (h *Handler) SetServer(server *lsp.Server) {
 func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult, error) {
 	logger.Info("Initializing LSP server")
 
+	// Add all uppercase letters as trigger characters so completion triggers automatically when typing operand names
+	triggerChars := []string{"+", "(", " "}
+	for ch := 'A'; ch <= 'Z'; ch++ {
+		triggerChars = append(triggerChars, string(ch))
+	}
+
 	return &lsp.InitializeResult{
 		Capabilities: lsp.ServerCapabilities{
 			TextDocumentSync: lsp.TextDocumentSyncFull,
 			CompletionProvider: &lsp.CompletionOptions{
-				TriggerCharacters: []string{"+", "(", " "},
+				TriggerCharacters: triggerChars,
 			},
 			HoverProvider: true,
 		},

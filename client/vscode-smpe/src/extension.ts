@@ -15,7 +15,11 @@ export function activate(context: vscode.ExtensionContext) {
     // Get configuration
     const config = vscode.workspace.getConfiguration('smpe');
     const serverPath = config.get<string>('serverPath') || 'smpe_ls';
-    const debug = config.get<boolean>('debug') ?? true; // Default to true during development
+
+    // FORCE debug mode to true during development
+    const debug = true;
+
+    console.log(`DEBUG: debug config value = ${config.get<boolean>('debug')}, FORCED final debug = ${debug}`);
 
     // Determine the full path to the server
     let executable = serverPath;

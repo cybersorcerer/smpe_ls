@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/cybersorcerer/smpe_ls/internal/logger"
 	"github.com/cybersorcerer/smpe_ls/internal/parser"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
@@ -20,13 +21,14 @@ type MCSStatement struct {
 
 // Operand represents an operand definition
 type Operand struct {
-	Name        string         `json:"name"`
-	Parameter   string         `json:"parameter,omitempty"`
-	Type        string         `json:"type,omitempty"`
-	Length      int            `json:"length,omitempty"`
-	Description string         `json:"description"`
-	AllowedIf   string         `json:"allowed_if,omitempty"`
-	Values      []AllowedValue `json:"values,omitempty"`
+	Name              string         `json:"name"`
+	Parameter         string         `json:"parameter,omitempty"`
+	Type              string         `json:"type,omitempty"`
+	Length            int            `json:"length,omitempty"`
+	Description       string         `json:"description"`
+	AllowedIf         string         `json:"allowed_if,omitempty"`
+	MutuallyExclusive string         `json:"mutually_exclusive,omitempty"`
+	Values            []AllowedValue `json:"values,omitempty"`
 }
 
 // AllowedValue represents an allowed value for an operand
@@ -77,6 +79,9 @@ func (p *Provider) GetCompletions(text string, line, character int) []lsp.Comple
 		return nil
 	}
 
+	// DEBUG: Log every completion request
+	logger.Debug("GetCompletions called - line: %d, character: %d, currentLine: %q", line, character, currentLine)
+
 	// Calculate absolute cursor position
 	cursorPos := 0
 	for i := 0; i < line; i++ {
@@ -86,6 +91,10 @@ func (p *Provider) GetCompletions(text string, line, character int) []lsp.Comple
 
 	// Get cursor context using statement boundary detection
 	ctx := parser.GetCursorContext(text, cursorPos)
+
+	// DEBUG: Log what parser detected
+	logger.Debug("Parser context - StatementType: %s, InParameter: %v, StatementText length: %d",
+		ctx.StatementType, ctx.InParameter, len(ctx.StatementText))
 
 	// Check if we're typing a MCS statement (at start or after +)
 	textBefore := currentLine[:character]
@@ -136,17 +145,14 @@ func (p *Provider) GetCompletions(text string, line, character int) []lsp.Comple
 		statementTextBefore = ctx.StatementText
 	}
 
-	// Additional safety: Use the current line text instead of full statement
-	// This handles the case where we're typing on a line that's part of an unterminated statement
-	// Example: "++IF FMID(MYFMID)" without "." - if cursor is after "++IF ", we should only see "++IF "
-	// not the full "++IF FMID(MYFMID)"
-	if len(currentLine) > 0 && character <= len(currentLine) {
-		lineTextBefore := currentLine[:character]
-		// If the current line starts with ++, use line text instead of statement text
-		if strings.HasPrefix(strings.TrimSpace(lineTextBefore), "++") {
-			statementTextBefore = lineTextBefore
-		}
-	}
+	// For multiline statements, we need to use the full statement text from the parser
+	// The parser already correctly handles statement boundaries across multiple lines
+	// We should trust the parser's StatementText which includes all lines up to the cursor
+
+	// DEBUG: Log what we're working with
+	logger.Debug("Multiline completion - StatementType: %s, StatementTextBefore length: %d, CursorOffset: %d",
+		ctx.StatementType, len(statementTextBefore), ctx.CursorOffset)
+	logger.Debug("StatementTextBefore: %q", statementTextBefore)
 
 	// If cursor is inside statement parameter parentheses, no completion
 	// BUT: if cursor is inside OPERAND parameter parentheses, offer value completion
@@ -170,7 +176,7 @@ func (p *Provider) GetCompletions(text string, line, character int) []lsp.Comple
 	// Debug: Log the statement text being analyzed
 	// logger.Debug("Statement text for completion: %q", statementTextBefore)
 
-	return p.getOperandCompletions(stmt, statementTextBefore, line, character)
+	return p.getOperandCompletions(stmt, statementTextBefore, currentLine, line, character)
 }
 
 // detectOperandParameter checks if cursor is inside an operand parameter
@@ -447,7 +453,7 @@ func (p *Provider) getMCSCompletions(replaceRange *lsp.Range) []lsp.CompletionIt
 	var items []lsp.CompletionItem
 
 	// Order statements for consistent display
-	order := []string{"++APAR", "++ASSIGN", "++DELETE", "++FEATURE", "++FUNCTION", "++HOLD", "++IF"}
+	order := []string{"++APAR", "++ASSIGN", "++DELETE", "++FEATURE", "++FUNCTION", "++HOLD", "++IF", "++JAR", "++JARUPD", "++VER", "++ZAP"}
 
 	for _, name := range order {
 		stmt, ok := p.statements[name]
@@ -487,28 +493,45 @@ func (p *Provider) getMCSCompletions(replaceRange *lsp.Range) []lsp.CompletionIt
 }
 
 // getOperandCompletions returns operand completions based on statement and context
-func (p *Provider) getOperandCompletions(stmt MCSStatement, textBefore string, line int, character int) []lsp.CompletionItem {
+func (p *Provider) getOperandCompletions(stmt MCSStatement, statementTextBefore string, currentLine string, line int, character int) []lsp.CompletionItem {
 	var items []lsp.CompletionItem
 
-	// Parse which operands are already present
-	presentOperands := p.parseOperands(textBefore)
+	// Find the start of the word being typed in the current line (for TextEdit range calculation)
+	currentLineText := currentLine[:character]
+	wordStart := character
+	for wordStart > 0 && isOperandChar(currentLineText[wordStart-1]) {
+		wordStart--
+	}
+
+	// Remove the incomplete word at cursor position from statement text before parsing
+	// This prevents treating "F" as a complete operand name when we're typing "FROMDS"
+	statementTextForParsing := statementTextBefore
+	if wordStart < character {
+		// Calculate how many characters to remove from the end of statementTextBefore
+		incompleteWordLen := character - wordStart
+		if len(statementTextForParsing) >= incompleteWordLen {
+			statementTextForParsing = statementTextForParsing[:len(statementTextForParsing)-incompleteWordLen]
+		}
+	}
+
+	// Parse which operands are already present (excluding the incomplete word at cursor)
+	presentOperands := p.parseOperands(statementTextForParsing)
 
 	// Debug: log which operands were found
 	// DEBUG: Uncomment to see what operands are detected
-	/*
 	var opNames []string
 	for op := range presentOperands {
 		opNames = append(opNames, op)
 	}
-	logger.Debug("Present operands in %q: %v", textBefore, opNames)
-	*/
+	logger.Debug("Present operands in %q: %v", statementTextForParsing, opNames)
 
-	// Check if we're typing an operand name (for TextEdit range calculation)
-	// Find the word being typed at cursor position
-	wordStart := character
-	if len(textBefore) > 0 {
-		for wordStart > 0 && isOperandChar(textBefore[wordStart-1]) {
-			wordStart--
+	// Special handling for ++JAR: context-sensitive completion based on DELETE operand
+	// From syntax_diagrams/jar-delete.png: If DELETE is present, only DISTLIB and VERSION are allowed
+	// From syntax_diagrams/jar-add.png: If DELETE is NOT present, all operands except DELETE are allowed
+	isJarDeleteMode := false
+	if stmt.Name == "++JAR" {
+		if _, hasDelete := presentOperands["DELETE"]; hasDelete {
+			isJarDeleteMode = true
 		}
 	}
 
@@ -531,6 +554,30 @@ func (p *Provider) getOperandCompletions(stmt MCSStatement, textBefore string, l
 			continue
 		}
 
+		// Context-sensitive filtering for ++JAR based on DELETE mode
+		if stmt.Name == "++JAR" {
+			if isJarDeleteMode {
+				// DELETE mode: only DISTLIB and VERSION allowed (DELETE already present)
+				if primaryName != "DISTLIB" && primaryName != "VERSION" {
+					continue
+				}
+			} else {
+				// CREATE mode: check if any non-DELETE operands are present
+				hasNonDeleteOperands := false
+				for op := range presentOperands {
+					if op != "DELETE" {
+						hasNonDeleteOperands = true
+						break
+					}
+				}
+
+				// If non-DELETE operands are present, don't offer DELETE anymore
+				if hasNonDeleteOperands && primaryName == "DELETE" {
+					continue
+				}
+			}
+		}
+
 		// Check if operand has dependency (e.g., RFDSNPFX depends on FILES)
 		if operand.AllowedIf != "" {
 			// Check if dependency is present
@@ -538,6 +585,10 @@ func (p *Provider) getOperandCompletions(stmt MCSStatement, textBefore string, l
 				continue // Skip this operand as its dependency is not met
 			}
 		}
+
+		// Note: mutually_exclusive operands are NOT filtered from completion
+		// They should be offered as suggestions, and diagnostics will flag the error if used incorrectly
+		// This allows users to see all available options and make informed choices
 
 		// Create insert text with parameter placeholder if needed
 		// Use snippet format to position cursor inside parentheses
@@ -664,8 +715,9 @@ func (p *Provider) parseOperands(text string) map[string]bool {
 
 		if i > nameStart {
 			operandName := text[nameStart:i]
-			// Only add if it looks like an operand (all uppercase) AND is not a statement name
-			if isOperandName(operandName) && !p.isStatementName(operandName) {
+			// Only add if it looks like an operand (all uppercase)
+			// Allow DELETE as both operand and statement name
+			if isOperandName(operandName) && (operandName == "DELETE" || !p.isStatementName(operandName)) {
 				operands[operandName] = true
 			}
 

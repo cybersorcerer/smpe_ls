@@ -1,0 +1,32 @@
+++USERMOD(LSMP003) REWORK(2019352)
+  DESC(R+V SMPE-UTILITY: CIC4SMPE (CICS-PreCompiler Support))
+  /*
+  +--------------------------------------------------------------------+
+  ! Notes to installer:                                                !
+  ! o This UMOD adds support for CICS-Precompiles                      !
+  ! o CICS-Precompiles can be initiated with                           !
+  !   "SET BOUNDARY(zone) OPTIONS(RV$CIPC)                             !
+  ! o If not def'd in CSI your APPLY job requires following DDDEFs:    !
+  !   //U$ASMSRC  DD DISP=SHR,DSN=TGT.RSIN0SP0.RUV.U$ASMSRC            !
+  !   to load SRC=CIC4SMPE                                             !
+  !                                                                    !
+  !       dd.mm.yy/userid - Comments:                               $nn!
+  ! CHGS: 18.12.19/XV13265- cre UMOD:                               $00!
+  !                         TXLIB-SRC taken from                    $00!
+  !                         'XV880AJ.USER.SOURCE(CIC4SMPE)'         $00!
+  +--------------------------------------------------------------------+
+  */ .
+++VER(Z038)        FMID(VSPFUNC)
+                   .
+++JCLIN .
+//LINK    EXEC LINKS,
+//             NAME=S$SPLINK,                    <- SYS1.SP.SRUVLINK
+//             PARM='RENT,REUSE,AMODE=31,RMODE=ANY'
+//SYSLIN    DD *
+  INCLUDE   A$SPMOD0(CIC4SMPE)
+    ORDER   CIC4SMPE
+    ENTRY   CIC4SMPE
+   NAME     CIC4SMPE(R)
+/*
+++SRC(CIC4SMPE)    DISTLIB(A$RVDUMY) /*SYSLIB(S$SPLINK)*/
+                   .

@@ -22,12 +22,13 @@ type MCSStatement struct {
 
 // Operand represents an operand of a MCS statement
 type Operand struct {
-	Name          string   `json:"name"`
-	Parameter     string   `json:"parameter"`
-	Type          string   `json:"type"`
-	Length        json.Number `json:"length,omitempty"`
-	Description   string   `json:"description"`
-	AllowedValues []string `json:"allowedValues,omitempty"`
+	Name              string      `json:"name"`
+	Parameter         string      `json:"parameter"`
+	Type              string      `json:"type"`
+	Length            json.Number `json:"length,omitempty"`
+	Description       string      `json:"description"`
+	MutuallyExclusive string      `json:"mutually_exclusive,omitempty"`
+	AllowedValues     []string    `json:"allowedValues,omitempty"`
 }
 
 // Provider provides hover information
@@ -196,6 +197,10 @@ func (p *Provider) createOperandHover(operand Operand) *lsp.Hover {
 
 	if operand.Length.String() != "" {
 		content += fmt.Sprintf("**Length:** %s\n\n", operand.Length.String())
+	}
+
+	if operand.MutuallyExclusive != "" {
+		content += fmt.Sprintf("**Mutually Exclusive with:** %s\n\n", operand.MutuallyExclusive)
 	}
 
 	if len(operand.AllowedValues) > 0 {
