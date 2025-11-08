@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/cybersorcerer/smpe_ls/internal/completion"
+	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/diagnostics"
 	"github.com/cybersorcerer/smpe_ls/internal/hover"
 	"github.com/cybersorcerer/smpe_ls/internal/logger"
@@ -23,22 +24,18 @@ type Handler struct {
 
 // New creates a new handler
 func New(version string, dataPath string) (*Handler, error) {
-	hoverProvider, err := hover.NewProvider(dataPath)
+	// Load MCS data once and share it among all providers
+	logger.Info("Loading MCS data from %s", dataPath)
+	store, err := data.Load(dataPath)
 	if err != nil {
 		return nil, err
 	}
+	logger.Info("Loaded %d MCS statements", len(store.List))
 
-	// Create completion provider with access to MCS data
-	completionProvider, err := completion.NewProvider(dataPath)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create diagnostics provider with access to MCS data
-	diagnosticsProvider, err := diagnostics.NewProvider(dataPath)
-	if err != nil {
-		return nil, err
-	}
+	// Create providers with shared data
+	hoverProvider := hover.NewProvider(store)
+	completionProvider := completion.NewProvider(store)
+	diagnosticsProvider := diagnostics.NewProvider(store)
 
 	return &Handler{
 		version:             version,

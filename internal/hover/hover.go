@@ -1,84 +1,25 @@
 package hover
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
+	"github.com/cybersorcerer/smpe_ls/internal/data"
+	"github.com/cybersorcerer/smpe_ls/internal/langid"
 	"github.com/cybersorcerer/smpe_ls/internal/logger"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
-// MCSStatement represents a MCS statement from smpe.json
-type MCSStatement struct {
-	Name        string     `json:"name"`
-	Description string     `json:"description"`
-	Parameter   string     `json:"parameter"`
-	Type        string     `json:"type"`
-	Operands    []Operand  `json:"operands"`
-}
-
-// Operand represents an operand of a MCS statement
-type Operand struct {
-	Name              string      `json:"name"`
-	Parameter         string      `json:"parameter"`
-	Type              string      `json:"type"`
-	Length            json.Number `json:"length,omitempty"`
-	Description       string      `json:"description"`
-	MutuallyExclusive string      `json:"mutually_exclusive,omitempty"`
-	AllowedValues     []string    `json:"allowedValues,omitempty"`
-}
-
 // Provider provides hover information
 type Provider struct {
-	statements map[string]MCSStatement
+	statements map[string]data.MCSStatement
 }
 
-// NewProvider creates a new hover provider
-func NewProvider(dataPath string) (*Provider, error) {
-	p := &Provider{
-		statements: make(map[string]MCSStatement),
+// NewProvider creates a new hover provider with shared data
+func NewProvider(store *data.Store) *Provider {
+	return &Provider{
+		statements: store.Statements,
 	}
-
-	if err := p.loadStatements(dataPath); err != nil {
-		return nil, err
-	}
-
-	return p, nil
-}
-
-// loadStatements loads MCS statements from smpe.json
-func (p *Provider) loadStatements(dataPath string) error {
-	// If dataPath is relative, make it absolute from executable directory
-	if !filepath.IsAbs(dataPath) {
-		ex, err := os.Executable()
-		if err != nil {
-			return fmt.Errorf("failed to get executable path: %w", err)
-		}
-		exDir := filepath.Dir(ex)
-		dataPath = filepath.Join(exDir, dataPath)
-	}
-
-	data, err := os.ReadFile(dataPath)
-	if err != nil {
-		logger.Error("Failed to read smpe.json: %v", err)
-		return fmt.Errorf("failed to read smpe.json: %w", err)
-	}
-
-	var statements []MCSStatement
-	if err := json.Unmarshal(data, &statements); err != nil {
-		logger.Error("Failed to parse smpe.json: %v", err)
-		return fmt.Errorf("failed to parse smpe.json: %w", err)
-	}
-
-	for _, stmt := range statements {
-		p.statements[stmt.Name] = stmt
-	}
-
-	logger.Info("Loaded %d MCS statements", len(p.statements))
-	return nil
 }
 
 // GetHover returns hover information for the given position
@@ -102,7 +43,22 @@ func (p *Provider) GetHover(text string, line, character int) *lsp.Hover {
 	logger.Debug("Hover word: %s", word)
 
 	// Check if it's a MCS statement
-	if stmt, ok := p.statements[word]; ok {
+	// First try exact match
+	stmt, ok := p.statements[word]
+	if !ok {
+		// Check if this is a language variant statement
+		baseName, langID, hasLangID := langid.ExtractLanguageID(word)
+		if hasLangID {
+			// Try to get the base statement
+			stmt, ok = p.statements[baseName]
+			if ok {
+				// Add language ID info to hover
+				enhancedStmt := stmt
+				enhancedStmt.Description = fmt.Sprintf("%s\n\n**Language:** %s", stmt.Description, langID)
+				return p.createStatementHover(enhancedStmt)
+			}
+		}
+	} else {
 		return p.createStatementHover(stmt)
 	}
 
@@ -111,7 +67,17 @@ func (p *Provider) GetHover(text string, line, character int) *lsp.Hover {
 	for i := line; i >= 0; i-- {
 		statementName := p.findMCSStatement(lines[i])
 		if statementName != "" {
-			if stmt, ok := p.statements[statementName]; ok {
+			// Try exact match first
+			stmt, ok := p.statements[statementName]
+			if !ok {
+				// Check if this is a language variant
+				baseName, _, hasLangID := langid.ExtractLanguageID(statementName)
+				if hasLangID {
+					stmt, ok = p.statements[baseName]
+				}
+			}
+
+			if ok {
 				for _, operand := range stmt.Operands {
 					if operand.Name == word {
 						return p.createOperandHover(operand)
@@ -152,16 +118,46 @@ func isWordChar(ch byte) bool {
 
 // findMCSStatement finds a MCS statement in a line
 func (p *Provider) findMCSStatement(line string) string {
-	for name := range p.statements {
-		if strings.Contains(line, name) {
-			return name
+	trimmed := strings.TrimSpace(line)
+	if !strings.HasPrefix(trimmed, "++") {
+		return ""
+	}
+
+	// Try to extract the statement name
+	// Format: ++STATEMENT(param) operands...
+	// or:     ++STATEMENT operands...
+	// or:     ++STATEMENT.
+
+	// Find where the statement name ends
+	endIdx := len(trimmed)
+	for i := 2; i < len(trimmed); i++ {
+		ch := trimmed[i]
+		if ch == '(' || ch == ' ' || ch == '.' || ch == '\t' {
+			endIdx = i
+			break
 		}
 	}
+
+	statementName := trimmed[:endIdx]
+
+	// Check if this is a known statement
+	if _, ok := p.statements[statementName]; ok {
+		return statementName
+	}
+
+	// Check if it's a language variant
+	baseName, _, hasLangID := langid.ExtractLanguageID(statementName)
+	if hasLangID {
+		if _, ok := p.statements[baseName]; ok {
+			return baseName
+		}
+	}
+
 	return ""
 }
 
 // createStatementHover creates hover info for a statement
-func (p *Provider) createStatementHover(stmt MCSStatement) *lsp.Hover {
+func (p *Provider) createStatementHover(stmt data.MCSStatement) *lsp.Hover {
 	content := fmt.Sprintf("**%s**\n\n%s\n\n", stmt.Name, stmt.Description)
 
 	if stmt.Parameter != "" {
@@ -184,7 +180,7 @@ func (p *Provider) createStatementHover(stmt MCSStatement) *lsp.Hover {
 }
 
 // createOperandHover creates hover info for an operand
-func (p *Provider) createOperandHover(operand Operand) *lsp.Hover {
+func (p *Provider) createOperandHover(operand data.Operand) *lsp.Hover {
 	content := fmt.Sprintf("**%s**\n\n%s\n\n", operand.Name, operand.Description)
 
 	if operand.Parameter != "" {
@@ -195,18 +191,22 @@ func (p *Provider) createOperandHover(operand Operand) *lsp.Hover {
 		content += fmt.Sprintf("**Type:** %s\n\n", operand.Type)
 	}
 
-	if operand.Length.String() != "" {
-		content += fmt.Sprintf("**Length:** %s\n\n", operand.Length.String())
+	if operand.Length > 0 {
+		content += fmt.Sprintf("**Length:** %d\n\n", operand.Length)
 	}
 
 	if operand.MutuallyExclusive != "" {
 		content += fmt.Sprintf("**Mutually Exclusive with:** %s\n\n", operand.MutuallyExclusive)
 	}
 
-	if len(operand.AllowedValues) > 0 {
+	if len(operand.Values) > 0 {
 		content += "**Allowed Values:**\n"
-		for _, val := range operand.AllowedValues {
-			content += fmt.Sprintf("- `%s`\n", val)
+		for _, val := range operand.Values {
+			if val.Description != "" {
+				content += fmt.Sprintf("- `%s`: %s\n", val.Name, val.Description)
+			} else {
+				content += fmt.Sprintf("- `%s`\n", val.Name)
+			}
 		}
 	}
 

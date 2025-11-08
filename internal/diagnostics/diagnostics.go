@@ -1,61 +1,23 @@
 package diagnostics
 
 import (
-	"encoding/json"
-	"os"
 	"strings"
 
+	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/logger"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
-// MCSStatement represents a MCS statement definition from smpe.json
-type MCSStatement struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Parameter   string    `json:"parameter,omitempty"`
-	Type        string    `json:"type"`
-	Operands    []Operand `json:"operands,omitempty"`
-}
-
-// Operand represents an operand definition
-type Operand struct {
-	Name              string `json:"name"`
-	Parameter         string `json:"parameter,omitempty"`
-	Type              string `json:"type,omitempty"`
-	Required          bool   `json:"required,omitempty"`
-	AllowedIf         string `json:"allowed_if,omitempty"`
-	MutuallyExclusive string `json:"mutually_exclusive,omitempty"`
-	Description       string `json:"description"`
-}
-
 // Provider provides diagnostics
 type Provider struct {
-	statements map[string]MCSStatement
+	statements map[string]data.MCSStatement
 }
 
-// NewProvider creates a new diagnostics provider
-func NewProvider(dataPath string) (*Provider, error) {
-	// Load MCS definitions from smpe.json
-	data, err := os.ReadFile(dataPath)
-	if err != nil {
-		return nil, err
-	}
-
-	var statements []MCSStatement
-	if err := json.Unmarshal(data, &statements); err != nil {
-		return nil, err
-	}
-
-	// Build lookup map
-	stmtMap := make(map[string]MCSStatement)
-	for _, stmt := range statements {
-		stmtMap[stmt.Name] = stmt
-	}
-
+// NewProvider creates a new diagnostics provider with shared data
+func NewProvider(store *data.Store) *Provider {
 	return &Provider{
-		statements: stmtMap,
-	}, nil
+		statements: store.Statements,
+	}
 }
 
 // Analyze analyzes the text and returns diagnostics
@@ -156,22 +118,30 @@ func (p *Provider) findAllStatements(text string) []StatementInfo {
 			statements = append(statements, stmt)
 			i = stmt.StartLine + 1 // Move past this statement
 
-			// Special handling for ++JCLIN with inline data:
-			// If ++JCLIN has NO FROMDS/RELFILE/TXLIB operands, then inline JCLIN data follows
-			// (even with terminator '.'), and continues until next ++ statement
-			if stmt.StatementType == "++JCLIN" {
-				// Check if this is inline JCLIN (no FROMDS, RELFILE, or TXLIB operands)
+			// Special handling for statements with inline data
+			// Check if this statement can have inline data based on smpe.json
+			// Statements with inline_data: true can contain JCL, Assembler, REXX, etc.
+			// Inline data is present when NO external data source operands (FROMDS, RELFILE, SSI, TXLIB) are specified
+			stmtDef, stmtExists := p.statements[stmt.StatementType]
+			if stmtExists && stmtDef.InlineData {
+				// Check if inline data is present by checking for external data source operands
 				hasExternalData := false
+				externalDataOperands := []string{"FROMDS", "RELFILE", "SSI", "TXLIB"}
 				for operandName := range stmt.Operands {
-					if operandName == "FROMDS" || operandName == "RELFILE" || operandName == "TXLIB" {
-						hasExternalData = true
+					for _, extOp := range externalDataOperands {
+						if operandName == extOp {
+							hasExternalData = true
+							break
+						}
+					}
+					if hasExternalData {
 						break
 					}
 				}
 
 				if !hasExternalData {
-					// This is inline JCLIN - skip all lines until we find the next ++ statement or EOF
-					// Inline JCLIN data must not contain lines starting with ++
+					// This statement has inline data - skip all lines until we find the next ++ statement or EOF
+					// Inline data (JCL, Assembler, REXX, etc.) must not contain lines starting with ++
 					for i < len(lines) {
 						nextLine := strings.TrimSpace(lines[i])
 						if strings.HasPrefix(nextLine, "++") {
@@ -321,8 +291,10 @@ func (p *Provider) parseStatement(lines []string, startLine int) StatementInfo {
 		lineNumbers = append(lineNumbers, currentLine)
 
 		// Check for terminator AFTER collecting the line
+		// A terminator is a '.' that appears OUTSIDE of parentheses (after comments are removed)
+		// This correctly handles dataset names like DSN(MY.DATA.SET) where dots appear inside parentheses
 		lineWithoutComments := removeComments(trimmedLine)
-		if strings.Contains(lineWithoutComments, ".") {
+		if hasTerminatorOutsideParens(lineWithoutComments) {
 			stmt.HasTerminator = true
 			break
 		}
@@ -335,16 +307,25 @@ func (p *Provider) parseStatement(lines []string, startLine int) StatementInfo {
 	completeStatement := strings.Join(statementLines, " ")
 	p.parseOperandsFromText(completeStatement, lineNumbers, &stmt)
 
+	// Debug: Log parsed operands for statements with FROMDS
+	if _, hasFROMDS := stmt.Operands["FROMDS"]; hasFROMDS {
+		logger.Debug("Statement %s at line %d has operands: %v", stmt.StatementType, stmt.StartLine+1, stmt.Operands)
+	}
+
 	return stmt
 }
 
 // parseOperandsFromText extracts operands from the complete statement text
 // lineNumbers maps the position in statementLines to the actual source line number
 func (p *Provider) parseOperandsFromText(text string, lineNumbers []int, stmt *StatementInfo) {
+	// Store original text before removing comments for line number calculation
+	originalText := text
+
 	// First, remove comments from the text
 	text = removeComments(text)
 
 	// Remove statement type and its parameter if present
+	skipOffset := 0 // Track how much we've skipped from the beginning
 	if strings.HasPrefix(text, "++") {
 		// Skip the statement name
 		i := 2 // skip ++
@@ -373,6 +354,7 @@ func (p *Provider) parseOperandsFromText(text string, lineNumbers []int, stmt *S
 			}
 		}
 
+		skipOffset = i
 		text = text[i:]
 	}
 
@@ -406,6 +388,11 @@ func (p *Provider) parseOperandsFromText(text string, lineNumbers []int, stmt *S
 					i++
 				}
 
+				// Determine the operand's line number by finding which line it appears on
+				// Calculate position in original text (before statement type was removed)
+				posInOriginal := skipOffset + nameStart
+				operandLineNum := p.findLineNumber(originalText, posInOriginal, lineNumbers, stmt.StartLine)
+
 				// Check for parameter
 				if i < len(text) && text[i] == '(' {
 					parenCount := 1
@@ -432,14 +419,12 @@ func (p *Provider) parseOperandsFromText(text string, lineNumbers []int, stmt *S
 						i++ // skip closing )
 					}
 
-					// Store operand only if it was followed by (...)
-					// This avoids treating IDs inside parameter lists as operands
-					// Use the first line number as the operand's line
-					operandLineNum := stmt.StartLine
-					if len(lineNumbers) > 0 {
-						operandLineNum = lineNumbers[0]
-					}
 					stmt.Operands[operandName] = operandValue
+					stmt.OperandLines[operandName] = operandLineNum
+				} else {
+					// Boolean operand without parameter (e.g., DELETE, NOAPARS, etc.)
+					// Store it with empty value to indicate it's present
+					stmt.Operands[operandName] = ""
 					stmt.OperandLines[operandName] = operandLineNum
 				}
 			}
@@ -447,6 +432,21 @@ func (p *Provider) parseOperandsFromText(text string, lineNumbers []int, stmt *S
 			i++
 		}
 	}
+}
+
+// findLineNumber determines which source line an operand appears on
+// based on its position in the joined text
+func (p *Provider) findLineNumber(text string, pos int, lineNumbers []int, defaultLine int) int {
+	if len(lineNumbers) == 0 {
+		return defaultLine
+	}
+
+	// Count how many space separators we've passed to determine which line we're on
+	// The text was joined with spaces, so each space (that was added by Join) represents a line boundary
+	// However, this is tricky because the original text also contains spaces
+	// So we use a simpler approach: just return the first line for now
+	// TODO: This could be improved by tracking exact character positions
+	return lineNumbers[0]
 }
 
 // parseOperandsFromLine extracts operands from a single line (DEPRECATED - kept for reference)
@@ -529,9 +529,12 @@ func (p *Provider) parseOperandsFromLine(line string, lineNum int, stmt *Stateme
 					operandValue = text[paramStart:i]
 					i++ // skip closing )
 
-					// Store operand only if it was followed by (...)
-					// This avoids treating IDs inside parameter lists as operands
 					stmt.Operands[operandName] = operandValue
+					stmt.OperandLines[operandName] = lineNum
+				} else {
+					// Boolean operand without parameter (e.g., DELETE, NOAPARS, etc.)
+					// Store it with empty value to indicate it's present
+					stmt.Operands[operandName] = ""
 					stmt.OperandLines[operandName] = lineNum
 				}
 			}
@@ -539,6 +542,24 @@ func (p *Provider) parseOperandsFromLine(line string, lineNum int, stmt *Stateme
 			i++
 		}
 	}
+}
+
+// hasTerminatorOutsideParens checks if a '.' exists outside of parentheses
+// This function should be called AFTER removeComments() has been applied
+// It correctly handles dataset names like DSN(MY.DATA.SET) where dots appear inside parentheses
+func hasTerminatorOutsideParens(text string) bool {
+	parenCount := 0
+	for i := 0; i < len(text); i++ {
+		if text[i] == '(' {
+			parenCount++
+		} else if text[i] == ')' {
+			parenCount--
+		} else if text[i] == '.' && parenCount == 0 {
+			// Found a '.' outside of parentheses - this is a statement terminator
+			return true
+		}
+	}
+	return false
 }
 
 // removeComments removes /* ... */ style comments from a line
@@ -740,6 +761,19 @@ func (p *Provider) validateOperands(stmt StatementInfo) []lsp.Diagnostic {
 
 // createDiagnostic creates a diagnostic with proper range
 func (p *Provider) createDiagnostic(startLine, startCol, endLine, endCol, severity int, message string) lsp.Diagnostic {
+	// Add severity prefix with Unicode symbols for better visual distinction
+	var prefix string
+	switch severity {
+	case lsp.SeverityError:
+		prefix = "🔴 "
+	case lsp.SeverityWarning:
+		prefix = "⚠️ "
+	case lsp.SeverityInformation:
+		prefix = "ℹ️ "
+	case lsp.SeverityHint:
+		prefix = "💡 "
+	}
+
 	return lsp.Diagnostic{
 		Range: lsp.Range{
 			Start: lsp.Position{Line: startLine, Character: startCol},
@@ -747,7 +781,7 @@ func (p *Provider) createDiagnostic(startLine, startCol, endLine, endCol, severi
 		},
 		Severity: severity,
 		Source:   "smpe_ls",
-		Message:  message,
+		Message:  prefix + message,
 	}
 }
 
@@ -803,6 +837,13 @@ func getRequiredOperands(statementType string) []string {
 		// From syntax_diagrams/zap.png:
 		// No operands are strictly required beyond the name parameter
 		// DALIAS and TALIAS are mutually exclusive
+		return []string{}
+	case "++MAC":
+		// From syntax_diagrams/mac.png and mac-delete.png:
+		// DISTLIB is required in ADD/UPDATE mode (when DELETE is not specified)
+		// In DELETE mode (when DELETE is specified), DISTLIB is optional
+		// Since this is conditional, we don't enforce it here
+		// The mutually_exclusive validation handles the DELETE operand constraints
 		return []string{}
 	default:
 		// No required operands for other statements (based on current syntax diagrams)

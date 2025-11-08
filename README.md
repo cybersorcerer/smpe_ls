@@ -4,7 +4,37 @@ A Language Server Protocol (LSP) implementation for SMP/E (System Modification P
 
 ## Features
 
-### Release 0.2.0 (Current)
+### Release 0.3.0 (Current)
+
+**New Features:**
+
+- **++MAC Statement Support** - Macro library management with context-sensitive validation
+  - ADD/UPDATE mode: DISTLIB required, mutually exclusive operands validated
+  - DELETE mode: Special validation for DELETE with FROMDS/RELFILE/SSI/TXLIB
+- **++MACUPD Statement Support** - Macro update operations with inline data support
+- **++MOD Statement Support** - Load module operations with inline data support
+- **++SRC Statement Support** - Source code operations with inline Assembler/C/etc. support
+- **++SRCUPD Statement Support** - Source update operations with inline data support
+- **Inline Data Architecture** - Dynamic inline data handling via `inline_data` attribute in smpe.json
+  - Supports ++JCLIN (JCL), ++MAC (Assembler), ++MACUPD, ++MOD, ++SRC, ++SRCUPD
+  - No SMP/E diagnostics or completions inside inline data regions
+  - External data operands (FROMDS, RELFILE, SSI, TXLIB) properly detected
+- **Enhanced Syntax Highlighting** - Inline data (JCL/Assembler/REXX) displayed as plain text without false SMP/E highlighting
+- **Visual Diagnostic Severity** - Unicode symbols in diagnostic messages for better distinction:
+  - 🔴 ERROR
+  - ⚠️ WARNING
+  - ℹ️ INFORMATION
+  - 💡 HINT
+
+**Enhanced Diagnostics:**
+
+- Fixed dataset name handling - dots in DSN(MY.DATA.SET) no longer treated as statement terminators
+- Boolean operand parsing - DELETE, NOAPARS, etc. now correctly validated
+- Improved terminator detection - only detects periods outside parentheses
+- Completion now shows actual statement names instead of generic "MCS"
+- Hover now shows correct statement/operand names instead of "MCS"
+
+### Release 0.2.0
 
 **New Features:**
 
@@ -48,7 +78,9 @@ Core features:
 
 ## Supported MCS Statements
 
-Version 0.2.0 supports 12 MCS statements:
+Version 0.3.0 supports 17 MCS statements with full diagnostics validation:
+
+**Control MCS:**
 
 - `++APAR` - Service SYSMOD (temporary fix)
 - `++ASSIGN` - Source ID Assignment
@@ -57,11 +89,21 @@ Version 0.2.0 supports 12 MCS statements:
 - `++FUNCTION` - Function SYSMOD
 - `++HOLD` - Exception Status
 - `++IF` - Conditional Processing
-- `++JAR` - JAR file management (NEW in 0.2.0)
-- `++JARUPD` - JAR update operations (NEW in 0.2.0)
-- `++JCLIN` - Job Control Language Input with inline JCL support (NEW in 0.2.0)
-- `++VER` - Version specification (NEW in 0.2.0)
-- `++ZAP` - Superzap operations (NEW in 0.2.0)
+- `++JAR` - JAR file management
+- `++JARUPD` - JAR update operations
+- `++JCLIN` - Job Control Language Input with inline JCL support
+- `++MAC` - Macro library management (NEW in 0.3.0)
+- `++MACUPD` - Macro update operations (NEW in 0.3.0)
+- `++MOD` - Load module operations (NEW in 0.3.0)
+- `++SRC` - Source code operations (NEW in 0.3.0)
+- `++SRCUPD` - Source update operations (NEW in 0.3.0)
+- `++VER` - Version specification
+- `++ZAP` - Superzap operations
+
+**Additional Statements in smpe.json (completion and hover available):**
+
+- All Data Element MCS with language variants (++BOOK, ++CLIST, ++EXEC, ++FONT, ++HELP, ++MSG, ++PARM, etc.)
+- Additional Control MCS (++MOVE, ++NULL, ++PRODUCT, ++PROGRAM, ++PTF, ++RELEASE, ++RENAME, ++USERMOD)
 
 ## Installation
 

@@ -1,0 +1,34 @@
+/************************************************/
+/* Language Variant Statement Test              */
+/************************************************/
+
+/* CORRECT: Valid language variant statements */
+++FONTENU(MYFONT) DISTLIB(AFONTLIB) SYSLIB(SFONTLIB) RELFILE(1).
+
+++BOOKDEU(MYBOOK) DISTLIB(ABOOKLIB) SYSLIB(SBOOKLIB) RELFILE(2).
+
+++HELPENU(MYHELP) DISTLIB(AHELPLIB) SYSLIB(SHELPLIB) RELFILE(3).
+
+++MSGDEU(MYMSG) DISTLIB(AMSGLIB) SYSLIB(SMSGLIB) RELFILE(4).
+
+++PNLENU(MYPANEL) DISTLIB(APNLLIB) SYSLIB(SPNLLIB) RELFILE(5).
+
+/* CORRECT: Data elements without language variants */
+++CLIST(MYCLIST) DISTLIB(ACLISTLIB) SYSLIB(SCLISTLIB) RELFILE(6).
+
+++DATA(MYDATA) DISTLIB(ADATALIB) SYSLIB(SDATALIB) RELFILE(7).
+
+++EXEC(MYEXEC) DISTLIB(AEXECLIB) SYSLIB(SEXECLIB) RELFILE(8).
+
+/* ERROR: Invalid language identifier */
+++FONTXYZ(BADFONT) DISTLIB(AFONTLIB) SYSLIB(SFONTLIB) RELFILE(9).
+
+/* ERROR: Language variant on statement that doesn't support it */
+++CLISTENU(BADCLIST) DISTLIB(ACLISTLIB) SYSLIB(SCLISTLIB) RELFILE(10).
+
+/* ERROR: Missing language identifier for statement that requires it */
+++FONT(INCOMPLETEFONT) DISTLIB(AFONTLIB) SYSLIB(SFONTLIB) RELFILE(11).
+
+/************************************************/
+/* End of language ID test file                 */
+/************************************************/

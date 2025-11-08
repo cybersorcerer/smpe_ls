@@ -1,0 +1,5 @@
+// Test: Missing terminator
+++MAC(TEST1) DISTLIB(AMACLIB)
+
+// Test: With terminator
+++MAC(TEST2) DISTLIB(AMACLIB).

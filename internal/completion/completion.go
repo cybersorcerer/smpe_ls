@@ -1,69 +1,25 @@
 package completion
 
 import (
-	"encoding/json"
-	"os"
 	"strings"
 
+	"github.com/cybersorcerer/smpe_ls/internal/data"
+	"github.com/cybersorcerer/smpe_ls/internal/langid"
 	"github.com/cybersorcerer/smpe_ls/internal/logger"
 	"github.com/cybersorcerer/smpe_ls/internal/parser"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
-// MCSStatement represents a MCS statement definition from smpe.json
-type MCSStatement struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Parameter   string    `json:"parameter,omitempty"`
-	Type        string    `json:"type"`
-	Operands    []Operand `json:"operands,omitempty"`
-}
-
-// Operand represents an operand definition
-type Operand struct {
-	Name              string         `json:"name"`
-	Parameter         string         `json:"parameter,omitempty"`
-	Type              string         `json:"type,omitempty"`
-	Length            int            `json:"length,omitempty"`
-	Description       string         `json:"description"`
-	AllowedIf         string         `json:"allowed_if,omitempty"`
-	MutuallyExclusive string         `json:"mutually_exclusive,omitempty"`
-	Values            []AllowedValue `json:"values,omitempty"`
-}
-
-// AllowedValue represents an allowed value for an operand
-type AllowedValue struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
-
 // Provider provides code completion
 type Provider struct {
-	statements map[string]MCSStatement
+	statements map[string]data.MCSStatement
 }
 
-// NewProvider creates a new completion provider
-func NewProvider(dataPath string) (*Provider, error) {
-	// Load MCS definitions from smpe.json
-	data, err := os.ReadFile(dataPath)
-	if err != nil {
-		return nil, err
-	}
-
-	var statements []MCSStatement
-	if err := json.Unmarshal(data, &statements); err != nil {
-		return nil, err
-	}
-
-	// Build lookup map
-	stmtMap := make(map[string]MCSStatement)
-	for _, stmt := range statements {
-		stmtMap[stmt.Name] = stmt
-	}
-
+// NewProvider creates a new completion provider with shared data
+func NewProvider(store *data.Store) *Provider {
 	return &Provider{
-		statements: stmtMap,
-	}, nil
+		statements: store.Statements,
+	}
 }
 
 // GetCompletions returns completion items for the given position
@@ -81,6 +37,12 @@ func (p *Provider) GetCompletions(text string, line, character int) []lsp.Comple
 
 	// DEBUG: Log every completion request
 	logger.Debug("GetCompletions called - line: %d, character: %d, currentLine: %q", line, character, currentLine)
+
+	// Check if we're inside inline data - if so, don't provide SMP/E completions
+	if p.isInsideInlineData(lines, line) {
+		logger.Debug("Cursor is inside inline data - no completions")
+		return nil
+	}
 
 	// Calculate absolute cursor position
 	cursorPos := 0
@@ -129,10 +91,29 @@ func (p *Provider) GetCompletions(text string, line, character int) []lsp.Comple
 	}
 
 	// Get statement definition
+	// First try exact match
 	stmt, ok := p.statements[ctx.StatementType]
 	if !ok {
-		// Unknown statement type, offer all MCS statements
-		return p.getMCSCompletions(nil)
+		// Check if this is a language variant statement (e.g., ++FONTENU)
+		baseName, langID, hasLangID := langid.ExtractLanguageID(ctx.StatementType)
+		if hasLangID {
+			// Try to get the base statement
+			stmt, ok = p.statements[baseName]
+			if !ok {
+				// Unknown base statement, offer all MCS statements
+				return p.getMCSCompletions(nil)
+			}
+			// Validate that this base statement actually requires language variants
+			if !stmt.LanguageVariants {
+				// Base statement doesn't require language variants
+				return p.getMCSCompletions(nil)
+			}
+			// langID is already validated by ExtractLanguageID, so we can proceed
+			logger.Debug("Recognized language variant: %s (base: %s, lang: %s)", ctx.StatementType, baseName, langID)
+		} else {
+			// Unknown statement type, offer all MCS statements
+			return p.getMCSCompletions(nil)
+		}
 	}
 
 	// Check cursor position within statement
@@ -242,11 +223,11 @@ func (p *Provider) detectOperandParameter(line string, character int) (string, b
 
 // getOperandValueCompletions returns value completions for operand parameters
 // This is highly context-sensitive, especially for ++HOLD REASON operand
-func (p *Provider) getOperandValueCompletions(stmt MCSStatement, operandName string, fullText string, line int, character int) []lsp.CompletionItem {
+func (p *Provider) getOperandValueCompletions(stmt data.MCSStatement, operandName string, fullText string, line int, character int) []lsp.CompletionItem {
 	var items []lsp.CompletionItem
 
 	// Find the operand definition
-	var operandDef *Operand
+	var operandDef *data.Operand
 	for i := range stmt.Operands {
 		names := strings.Split(stmt.Operands[i].Name, "|")
 		for _, name := range names {
@@ -299,7 +280,7 @@ func (p *Provider) getOperandValueCompletions(stmt MCSStatement, operandName str
 
 // getReasonCompletions returns context-sensitive completions for ++HOLD REASON operand
 // Behavior depends on which hold type is set: ERROR, SYSTEM, FIXCAT, or USER
-func (p *Provider) getReasonCompletions(operandDef *Operand, fullText string, currentLine int) []lsp.CompletionItem {
+func (p *Provider) getReasonCompletions(operandDef *data.Operand, fullText string, currentLine int) []lsp.CompletionItem {
 	var items []lsp.CompletionItem
 
 	// Parse the current statement to find hold type
@@ -452,8 +433,21 @@ func extractSysmodIDs(text string) []string {
 func (p *Provider) getMCSCompletions(replaceRange *lsp.Range) []lsp.CompletionItem {
 	var items []lsp.CompletionItem
 
-	// Order statements for consistent display
-	order := []string{"++APAR", "++ASSIGN", "++DELETE", "++FEATURE", "++FUNCTION", "++HOLD", "++IF", "++JAR", "++JARUPD", "++VER", "++ZAP"}
+	// Order statements for consistent display (Control MCS - alphabetically sorted)
+	// TODO: This list should be generated dynamically from smpe.json instead of being hard-coded (see TODO.md)
+	order := []string{"++APAR", "++ASSIGN", "++DELETE", "++FEATURE", "++FUNCTION", "++HOLD", "++IF", "++JAR", "++JARUPD", "++JCLIN", "++MAC", "++VER", "++ZAP"}
+
+	// Add all Data Element MCS base names (will be expanded with language variants below)
+	// TODO: This list should be generated dynamically from smpe.json instead of being hard-coded (see TODO.md)
+	dataElementOrder := []string{
+		"++BOOK", "++BSIND", "++CGM", "++CLIST", "++DATA", "++DATA1", "++DATA2",
+		"++DATA3", "++DATA4", "++DATA5", "++DATA6", "++EXEC", "++FONT", "++GDF",
+		"++HELP", "++IMG", "++MSG", "++PARM", "++PNL", "++PROBJ", "++PROC",
+		"++PRODXML", "++PRSRC", "++PSEG", "++PUBLB", "++SAMP", "++SKL", "++TBL",
+		"++TEXT", "++USER1", "++USER2", "++USER3", "++USER4", "++USER5",
+		"++UTIN", "++UTOUT",
+	}
+	order = append(order, dataElementOrder...)
 
 	for _, name := range order {
 		stmt, ok := p.statements[name]
@@ -461,39 +455,72 @@ func (p *Provider) getMCSCompletions(replaceRange *lsp.Range) []lsp.CompletionIt
 			continue
 		}
 
-		// Create insert text with parameter placeholder if needed
-		// Use snippet format to position cursor inside parentheses
-		insertText := name
-		if stmt.Parameter != "" {
-			insertText += "($1)" // $1 = cursor position inside parentheses
-		}
+		// If this statement requires language variants, generate all variants
+		if stmt.LanguageVariants {
+			for _, langID := range langid.NationalLanguageIdentifiers {
+				variantName := name + langID
 
-		item := lsp.CompletionItem{
-			Label:            name,
-			Kind:             lsp.CompletionItemKindKeyword,
-			Detail:           stmt.Type,
-			Documentation:    stmt.Description,
-			InsertTextFormat: lsp.InsertTextFormatSnippet, // Enable snippet support
-		}
+				// Create insert text with parameter placeholder if needed
+				insertText := variantName
+				if stmt.Parameter != "" {
+					insertText += "($1)" // $1 = cursor position inside parentheses
+				}
 
-		// If we have a range to replace (typed + characters), use TextEdit
-		if replaceRange != nil {
-			item.TextEdit = &lsp.TextEdit{
-				Range:   *replaceRange,
-				NewText: insertText,
+				item := lsp.CompletionItem{
+					Label:            variantName,
+					Kind:             lsp.CompletionItemKindKeyword,
+					Detail:           name + " (" + langID + ")",
+					Documentation:    stmt.Description,
+					InsertTextFormat: lsp.InsertTextFormatSnippet,
+				}
+
+				// If we have a range to replace (typed + characters), use TextEdit
+				if replaceRange != nil {
+					item.TextEdit = &lsp.TextEdit{
+						Range:   *replaceRange,
+						NewText: insertText,
+					}
+				} else {
+					item.InsertText = insertText
+				}
+
+				items = append(items, item)
 			}
 		} else {
-			item.InsertText = insertText
-		}
+			// Normal statement without language variants
+			// Create insert text with parameter placeholder if needed
+			insertText := name
+			if stmt.Parameter != "" {
+				insertText += "($1)" // $1 = cursor position inside parentheses
+			}
 
-		items = append(items, item)
+			item := lsp.CompletionItem{
+				Label:            name,
+				Kind:             lsp.CompletionItemKindKeyword,
+				Detail:           name,
+				Documentation:    stmt.Description,
+				InsertTextFormat: lsp.InsertTextFormatSnippet,
+			}
+
+			// If we have a range to replace (typed + characters), use TextEdit
+			if replaceRange != nil {
+				item.TextEdit = &lsp.TextEdit{
+					Range:   *replaceRange,
+					NewText: insertText,
+				}
+			} else {
+				item.InsertText = insertText
+			}
+
+			items = append(items, item)
+		}
 	}
 
 	return items
 }
 
 // getOperandCompletions returns operand completions based on statement and context
-func (p *Provider) getOperandCompletions(stmt MCSStatement, statementTextBefore string, currentLine string, line int, character int) []lsp.CompletionItem {
+func (p *Provider) getOperandCompletions(stmt data.MCSStatement, statementTextBefore string, currentLine string, line int, character int) []lsp.CompletionItem {
 	var items []lsp.CompletionItem
 
 	// Find the start of the word being typed in the current line (for TextEdit range calculation)
@@ -802,4 +829,82 @@ func isOperandName(token string) bool {
 func (p *Provider) isStatementName(token string) bool {
 	_, exists := p.statements["++"+token]
 	return exists
+}
+
+// isInsideInlineData checks if the cursor is inside inline data
+// Inline data is present after statements with inline_data: true (++JCLIN, ++MAC, etc.)
+// when no external data operands (FROMDS, RELFILE, SSI, TXLIB) are present
+func (p *Provider) isInsideInlineData(lines []string, currentLine int) bool {
+	// Search backwards from current line to find the last ++ statement
+	var lastStatement string
+	var lastStatementLine int
+
+	for i := currentLine; i >= 0; i-- {
+		trimmed := strings.TrimSpace(lines[i])
+		if strings.HasPrefix(trimmed, "++") {
+			lastStatement = trimmed
+			lastStatementLine = i
+			break
+		}
+	}
+
+	if lastStatement == "" {
+		return false
+	}
+
+	// Parse the statement type
+	stmtType := ""
+	if idx := strings.Index(lastStatement, "("); idx > 0 {
+		stmtType = lastStatement[:idx]
+	} else if idx := strings.Index(lastStatement, " "); idx > 0 {
+		stmtType = lastStatement[:idx]
+	} else if idx := strings.Index(lastStatement, "."); idx > 0 {
+		stmtType = lastStatement[:idx]
+	} else {
+		stmtType = lastStatement
+	}
+
+	// Check if this statement can have inline data
+	stmtDef, exists := p.statements[stmtType]
+	if !exists || !stmtDef.InlineData {
+		return false
+	}
+
+	// Check if the statement has a terminator (required for inline data to follow)
+	hasTerminator := strings.Contains(lastStatement, ".")
+	if !hasTerminator {
+		// Multi-line statement - check following lines until we find terminator
+		for i := lastStatementLine + 1; i <= currentLine && i < len(lines); i++ {
+			if strings.Contains(strings.TrimSpace(lines[i]), ".") {
+				hasTerminator = true
+				break
+			}
+		}
+	}
+
+	if !hasTerminator {
+		return false
+	}
+
+	// Check if the statement has external data operands
+	// Collect all lines from lastStatement until we find terminator
+	statementText := ""
+	for i := lastStatementLine; i < len(lines); i++ {
+		statementText += " " + lines[i]
+		if strings.Contains(lines[i], ".") {
+			break
+		}
+	}
+
+	// Check for external data operands
+	externalDataOperands := []string{"FROMDS", "RELFILE", "SSI", "TXLIB"}
+	for _, op := range externalDataOperands {
+		if strings.Contains(statementText, op+"(") || strings.Contains(statementText, op+" (") {
+			// Has external data - not inline
+			return false
+		}
+	}
+
+	// This statement has inline data and we're after it - we're inside inline data
+	return true
 }

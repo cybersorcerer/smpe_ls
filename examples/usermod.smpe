@@ -1,32 +1,48 @@
-++USERMOD(LSMP003) REWORK(2019352)
-  DESC(R+V SMPE-UTILITY: CIC4SMPE (CICS-PreCompiler Support))
+++USERMOD(LJS2012) REWORK(2022056)
+  DESC(R+V_BASE_JES2: EXIT60 - Converter Exit V1R0M7 PRIMARY(!) JES2)
   /*
   +--------------------------------------------------------------------+
   ! Notes to installer:                                                !
-  ! o This UMOD adds support for CICS-Precompiles                      !
-  ! o CICS-Precompiles can be initiated with                           !
-  !   "SET BOUNDARY(zone) OPTIONS(RV$CIPC)                             !
-  ! o If not def'd in CSI your APPLY job requires following DDDEFs:    !
-  !   //U$ASMSRC  DD DISP=SHR,DSN=TGT.RSIN0SP0.RUV.U$ASMSRC            !
-  !   to load SRC=CIC4SMPE                                             !
+  !   UMOD becomes OBSOLETE when ALL LPARs in R+V-Enterprise run       !
+  !   JES2 as the PRIMARY subsystem !-)                                !
   !                                                                    !
-  !       dd.mm.yy/userid - Comments:                               $nn!
-  ! CHGS: 18.12.19/XV13265- cre UMOD:                               $00!
-  !                         TXLIB-SRC taken from                    $00!
-  !                         'XV880AJ.USER.SOURCE(CIC4SMPE)'         $00!
+  ! o UMOD requires update/resync to:                                  !
+  !   JES2-PARMLIB Enterprise MBRs[J2PRME00,J2BKPE00]                  !
+  !   refto appropriate UMODs                                          !
+  !         as follows:                                                !
+  !         >>> LOADMOD(J&JESPRIID.UX0060) STORAGE=CSA                 !
+  !         >>> EXIT(60) ROUTINES=J2UX60,STATUS=ENABLED                !
+  !                                                                    !
+  ! o Consider to create GENASM entries for ALL (or at least most      !
+  !   important) JES2 MACs used in this EXIT to instruct SMPE to       !
+  !   automaticaly relink EXIT60 whenever maintenance is applied       !
+  !   to one of the following JES2 MACs:                               !
+  !   > UCLIN .                                                        !
+  !   > ADD MAC(????????)  GENASM(J2UX0060).                           !
+  !   > ENDUCL .                                                       !
+  !                                                                    !
+  ! o UMOD requires TXLIB/DDDEFs, if not def'd in CSI your APPLY job   !
+  !   must contain DDDEFs to access external members                   !
+  !                                                                    !
   +--------------------------------------------------------------------+
   */ .
-++VER(Z038)        FMID(VSPFUNC)
-                   .
+++VER(Z038)      FMID(HJE77C0)
+                 PRE(???????)
+                 REQ(???????)
+                .
 ++JCLIN .
+//* Execute Link Procedure
 //LINK    EXEC LINKS,
-//             NAME=S$SPLINK,                    <- SYS1.SP.SRUVLINK
-//             PARM='RENT,REUSE,AMODE=31,RMODE=ANY'
+//        NAME=SHASLNKE,                    store LMOD on SYS1.SHASLNKE
+//        PARM='RENT,REUS,AMODE=31,RMODE=ANY'
 //SYSLIN    DD *
-  INCLUDE   A$SPMOD0(CIC4SMPE)
-    ORDER   CIC4SMPE
-    ENTRY   CIC4SMPE
-   NAME     CIC4SMPE(R)
+  INCLUDE   A$RVDUMY(J2UX0060)
+    ORDER   J2UX0060
+    ENTRY   J2UX60
+   NAME     J2UX0060(R)
 /*
-++SRC(CIC4SMPE)    DISTLIB(A$RVDUMY) /*SYSLIB(S$SPLINK)*/
+//
+++SRC(J2UX0060)    DISTLIB(A$RVDUMY)   /* RSPL-SYSLIB(SHASLNKE)      */
+                   TXLIB(UZSOURCE)     /* common Zone input.         */
                    .
+++VER()
