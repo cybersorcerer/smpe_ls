@@ -1,0 +1,42 @@
+/* Test space-separated parameters */
+
+/* Single line with commas - WORKS */
+++ASSIGN
+    SOURCEID(PROD2025)
+    TO(A12345,A23456,A34567)
+    .
+
+/* Single line with spaces - SHOULD WORK */
+++ASSIGN
+    SOURCEID(PROD2026)
+    TO(A12345 A23456 A34567)
+    .
+
+/* Multiline with commas - WORKS */
+++ASSIGN
+    SOURCEID(PROD2027)
+    TO(
+        A12345,
+        A23456,
+        A34567
+    )
+    .
+
+/* Multiline with spaces - SHOULD WORK */
+++ASSIGN
+    SOURCEID(PROD2028)
+    TO(
+        A12345
+        A23456
+        A34567
+    )
+    .
+
+/* Mixed - commas and spaces */
+++ASSIGN
+    SOURCEID(PROD2029)
+    TO(
+        A12345 A23456
+        A34567 A45678
+    )
+    .

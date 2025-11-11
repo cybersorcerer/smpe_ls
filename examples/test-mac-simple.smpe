@@ -1,5 +1,10 @@
-// Test: Missing terminator
 ++MAC(TEST1) DISTLIB(AMACLIB)
+/* Test: Missing terminator */
+.
+++MAC(TEST2) DISTLIB(AMACLIB)
+.
+++VER(Z038) .
 
-// Test: With terminator
-++MAC(TEST2) DISTLIB(AMACLIB).
+++HOLD(U00001) FMID(HDP0001) CLASS(ABC) REASON(XYZ) .
+++MAC(tetete) FROMDS(DSN(my.test) NUMBER(12) UNIT(SYSDA) VOL()) .
+++APAR(A1234567) DESCRIPTION(My Description) FILES(1) RFDSNPFX(HUHU) REWORK(12345) .

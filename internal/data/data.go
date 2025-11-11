@@ -30,9 +30,12 @@ type Operand struct {
 }
 
 // AllowedValue represents an allowed value for an operand
+// For sub-operands (e.g., DSN within FROMDS), this structure also includes type and length constraints
 type AllowedValue struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Type        string `json:"type,omitempty"`        // Type constraint (string, integer, etc.) for sub-operands
+	Length      int    `json:"length,omitempty"`      // Maximum length constraint for sub-operands
 }
 
 // Store holds the shared MCS statement data

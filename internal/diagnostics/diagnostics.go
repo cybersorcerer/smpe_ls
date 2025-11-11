@@ -24,7 +24,8 @@ func NewProvider(store *data.Store) *Provider {
 func (p *Provider) Analyze(text string) []lsp.Diagnostic {
 	logger.Debug("Analyzing text for diagnostics")
 
-	var diagnostics []lsp.Diagnostic
+	// Initialize as empty array to ensure it serializes as [] not null in JSON
+	diagnostics := make([]lsp.Diagnostic, 0)
 
 	// Find all statements in the document
 	statements := p.findAllStatements(text)
@@ -271,13 +272,28 @@ func (p *Provider) parseStatement(lines []string, startLine int) StatementInfo {
 	var statementLines []string
 	var lineNumbers []int // Track which source line each collected line came from
 	currentLine := startLine
+	inComment := false // Track if we're inside a multiline comment
 
 	for currentLine < len(lines) {
 		textLine := lines[currentLine]
 		trimmedLine := strings.TrimSpace(textLine)
 
-		// Skip empty lines and lines that are only comments
-		if trimmedLine == "" || strings.HasPrefix(trimmedLine, "/*") {
+		// Check for comment start/end to properly skip multiline comments
+		if strings.Contains(trimmedLine, "/*") {
+			inComment = true
+		}
+		if strings.Contains(trimmedLine, "*/") {
+			inComment = false
+			// Don't skip this line - it might contain a terminator after the */
+			// Fall through to process the rest of the line
+		} else if inComment {
+			// We're inside a comment and this line doesn't end it - skip
+			currentLine++
+			continue
+		}
+
+		// Skip empty lines
+		if trimmedLine == "" {
 			currentLine++
 			continue
 		}
@@ -287,14 +303,17 @@ func (p *Provider) parseStatement(lines []string, startLine int) StatementInfo {
 			break
 		}
 
-		statementLines = append(statementLines, trimmedLine)
-		lineNumbers = append(lineNumbers, currentLine)
+		// Remove comments from the line before adding to statement
+		cleanedLine := removeComments(trimmedLine)
+		if cleanedLine != "" {
+			statementLines = append(statementLines, cleanedLine)
+			lineNumbers = append(lineNumbers, currentLine)
+		}
 
 		// Check for terminator AFTER collecting the line
 		// A terminator is a '.' that appears OUTSIDE of parentheses (after comments are removed)
 		// This correctly handles dataset names like DSN(MY.DATA.SET) where dots appear inside parentheses
-		lineWithoutComments := removeComments(trimmedLine)
-		if hasTerminatorOutsideParens(lineWithoutComments) {
+		if hasTerminatorOutsideParens(cleanedLine) {
 			stmt.HasTerminator = true
 			break
 		}
@@ -570,8 +589,8 @@ func removeComments(line string) string {
 		if i < len(line)-1 && line[i] == '/' && line[i+1] == '*' {
 			// Start of comment - skip until we find */
 			i += 2
-			for i < len(line)-1 {
-				if line[i] == '*' && line[i+1] == '/' {
+			for i < len(line) {
+				if i < len(line)-1 && line[i] == '*' && line[i+1] == '/' {
 					i += 2
 					break
 				}
@@ -641,6 +660,13 @@ func (p *Provider) validateOperands(stmt StatementInfo) []lsp.Diagnostic {
 						lsp.SeverityError,
 						"Operand '"+name+"' requires a parameter: "+op.Parameter,
 					))
+				}
+
+				// Check if this operand has sub-operands (values array) that need validation
+				if len(op.Values) > 0 && strings.Contains(op.Parameter, "(") {
+					// This operand has sub-operands - validate them
+					subDiags := p.validateSubOperands(opValue, lineNum, name, op.Values)
+					diagnostics = append(diagnostics, subDiags...)
 				}
 			}
 		}
@@ -806,6 +832,134 @@ func isOperandName(token string) bool {
 	return true
 }
 
+// validateSubOperands validates sub-operands within an operand's parameter
+// For example, validates DSN, NUMBER, VOL, UNIT within FROMDS(...)
+func (p *Provider) validateSubOperands(paramValue string, lineNum int, parentOperand string, subOperandDefs []data.AllowedValue) []lsp.Diagnostic {
+	var diagnostics []lsp.Diagnostic
+
+	// Parse sub-operands from the parameter value
+	// Example: "DSN(my.test) NUMBER(12) UNIT(SYSDA) VOL()"
+	subOperands := p.parseSubOperands(paramValue)
+
+	// Validate each sub-operand
+	for subOpName, subOpValue := range subOperands {
+		// Find the definition for this sub-operand
+		var subOpDef *data.AllowedValue
+		for i := range subOperandDefs {
+			if subOperandDefs[i].Name == subOpName {
+				subOpDef = &subOperandDefs[i]
+				break
+			}
+		}
+
+		if subOpDef == nil {
+			// Unknown sub-operand
+			diagnostics = append(diagnostics, p.createDiagnostic(
+				lineNum, 0,
+				lineNum, len(parentOperand),
+				lsp.SeverityWarning,
+				"Unknown sub-operand '"+subOpName+"' for "+parentOperand,
+			))
+			continue
+		}
+
+		// Check if sub-operand has an empty parameter when it shouldn't
+		// Sub-operands with type "string" or "integer" and length > 0 should not be empty
+		// Exception: length=0 means no length restriction (can be empty)
+		if subOpValue == "" && subOpDef.Length > 0 && (subOpDef.Type == "string" || subOpDef.Type == "integer") {
+			diagnostics = append(diagnostics, p.createDiagnostic(
+				lineNum, 0,
+				lineNum, len(parentOperand),
+				lsp.SeverityWarning,
+				"Sub-operand '"+subOpName+"' of "+parentOperand+" has empty parameter (expected "+subOpDef.Type+")",
+			))
+		}
+
+		// Check length constraints for non-empty values
+		if subOpValue != "" && subOpDef.Length > 0 && len(subOpValue) > subOpDef.Length {
+			diagnostics = append(diagnostics, p.createDiagnostic(
+				lineNum, 0,
+				lineNum, len(parentOperand),
+				lsp.SeverityWarning,
+				"Sub-operand '"+subOpName+"' of "+parentOperand+" exceeds maximum length",
+			))
+		}
+	}
+
+	return diagnostics
+}
+
+// parseSubOperands parses sub-operands from a parameter value
+// Example: "DSN(my.test) NUMBER(12) UNIT(SYSDA) VOL()"
+// Returns: map{"DSN": "my.test", "NUMBER": "12", "UNIT": "SYSDA", "VOL": ""}
+func (p *Provider) parseSubOperands(paramValue string) map[string]string {
+	result := make(map[string]string)
+	text := strings.TrimSpace(paramValue)
+
+	i := 0
+	for i < len(text) {
+		// Skip whitespace
+		for i < len(text) && (text[i] == ' ' || text[i] == '\t') {
+			i++
+		}
+		if i >= len(text) {
+			break
+		}
+
+		// Read sub-operand name
+		nameStart := i
+		for i < len(text) && isOperandChar(text[i]) {
+			i++
+		}
+
+		if i > nameStart {
+			subOpName := text[nameStart:i]
+
+			// Skip whitespace before parameter
+			for i < len(text) && (text[i] == ' ' || text[i] == '\t') {
+				i++
+			}
+
+			// Check for parameter
+			if i < len(text) && text[i] == '(' {
+				parenDepth := 1
+				i++ // skip opening (
+				paramStart := i
+
+				// Find matching closing paren with depth tracking
+				for i < len(text) && parenDepth > 0 {
+					if text[i] == '(' {
+						parenDepth++
+					} else if text[i] == ')' {
+						parenDepth--
+					}
+					if parenDepth > 0 {
+						i++
+					}
+				}
+
+				// Extract parameter value
+				paramValue := ""
+				if i > paramStart {
+					paramValue = strings.TrimSpace(text[paramStart:i])
+				}
+				result[subOpName] = paramValue
+
+				if parenDepth == 0 {
+					i++ // skip closing )
+				}
+			} else {
+				// Sub-operand without parameter (should be rare for sub-operands)
+				result[subOpName] = ""
+			}
+		} else {
+			i++
+		}
+	}
+
+	return result
+}
+
 // getRequiredOperands returns the list of required operands for a statement
 // These requirements are derived from the syntax diagrams in syntax_diagrams/
 func getRequiredOperands(statementType string) []string {
@@ -844,6 +998,11 @@ func getRequiredOperands(statementType string) []string {
 		// In DELETE mode (when DELETE is specified), DISTLIB is optional
 		// Since this is conditional, we don't enforce it here
 		// The mutually_exclusive validation handles the DELETE operand constraints
+		return []string{}
+	case "++USERMOD":
+		// From syntax_diagrams/usermod.png:
+		// No operands are strictly required, all are optional
+		// RFDSNPFX has allowed_if dependency on FILES (handled automatically)
 		return []string{}
 	default:
 		// No required operands for other statements (based on current syntax diagrams)

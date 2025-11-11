@@ -126,10 +126,11 @@ const (
 
 // ServerCapabilities describes the capabilities of the server
 type ServerCapabilities struct {
-	TextDocumentSync   int                        `json:"textDocumentSync,omitempty"`
-	CompletionProvider *CompletionOptions         `json:"completionProvider,omitempty"`
-	HoverProvider      bool                       `json:"hoverProvider,omitempty"`
-	DiagnosticProvider *DiagnosticOptions         `json:"diagnosticProvider,omitempty"`
+	TextDocumentSync          int                        `json:"textDocumentSync,omitempty"`
+	CompletionProvider        *CompletionOptions         `json:"completionProvider,omitempty"`
+	HoverProvider             bool                       `json:"hoverProvider,omitempty"`
+	DiagnosticProvider        *DiagnosticOptions         `json:"diagnosticProvider,omitempty"`
+	SemanticTokensProvider    *SemanticTokensOptions     `json:"semanticTokensProvider,omitempty"`
 }
 
 // TextDocumentSyncKind values
@@ -148,6 +149,38 @@ type CompletionOptions struct {
 type DiagnosticOptions struct {
 	InterFileDependencies bool `json:"interFileDependencies"`
 	WorkspaceDiagnostics  bool `json:"workspaceDiagnostics"`
+}
+
+// SemanticTokensOptions describes semantic tokens options
+type SemanticTokensOptions struct {
+	Legend SemanticTokensLegend `json:"legend"`
+	Full   bool                 `json:"full"`
+	Range  bool                 `json:"range,omitempty"`
+}
+
+// SemanticTokensLegend describes the legend for semantic tokens
+type SemanticTokensLegend struct {
+	TokenTypes     []string `json:"tokenTypes"`
+	TokenModifiers []string `json:"tokenModifiers"`
+}
+
+// SemanticToken represents a single semantic token (delta-encoded)
+type SemanticToken struct {
+	DeltaLine      int `json:"deltaLine"`
+	DeltaStart     int `json:"deltaStart"`
+	Length         int `json:"length"`
+	TokenType      int `json:"tokenType"`
+	TokenModifiers int `json:"tokenModifiers"`
+}
+
+// SemanticTokensParams represents parameters for semantic tokens request
+type SemanticTokensParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+}
+
+// SemanticTokens represents the result of a semantic tokens request
+type SemanticTokens struct {
+	Data []int `json:"data"`
 }
 
 // InitializeParams represents the initialize request parameters

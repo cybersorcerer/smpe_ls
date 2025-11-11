@@ -1,0 +1,19 @@
+/* ASSIGN with multi-line TO list */
+++ASSIGN
+    SOURCEID(PROD2025)
+    TO(
+        A12345,
+        A23456,
+        A34567,
+        U45678
+    )
+    .
+
+/* ASSIGN with comments */
+++ASSIGN /* Assign source ID */
+    SOURCEID(TESTSRC) /* Source identifier */
+    TO(
+        A12345, /* First APAR */
+        A23456  /* Second APAR */
+    ) /* End of list */
+    .

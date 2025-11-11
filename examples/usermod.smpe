@@ -1,11 +1,7 @@
 ++USERMOD(LJS2012) REWORK(2022056)
-  DESC(R+V_BASE_JES2: EXIT60 - Converter Exit V1R0M7 PRIMARY(!) JES2)
+  DESC("BASE_JES2: EXIT60 - Converter Exit V1R0M7 PRIMARY(!) JES2")
   /*
   +--------------------------------------------------------------------+
-  ! Notes to installer:                                                !
-  !   UMOD becomes OBSOLETE when ALL LPARs in R+V-Enterprise run       !
-  !   JES2 as the PRIMARY subsystem !-)                                !
-  !                                                                    !
   ! o UMOD requires update/resync to:                                  !
   !   JES2-PARMLIB Enterprise MBRs[J2PRME00,J2BKPE00]                  !
   !   refto appropriate UMODs                                          !
@@ -45,4 +41,6 @@
 ++SRC(J2UX0060)    DISTLIB(A$RVDUMY)   /* RSPL-SYSLIB(SHASLNKE)      */
                    TXLIB(UZSOURCE)     /* common Zone input.         */
                    .
-++VER()
+++VER(?????) /* klasdjlaksdj */
+/* lksdlakjdalskk */ .
+++ASSIGN SOURCEID(NIX) TO(HUHO) .

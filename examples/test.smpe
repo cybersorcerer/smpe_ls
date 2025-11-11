@@ -1,43 +1,37 @@
-/************************************************/
-/* SMP/E MCS Test File                          */
-/* Tests all statement types and features       */
-/************************************************/
-
-/************************************************/
-/* ++APAR - Service SYSMOD                      */
-/************************************************/
-
 ++APAR(A471100)
+	/************************************************/
+	/* ++APAR - Service SYSMOD                      */
+	/************************************************/
     DESCRIPTION(Fix for security vulnerability in authentication module)
     FILES(2)
     RFDSNPFX(APARA12)
     REWORK(20250101)
     .
 
-/* APAR without optional operands */
 ++APAR(A23456)
+/* APAR without optional operands */
     DESCRIPTION(Simple fix)
     .
 
-/* APAR with multi-line description */
 ++APAR(A34567)
+/* APAR with multi-line description */
     DESCRIPTION(This is a very long description
                 that spans multiple lines because
                 it contains detailed information
                 about the fix)
     .
 
+
+++ASSIGN
 /************************************************/
 /* ++ASSIGN - Source ID Assignment              */
 /************************************************/
-
-++ASSIGN
     SOURCEID(MYSOURCE)
     TO(SYSMOD1,SYSMOD2,SYSMOD3)
     .
 
-/* ASSIGN with multi-line TO list */
 ++ASSIGN
+/* ASSIGN with multi-line TO list */
     SOURCEID(PROD2025)
     TO(
         A12345,
@@ -47,66 +41,64 @@
     )
     .
 
-/* ASSIGN with comments */
 ++ASSIGN /* Assign source ID */
+/* ASSIGN with comments */
     SOURCEID(TESTSRC) /* Source identifier */
     TO(
         A12345, /* First APAR */
         A23456  /* Second APAR */
     ) /* End of list */
     .
-
+++DELETE(MYMODULE)
 /************************************************/
 /* ++DELETE - Delete Load Module               */
 /************************************************/
-
-++DELETE(MYMODULE)
     SYSLIB(SYSLIB1)
     .
 
-/* DELETE from all libraries */
 ++DELETE(OLDMOD)
+/* DELETE from all libraries */
     SYSLIB(ALL)
     .
 
-/* DELETE with multiple libraries */
 ++DELETE(TESTMOD)
+/* DELETE with multiple libraries */
     SYSLIB(SYSLIB1,SYSLIB2,SYSLIB3)
     .
 
-/* DELETE with alias */
 ++DELETE(MAINMOD)
+/* DELETE with alias */
     SYSLIB(SYSLIB1)
     ALIAS(ALIAS1,ALIAS2)
     .
 
+
+++FEATURE(FEATURE1)
 /************************************************/
 /* ++FEATURE - SYSMOD Set Description           */
 /************************************************/
-
-++FEATURE(FEATURE1)
     DESCRIPTION(New security feature set)
     FMID(HDP1234)
     PRODUCT(5655ABC,01.02.00)
     .
 
-/* FEATURE with multiple FMIDs */
 ++FEATURE(FEATURE2)
+/* FEATURE with multiple FMIDs */
     DESCRIPTION(Database enhancement package)
     FMID(HDP1234,HDP1235,HDP1236)
     REWORK(20250115)
     .
 
-/* FEATURE minimal */
 ++FEATURE(FEATURE3)
+/* FEATURE minimal */
     DESCRIPTION(Basic feature)
     .
 
+
+++FUNCTION(HDP1234)
 /************************************************/
 /* ++FUNCTION - Function SYSMOD                 */
 /************************************************/
-
-++FUNCTION(HDP1234)
     DESCRIPTION(Base function for product XYZ)
     FESN(FE12345)
     FILES(5)
@@ -114,13 +106,13 @@
     REWORK(20250201)
     .
 
-/* FUNCTION minimal */
 ++FUNCTION(HDP2345)
+/* FUNCTION minimal */
     DESCRIPTION(Simple function)
     .
 
-/* FUNCTION with multi-line description */
 ++FUNCTION(HDP3456)
+/* FUNCTION with multi-line description */
     DESCRIPTION(This function provides
                 core capabilities for
                 the system infrastructure)
@@ -128,11 +120,11 @@
     RFDSNPFX(FUNC345)
     .
 
+
+++HOLD(U12345)
 /************************************************/
 /* ++HOLD - Exception Status                    */
 /************************************************/
-
-++HOLD(U12345)
     FMID(HDP1234)
     REASON(B23456)
     ERROR
@@ -141,8 +133,8 @@
     COMMENT(Critical fix required before apply)
     .
 
-/* HOLD with FIXCAT */
 ++HOLD(U23456)
+/* HOLD with FIXCAT */
     FMID(HDP1234)
     REASON(B34567)
     FIXCAT
@@ -150,23 +142,23 @@
     CLASS(SECINT)
     .
 ++HOLD(U00001) ERROR REASON(ID) .
-/* HOLD with SYSTEM */
 ++HOLD(U34567)
+/* HOLD with SYSTEM */
     FMID(HDP1234)
     REASON(SYSTEM Reason-IDs)
     SYSTEM
     .
 
-/* HOLD with USER */
 ++HOLD(U45678)
+/* HOLD with USER */
     FMID(HDP1234)
     REASON(B45678)
     USER
     COMMENT(User modification required)
     .
 
-/* HOLD with multi-line comment */
 ++HOLD(U56789)
+/* HOLD with multi-line comment */
     FMID(HDP1234)
     REASON(B56789)
     ERROR
@@ -175,12 +167,8 @@
             and required actions)
     .
 
-/************************************************/
-/* Complex Examples with Comments              */
-/************************************************/
-
-/* Multiple statements in sequence */
 ++APAR(A99999) /* Critical fix */
+/* Multiple statements in sequence */
     DESCRIPTION(Emergency patch) /* Short description */
     .
 
@@ -193,10 +181,11 @@
   PARM(PATHMODE(0,6,4,4))
   LINK('../TicTacToe.jar')
   SYMLINK('../../../../../usr/lib/TicTacToe.jar')
-  SYMPATH('../../usr/lpp/abc/bin/TicTacToe.jar').
+  SYMPATH('../../usr/lpp/abc/bin/TicTacToe.jar') .
 
+++JCLIN
 /* Test ++JCLIN with inline JCL data - CORRECT */
-++JCLIN.
+.
 //SMPMCS   JOB (ACCT),'INSTALL',CLASS=A,MSGCLASS=X
 //STEP1    EXEC PGM=IEWL
 //SYSLMOD  DD DSN=SYS1.LINKLIB,DISP=SHR
@@ -205,36 +194,30 @@
  ENTRY   MODULE01
  NAME    MODULE01(R)
 /*
-
+++JCLIN RELFILE(5)
 /* Test ++JCLIN with RELFILE - external data */
-++JCLIN RELFILE(5).
+.
 
-/************************************************/
-/* ++JCLIN Error Test Cases                     */
-/************************************************/
-
-/* ERROR: ++JCLIN without terminator */
 ++JCLIN
+/* ERROR: ++JCLIN without terminator */
 //JOB1 JOB
 
+++JCLIN FROMDS(DSN(MY.DATA.SET) NUMBER(1)) RELFILE(2)
 /* ERROR: ++JCLIN with mutually exclusive operands */
-++JCLIN FROMDS(DSN(MY.DATA.SET) NUMBER(1)) RELFILE(2).
+.
 
-/* Test various comment positions */
-++FUNCTION /* Start */ (HDP9999) /* After name */
-    DESCRIPTION /* Before paren */ (Test function) /* After paren */
+++FUNCTION(HDP9999) /* After name */
+    DESCRIPTION (Test function) /* After paren */
     . /* End of statement */
 
-/************************************************/
-/* Edge Cases                                   */
-/************************************************/
-
+++APAR(A00001)
 /* Minimal statements */
-++APAR(A00001).
+.
 ++FUNCTION(HDP0001).
 
+++ASSIGN SOURCEID(TEST) TO(SYSMOD1)
 /* Statement with only required operands */
-++ASSIGN SOURCEID(TEST) TO(SYSMOD1).
+.
 
 ++DELETE(MODULE1) SYSLIB(LIB1).
 
@@ -242,54 +225,50 @@
 
 ++HOLD(U00001) FMID(HDP0001) REASON(B00001) ERROR.
 
-/************************************************/
-/* Test Cases for Diagnostics                  */
-/************************************************/
-
-/* ERROR: Statement without terminator (missing .) */
 ++APAR(A88888)
+/* ERROR: Statement without terminator (missing .) */
     DESCRIPTION(Missing terminator)
 
-/* ERROR: Statement parameter missing */
 ++APAR
+/* ERROR: Statement parameter missing */
     DESCRIPTION(Missing parameter)
     .
 
-/* ERROR: Required operands missing for ++ASSIGN */
 ++ASSIGN
+/* ERROR: Required operands missing for ++ASSIGN */
     SOURCEID(TEST)
     .
 
-/* ERROR: Unknown operand */
 ++APAR(A77777)
+/* ERROR: Unknown operand */
     INVALID_OPERAND(test)
     .
 
-/* ERROR: Duplicate operand */
 ++APAR(A66666)
+/* ERROR: Duplicate operand */
     DESCRIPTION(First description)
     DESCRIPTION(Second description)
     .
 
 ++IF FMID(MYFMID)
 
-/* ERROR: Dependency violation - RFDSNPFX without FILES */
 ++APAR(A55555)
+/* ERROR: Dependency violation - RFDSNPFX without FILES */
     RFDSNPFX(TEST123)
     .
 
 
-/* ERROR: Unknown statement type */
 ++UNKNOWN(TEST)
+/* ERROR: Unknown statement type */
     .
 
-/* ERROR: Malformed parentheses */
 ++APAR(A44444
+/* ERROR: Malformed parentheses */
     DESCRIPTION(Missing closing paren)
     .
 
-/* ERROR: Multiple missing terminators */
 ++APAR(A33333)
+/* ERROR: Multiple missing terminators */
     DESCRIPTION(No terminator 1)
 
 ++APAR(A22222)
@@ -298,7 +277,3 @@
 ++APAR(A11111)
     DESCRIPTION(This one has terminator)
     .
-
-/************************************************/
-/* End of test file                             */
-/************************************************/

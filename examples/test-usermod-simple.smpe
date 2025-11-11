@@ -1,0 +1,4 @@
+++USERMOD(TEST002)
+  REWORK(123)
+  DESC(This is a test with PRIMARY(!) inside)
+  .

@@ -2,7 +2,7 @@
   "name": "vscode-smpe",
   "displayName": "SMP/E Language Support",
   "description": "Language support for SMP/E MCS statements",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "cybersorcerer",
   "engines": {
     "vscode": "^1.75.0"
@@ -28,13 +28,6 @@
           ".smp"
         ],
         "configuration": "./language-configuration.json"
-      }
-    ],
-    "grammars": [
-      {
-        "language": "smpe",
-        "scopeName": "source.smpe",
-        "path": "./syntaxes/smpe.tmLanguage.json"
       }
     ],
     "configuration": {

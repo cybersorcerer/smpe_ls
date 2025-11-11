@@ -1,0 +1,4 @@
+++USERMOD(TEST003)
+  REWORK(123)
+  /* This is a comment with PRIMARY and JES2 words */
+  .

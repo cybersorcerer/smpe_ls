@@ -26,6 +26,7 @@ type Handler interface {
 	TextDocumentDidClose(params DidCloseTextDocumentParams) error
 	TextDocumentCompletion(params CompletionParams) ([]CompletionItem, error)
 	TextDocumentHover(params HoverParams) (*Hover, error)
+	TextDocumentSemanticTokensFull(params SemanticTokensParams) (*SemanticTokens, error)
 }
 
 // NewServer creates a new LSP server
@@ -162,6 +163,19 @@ func (s *Server) handleRequest(req *Request) error {
 		}
 
 		result, err := s.handler.TextDocumentHover(params)
+		if err != nil {
+			return s.sendErrorResponse(req.ID, InternalError, err.Error())
+		}
+
+		return s.sendResponse(req.ID, result)
+
+	case "textDocument/semanticTokens/full":
+		var params SemanticTokensParams
+		if err := json.Unmarshal(req.Params, &params); err != nil {
+			return s.sendErrorResponse(req.ID, InvalidParams, "Invalid params")
+		}
+
+		result, err := s.handler.TextDocumentSemanticTokensFull(params)
 		if err != nil {
 			return s.sendErrorResponse(req.ID, InternalError, err.Error())
 		}

@@ -43,7 +43,7 @@ clean-all:
 
 test:
 	@echo "Running tests..."
-	go test -v ./...
+	@which richgo > /dev/null 2>&1 && richgo test -v ./... || go test -v ./...
 
 vscode-deps:
 	@echo "Installing VSCode extension dependencies..."

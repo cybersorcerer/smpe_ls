@@ -8,18 +8,23 @@ import (
 	"github.com/cybersorcerer/smpe_ls/internal/diagnostics"
 	"github.com/cybersorcerer/smpe_ls/internal/hover"
 	"github.com/cybersorcerer/smpe_ls/internal/logger"
+	"github.com/cybersorcerer/smpe_ls/internal/parser"
+	"github.com/cybersorcerer/smpe_ls/internal/semantic"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
 // Handler implements the LSP handler interface
 type Handler struct {
-	version            string
-	documents          map[string]string
-	documentsMutex     sync.RWMutex
-	completionProvider *completion.Provider
-	hoverProvider      *hover.Provider
+	version             string
+	documents           map[string]string
+	parsedDocuments     map[string]*parser.Document // AST cache
+	documentsMutex      sync.RWMutex
+	parser              *parser.Parser
+	completionProvider  *completion.Provider
+	hoverProvider       *hover.Provider
 	diagnosticsProvider *diagnostics.Provider
-	server             *lsp.Server
+	semanticProvider    *semantic.Provider
+	server              *lsp.Server
 }
 
 // New creates a new handler
@@ -32,17 +37,24 @@ func New(version string, dataPath string) (*Handler, error) {
 	}
 	logger.Info("Loaded %d MCS statements", len(store.List))
 
+	// Create parser
+	parserInstance := parser.NewParser(store.Statements)
+
 	// Create providers with shared data
 	hoverProvider := hover.NewProvider(store)
 	completionProvider := completion.NewProvider(store)
 	diagnosticsProvider := diagnostics.NewProvider(store)
+	semanticProvider := semantic.NewProvider(store.Statements)
 
 	return &Handler{
 		version:             version,
 		documents:           make(map[string]string),
+		parsedDocuments:     make(map[string]*parser.Document),
+		parser:              parserInstance,
 		completionProvider:  completionProvider,
 		hoverProvider:       hoverProvider,
 		diagnosticsProvider: diagnosticsProvider,
+		semanticProvider:    semanticProvider,
 	}, nil
 }
 
@@ -68,6 +80,21 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 				TriggerCharacters: triggerChars,
 			},
 			HoverProvider: true,
+			SemanticTokensProvider: &lsp.SemanticTokensOptions{
+				Legend: lsp.SemanticTokensLegend{
+					TokenTypes: []string{
+						"keyword",   // MCS statements
+						"function",  // Operands
+						"parameter", // Parameter values
+						"comment",   // Comments
+						"string",    // Quoted strings
+						"number",    // Numbers
+					},
+					TokenModifiers: []string{},
+				},
+				Full:  true,
+				Range: false,
+			},
 		},
 		ServerInfo: &lsp.ServerInfo{
 			Name:    "smpe_ls",
@@ -82,10 +109,14 @@ func (h *Handler) TextDocumentDidOpen(params lsp.DidOpenTextDocumentParams) erro
 
 	h.documentsMutex.Lock()
 	h.documents[params.TextDocument.URI] = params.TextDocument.Text
+
+	// Parse document and cache AST
+	doc := h.parser.Parse(params.TextDocument.Text)
+	h.parsedDocuments[params.TextDocument.URI] = doc
 	h.documentsMutex.Unlock()
 
 	// Send diagnostics
-	h.publishDiagnostics(params.TextDocument.URI, params.TextDocument.Text)
+	h.publishDiagnostics(params.TextDocument.URI)
 
 	return nil
 }
@@ -100,10 +131,14 @@ func (h *Handler) TextDocumentDidChange(params lsp.DidChangeTextDocumentParams) 
 		h.documents[params.TextDocument.URI] = params.ContentChanges[0].Text
 	}
 	text := h.documents[params.TextDocument.URI]
+
+	// Re-parse document and update cache
+	doc := h.parser.Parse(text)
+	h.parsedDocuments[params.TextDocument.URI] = doc
 	h.documentsMutex.Unlock()
 
 	// Send diagnostics
-	h.publishDiagnostics(params.TextDocument.URI, text)
+	h.publishDiagnostics(params.TextDocument.URI)
 
 	return nil
 }
@@ -114,6 +149,7 @@ func (h *Handler) TextDocumentDidClose(params lsp.DidCloseTextDocumentParams) er
 
 	h.documentsMutex.Lock()
 	delete(h.documents, params.TextDocument.URI)
+	delete(h.parsedDocuments, params.TextDocument.URI) // Also clear cached AST
 	h.documentsMutex.Unlock()
 
 	return nil
@@ -126,6 +162,7 @@ func (h *Handler) TextDocumentCompletion(params lsp.CompletionParams) ([]lsp.Com
 
 	h.documentsMutex.RLock()
 	text, ok := h.documents[params.TextDocument.URI]
+	doc, hasDoc := h.parsedDocuments[params.TextDocument.URI]
 	h.documentsMutex.RUnlock()
 
 	if !ok {
@@ -133,8 +170,18 @@ func (h *Handler) TextDocumentCompletion(params lsp.CompletionParams) ([]lsp.Com
 		return nil, nil
 	}
 
-	items := h.completionProvider.GetCompletions(text, params.Position.Line, params.Position.Character)
-	logger.Debug("Returning %d completion items", len(items))
+	// Always ensure we have a parsed document (AST)
+	if !hasDoc {
+		logger.Debug("No parsed document found, parsing now: %s", params.TextDocument.URI)
+		h.documentsMutex.Lock()
+		doc = h.parser.Parse(text)
+		h.parsedDocuments[params.TextDocument.URI] = doc
+		h.documentsMutex.Unlock()
+	}
+
+	// Always use AST-based completion
+	items := h.completionProvider.GetCompletionsAST(doc, text, params.Position.Line, params.Position.Character)
+	logger.Debug("Using AST-based completion, returning %d items", len(items))
 
 	return items, nil
 }
@@ -145,26 +192,76 @@ func (h *Handler) TextDocumentHover(params lsp.HoverParams) (*lsp.Hover, error) 
 		params.TextDocument.URI, params.Position.Line, params.Position.Character)
 
 	h.documentsMutex.RLock()
-	text, ok := h.documents[params.TextDocument.URI]
+	text, textExists := h.documents[params.TextDocument.URI]
+	doc, hasDoc := h.parsedDocuments[params.TextDocument.URI]
 	h.documentsMutex.RUnlock()
 
-	if !ok {
+	if !textExists {
 		logger.Debug("Document not found: %s", params.TextDocument.URI)
 		return nil, nil
 	}
 
-	hover := h.hoverProvider.GetHover(text, params.Position.Line, params.Position.Character)
+	// Always ensure we have a parsed document (AST)
+	if !hasDoc {
+		logger.Debug("No parsed document found for hover, parsing now: %s", params.TextDocument.URI)
+		h.documentsMutex.Lock()
+		doc = h.parser.Parse(text)
+		h.parsedDocuments[params.TextDocument.URI] = doc
+		h.documentsMutex.Unlock()
+	}
+
+	// Always use AST-based hover
+	hover := h.hoverProvider.GetHoverAST(doc, params.Position.Line, params.Position.Character)
+	logger.Debug("Using AST-based hover")
 
 	return hover, nil
 }
 
+// TextDocumentSemanticTokensFull handles semantic tokens request
+func (h *Handler) TextDocumentSemanticTokensFull(params lsp.SemanticTokensParams) (*lsp.SemanticTokens, error) {
+	logger.Debug("Semantic tokens request for: %s", params.TextDocument.URI)
+
+	h.documentsMutex.RLock()
+	doc, exists := h.parsedDocuments[params.TextDocument.URI]
+	text, textExists := h.documents[params.TextDocument.URI]
+	h.documentsMutex.RUnlock()
+
+	if !exists {
+		logger.Debug("Document not found for semantic tokens: %s", params.TextDocument.URI)
+		return &lsp.SemanticTokens{Data: []int{}}, nil
+	}
+
+	if !textExists {
+		logger.Debug("Document text not found for semantic tokens: %s", params.TextDocument.URI)
+		return &lsp.SemanticTokens{Data: []int{}}, nil
+	}
+
+	// Generate semantic tokens from AST
+	data := h.semanticProvider.BuildTokensFromAST(doc, text)
+
+	return &lsp.SemanticTokens{
+		Data: data,
+	}, nil
+}
+
 // publishDiagnostics publishes diagnostics for a document
-func (h *Handler) publishDiagnostics(uri string, text string) {
+func (h *Handler) publishDiagnostics(uri string) {
 	if h.server == nil {
 		return
 	}
 
-	diagnostics := h.diagnosticsProvider.Analyze(text)
+	// Get parsed document from cache
+	h.documentsMutex.RLock()
+	doc, exists := h.parsedDocuments[uri]
+	h.documentsMutex.RUnlock()
+
+	if !exists {
+		logger.Debug("No parsed document found for diagnostics: %s", uri)
+		return
+	}
+
+	// Generate diagnostics from AST
+	diagnostics := h.diagnosticsProvider.AnalyzeAST(doc)
 
 	params := map[string]interface{}{
 		"uri":         uri,

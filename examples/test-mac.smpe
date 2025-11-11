@@ -1,134 +1,137 @@
-// ++MAC Test File
-// Testing ADD/UPDATE and DELETE modes for ++MAC MCS statement
-
-// Valid ++MAC ADD with required DISTLIB
-++MAC(MYMAC) DISTLIB(AMACLIB).
-
-// Valid ++MAC with multiple operands
+/* ++MAC Test File
+Testing ADD/UPDATE and DELETE modes for ++MAC MCS statement
+Valid ++MAC ADD with required DISTLIB
+*/
+++MAC(MYMAC) DISTLIB(AMACLIB) .
+MYMAC MACRO
+	LA	R8,1
+	ST	R8,MY_REG
+	MEND
+/* laskdöaskdöla */
 ++MAC(MYMAC2)
   DISTLIB(AMACLIB)
   SYSLIB(ASYSLIB)
   MALIAS(MAC2A,MAC2B).
 
-// Valid ++MAC with ASSEM
+/* Valid ++MAC with ASSEM */
 ++MAC(MYMAC3)
   DISTLIB(AMACLIB)
   ASSEM(MOD1,MOD2)
   DISTMOD(AMODLIB)
   DISTSRC(ASRCLIB).
 
-// Valid ++MAC with FROMDS
+/* Valid ++MAC with FROMDS */
 ++MAC(MYMAC4)
   DISTLIB(AMACLIB)
   FROMDS(DSN(MY.DATA.SET) NUMBER(1) VOL(WORK01)).
 
-// Valid ++MAC with RELFILE
+/* Valid ++MAC with RELFILE */
 ++MAC(MYMAC5)
   DISTLIB(AMACLIB)
   RELFILE(1).
 
-// Valid ++MAC with TXLIB
+/* Valid ++MAC with TXLIB */
 ++MAC(MYMAC6)
   DISTLIB(AMACLIB)
   TXLIB(ATXLIB).
 
-// Valid ++MAC with SSI
+/* Valid ++MAC with SSI */
 ++MAC(MYMAC7)
   DISTLIB(AMACLIB)
   SSI(12345678).
 
-// Valid ++MAC with PREFIX and RMID
+/* Valid ++MAC with PREFIX and RMID */
 ++MAC(MYMAC8)
   DISTLIB(AMACLIB)
   PREFIX(ABC)
   RMID(PTF0001)
   UMID(PTF0002,PTF0003).
 
-// Valid ++MAC with VERSION
+/* Valid ++MAC with VERSION */
 ++MAC(MYMAC9)
   DISTLIB(AMACLIB)
   VERSION(FMID001,FMID002).
 
-// Valid ++MAC DELETE with DISTLIB
+/* Valid ++MAC DELETE with DISTLIB */
 ++MAC(OLDMAC) DELETE DISTLIB(AMACLIB).
 
-// Valid ++MAC DELETE without DISTLIB
+/* Valid ++MAC DELETE without DISTLIB */
 ++MAC(OLDMAC2) DELETE.
 
-// Valid ++MAC DELETE with VERSION
+/* Valid ++MAC DELETE with VERSION */
 ++MAC(OLDMAC3) DELETE VERSION(FMID001).
 
-// Invalid: ++MAC without DISTLIB (should show warning/error in non-DELETE mode)
-++MAC(BADMAC).
+/* Invalid: ++MAC without DISTLIB (should show warning/error in non-DELETE mode) */
+++MAC(BADMAC) .
 
-// Invalid: ++MAC with DELETE and ASSEM (mutually exclusive)
+/* Invalid: ++MAC with DELETE and ASSEM (mutually exclusive) */
 ++MAC(BADMAC2) DELETE ASSEM(MOD1).
 
-// Invalid: ++MAC with DELETE and DISTMOD (mutually exclusive)
+/* Invalid: ++MAC with DELETE and DISTMOD (mutually exclusive) */
 ++MAC(BADMAC3) DELETE DISTMOD(AMODLIB).
 
-// Invalid: ++MAC with DELETE and DISTSRC (mutually exclusive)
+/* Invalid: ++MAC with DELETE and DISTSRC (mutually exclusive) */
 ++MAC(BADMAC4) DELETE DISTSRC(ASRCLIB).
 
-// Invalid: ++MAC with DELETE and MALIAS (mutually exclusive)
+/* Invalid: ++MAC with DELETE and MALIAS (mutually exclusive) */
 ++MAC(BADMAC5) DELETE MALIAS(ALIAS1).
 
-// Invalid: ++MAC with DELETE and PREFIX (mutually exclusive)
+/* Invalid: ++MAC with DELETE and PREFIX (mutually exclusive) */
 ++MAC(BADMAC6) DELETE PREFIX(ABC).
 
-// Invalid: ++MAC with DELETE and RMID (mutually exclusive)
+/* Invalid: ++MAC with DELETE and RMID (mutually exclusive) */
 ++MAC(BADMAC7) DELETE RMID(PTF0001).
 
-// Invalid: ++MAC with DELETE and SYSLIB (mutually exclusive)
+/* Invalid: ++MAC with DELETE and SYSLIB (mutually exclusive) */
 ++MAC(BADMAC8) DELETE SYSLIB(ASYSLIB).
 
-// Invalid: ++MAC with DELETE and UMID (mutually exclusive)
+/* Invalid: ++MAC with DELETE and UMID (mutually exclusive) */
 ++MAC(BADMAC9) DELETE UMID(PTF0001).
 
-// Invalid: ++MAC with RELFILE and FROMDS (mutually exclusive)
+/* Invalid: ++MAC with RELFILE and FROMDS (mutually exclusive) */
 ++MAC(BADMAC10)
   DISTLIB(AMACLIB)
   RELFILE(1)
   FROMDS(DSN(MY.DATA.SET) NUMBER(1)).
 
-// Invalid: ++MAC with RELFILE and SSI (mutually exclusive)
+/* Invalid: ++MAC with RELFILE and SSI (mutually exclusive) */
 ++MAC(BADMAC11)
   DISTLIB(AMACLIB)
   RELFILE(1)
   SSI(12345678).
 
-// Invalid: ++MAC with RELFILE and TXLIB (mutually exclusive)
+/* Invalid: ++MAC with RELFILE and TXLIB (mutually exclusive) */
 ++MAC(BADMAC12)
   DISTLIB(AMACLIB)
   RELFILE(1)
   TXLIB(ATXLIB).
 
-// Invalid: ++MAC with FROMDS and SSI (mutually exclusive)
+/* Invalid: ++MAC with FROMDS and SSI (mutually exclusive) */
 ++MAC(BADMAC13)
   DISTLIB(AMACLIB)
   FROMDS(DSN(MY.DATA.SET) NUMBER(1))
   SSI(12345678).
 
-// Invalid: ++MAC with FROMDS and TXLIB (mutually exclusive)
+/* Invalid: ++MAC with FROMDS and TXLIB (mutually exclusive) */
 ++MAC(BADMAC14)
   DISTLIB(AMACLIB)
   FROMDS(DSN(MY.DATA.SET) NUMBER(1))
   TXLIB(ATXLIB).
 
-// Invalid: ++MAC with SSI and TXLIB (mutually exclusive)
+/* Invalid: ++MAC with SSI and TXLIB (mutually exclusive) */
 ++MAC(BADMAC15)
   DISTLIB(AMACLIB)
   SSI(12345678)
   TXLIB(ATXLIB).
 
-// Invalid: ++MAC with DELETE and FROMDS (mutually exclusive)
+/* Invalid: ++MAC with DELETE and FROMDS (mutually exclusive) */
 ++MAC(BADMAC16) DELETE FROMDS(DSN(MY.DATA.SET) NUMBER(1)).
 
-// Invalid: ++MAC with DELETE and RELFILE (mutually exclusive)
+/* Invalid: ++MAC with DELETE and RELFILE (mutually exclusive) */
 ++MAC(BADMAC17) DELETE RELFILE(1).
 
-// Invalid: ++MAC with DELETE and SSI (mutually exclusive)
+/* Invalid: ++MAC with DELETE and SSI (mutually exclusive) */
 ++MAC(BADMAC18) DELETE SSI(12345678).
 
-// Invalid: ++MAC with DELETE and TXLIB (mutually exclusive)
+/* Invalid: ++MAC with DELETE and TXLIB (mutually exclusive) */
 ++MAC(BADMAC19) DELETE TXLIB(ATXLIB).

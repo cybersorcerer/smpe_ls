@@ -2,11 +2,10 @@ package hover
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/cybersorcerer/smpe_ls/internal/data"
-	"github.com/cybersorcerer/smpe_ls/internal/langid"
 	"github.com/cybersorcerer/smpe_ls/internal/logger"
+	"github.com/cybersorcerer/smpe_ls/internal/parser"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
@@ -22,138 +21,82 @@ func NewProvider(store *data.Store) *Provider {
 	}
 }
 
-// GetHover returns hover information for the given position
-func (p *Provider) GetHover(text string, line, character int) *lsp.Hover {
-	lines := strings.Split(text, "\n")
-	if line < 0 || line >= len(lines) {
+// GetHoverAST returns hover information using AST-based lookup
+func (p *Provider) GetHoverAST(doc *parser.Document, line, character int) *lsp.Hover {
+	if doc == nil {
 		return nil
 	}
 
-	currentLine := lines[line]
-	if character < 0 || character > len(currentLine) {
+	// Find the node at the cursor position
+	node := p.findNodeAtPosition(doc, line, character)
+	if node == nil {
 		return nil
 	}
 
-	// Find the word at the cursor position
-	word := p.getWordAtPosition(currentLine, character)
-	if word == "" {
-		return nil
-	}
+	logger.Debug("Hover node type: %v, name: %s", node.Type, node.Name)
 
-	logger.Debug("Hover word: %s", word)
-
-	// Check if it's a MCS statement
-	// First try exact match
-	stmt, ok := p.statements[word]
-	if !ok {
-		// Check if this is a language variant statement
-		baseName, langID, hasLangID := langid.ExtractLanguageID(word)
-		if hasLangID {
-			// Try to get the base statement
-			stmt, ok = p.statements[baseName]
-			if ok {
-				// Add language ID info to hover
-				enhancedStmt := stmt
-				enhancedStmt.Description = fmt.Sprintf("%s\n\n**Language:** %s", stmt.Description, langID)
-				return p.createStatementHover(enhancedStmt)
+	switch node.Type {
+	case parser.NodeTypeStatement:
+		if node.StatementDef != nil {
+			stmt := *node.StatementDef
+			// Add language ID info if present
+			if node.LanguageID != "" {
+				stmt.Description = fmt.Sprintf("%s\n\n**Language:** %s", stmt.Description, node.LanguageID)
 			}
+			return p.createStatementHover(stmt)
 		}
-	} else {
-		return p.createStatementHover(stmt)
-	}
-
-	// Check if it's an operand
-	// Find which MCS statement we're in
-	for i := line; i >= 0; i-- {
-		statementName := p.findMCSStatement(lines[i])
-		if statementName != "" {
-			// Try exact match first
-			stmt, ok := p.statements[statementName]
-			if !ok {
-				// Check if this is a language variant
-				baseName, _, hasLangID := langid.ExtractLanguageID(statementName)
-				if hasLangID {
-					stmt, ok = p.statements[baseName]
-				}
-			}
-
-			if ok {
-				for _, operand := range stmt.Operands {
-					if operand.Name == word {
-						return p.createOperandHover(operand)
-					}
-				}
-			}
-			break
+	case parser.NodeTypeOperand:
+		if node.OperandDef != nil {
+			return p.createOperandHover(*node.OperandDef)
 		}
+	case parser.NodeTypeParameter:
+		// No hover for parameter values
+		return nil
 	}
 
 	return nil
 }
 
-// getWordAtPosition gets the word at the given position
-func (p *Provider) getWordAtPosition(line string, character int) string {
-	// Find word boundaries
-	start := character
-	end := character
-
-	// Move start backwards
-	for start > 0 && (isWordChar(line[start-1])) {
-		start--
+// findNodeAtPosition finds the AST node at the given position
+func (p *Provider) findNodeAtPosition(doc *parser.Document, line, character int) *parser.Node {
+	// Search through all statements
+	for _, stmt := range doc.Statements {
+		if node := p.findNodeInTree(stmt, line, character); node != nil {
+			return node
+		}
 	}
-
-	// Move end forwards
-	for end < len(line) && (isWordChar(line[end])) {
-		end++
-	}
-
-	return line[start:end]
+	return nil
 }
 
-// isWordChar checks if a character is part of a word
-func isWordChar(ch byte) bool {
-	return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') ||
-	       (ch >= '0' && ch <= '9') || ch == '_' || ch == '+' || ch == '-'
-}
-
-// findMCSStatement finds a MCS statement in a line
-func (p *Provider) findMCSStatement(line string) string {
-	trimmed := strings.TrimSpace(line)
-	if !strings.HasPrefix(trimmed, "++") {
-		return ""
+// findNodeInTree recursively searches for a node at the given position
+func (p *Provider) findNodeInTree(node *parser.Node, line, character int) *parser.Node {
+	if node == nil {
+		return nil
 	}
 
-	// Try to extract the statement name
-	// Format: ++STATEMENT(param) operands...
-	// or:     ++STATEMENT operands...
-	// or:     ++STATEMENT.
-
-	// Find where the statement name ends
-	endIdx := len(trimmed)
-	for i := 2; i < len(trimmed); i++ {
-		ch := trimmed[i]
-		if ch == '(' || ch == ' ' || ch == '.' || ch == '\t' {
-			endIdx = i
-			break
+	// Check if position is within this node's range
+	if line == node.Position.Line {
+		nodeEnd := node.Position.Character + node.Position.Length
+		if character >= node.Position.Character && character < nodeEnd {
+			// Check children first (more specific match)
+			for _, child := range node.Children {
+				if childNode := p.findNodeInTree(child, line, character); childNode != nil {
+					return childNode
+				}
+			}
+			// Return this node if no child matched
+			return node
 		}
 	}
 
-	statementName := trimmed[:endIdx]
-
-	// Check if this is a known statement
-	if _, ok := p.statements[statementName]; ok {
-		return statementName
-	}
-
-	// Check if it's a language variant
-	baseName, _, hasLangID := langid.ExtractLanguageID(statementName)
-	if hasLangID {
-		if _, ok := p.statements[baseName]; ok {
-			return baseName
+	// Check children even if line doesn't match (for multiline statements)
+	for _, child := range node.Children {
+		if childNode := p.findNodeInTree(child, line, character); childNode != nil {
+			return childNode
 		}
 	}
 
-	return ""
+	return nil
 }
 
 // createStatementHover creates hover info for a statement
