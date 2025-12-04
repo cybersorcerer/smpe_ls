@@ -10,6 +10,18 @@ import (
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
+// Provider provides diagnostics
+type Provider struct {
+	statements map[string]data.MCSStatement
+}
+
+// NewProvider creates a new diagnostics provider with shared data
+func NewProvider(store *data.Store) *Provider {
+	return &Provider{
+		statements: store.Statements,
+	}
+}
+
 // AnalyzeAST analyzes an AST document and returns diagnostics
 // This replaces the old string-based Analyze() method
 func (p *Provider) AnalyzeAST(doc *parser.Document) []lsp.Diagnostic {
@@ -535,5 +547,67 @@ func (p *Provider) createDiagnosticFromNode(node *parser.Node, severity int, mes
 		Severity: severity,
 		Source:   "smpe_ls",
 		Message:  prefix + message,
+	}
+}
+
+// getRequiredOperands returns the list of required operands for a statement
+// These requirements are derived from the syntax diagrams in syntax_diagrams/
+func getRequiredOperands(statementType string) []string {
+	switch statementType {
+	case "++ASSIGN":
+		// From syntax_diagrams/assign.png: SOURCEID and TO are required
+		return []string{"SOURCEID", "TO"}
+	case "++IF":
+		// From syntax_diagrams/if.png: FMID and REQ are required, THEN is optional
+		return []string{"FMID", "REQ"}
+	case "++DELETE":
+		// From syntax_diagrams/delete.png: SYSLIB is required
+		return []string{"SYSLIB"}
+	case "++JAR":
+		// From syntax_diagrams/jar-add.png and jar-delete.png:
+		// No operands are strictly required beyond the name parameter
+		// DISTLIB and SYSLIB are important but not enforced as required here
+		// The statement itself requires either add mode (DISTLIB/SYSLIB) or delete mode (DELETE)
+		return []string{}
+	case "++MOD":
+		// From syntax_diagrams/mod_add_replace.png: DISTLIB is required for ADD/REPLACE mode
+		// From syntax_diagrams/mod_delete.png: DELETE mode has no required operands beyond DELETE itself
+		// Note: We return DISTLIB as required, but mutually_exclusive validation in smpe.json
+		// will handle the case where DELETE is present (which makes DISTLIB optional)
+		return []string{"DISTLIB"}
+	case "++MOVE":
+		// From syntax_diagrams/move-distlib.png and move-syslib.png:
+		// DISTLIB mode: DISTLIB + TODISTLIB + one of (MAC|MOD|SRC) required
+		// SYSLIB mode: SYSLIB + TOSYSLIB + one of (MAC|SRC|LMOD|FMID) required
+		// Complex conditional validation is now handled in validateOperandsAST for ++MOVE
+		return []string{}
+	case "++JARUPD":
+		// From syntax_diagrams/jar-upd.png:
+		// No operands are strictly required beyond the name parameter
+		return []string{}
+	case "++VER":
+		// From syntax_diagrams/ver.png:
+		// No operands are strictly required, all are optional
+		return []string{}
+	case "++ZAP":
+		// From syntax_diagrams/zap.png:
+		// No operands are strictly required beyond the name parameter
+		// DALIAS and TALIAS are mutually exclusive
+		return []string{}
+	case "++MAC":
+		// From syntax_diagrams/mac.png and mac-delete.png:
+		// DISTLIB is required in ADD/UPDATE mode (when DELETE is not specified)
+		// In DELETE mode (when DELETE is specified), DISTLIB is optional
+		// Since this is conditional, we don't enforce it here
+		// The mutually_exclusive validation handles the DELETE operand constraints
+		return []string{}
+	case "++USERMOD":
+		// From syntax_diagrams/usermod.png:
+		// No operands are strictly required, all are optional
+		// RFDSNPFX has allowed_if dependency on FILES (handled automatically)
+		return []string{}
+	default:
+		// No required operands for other statements (based on current syntax diagrams)
+		return []string{}
 	}
 }

@@ -3,11 +3,24 @@ package completion
 import (
 	"strings"
 
+	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/langid"
 	"github.com/cybersorcerer/smpe_ls/internal/logger"
 	"github.com/cybersorcerer/smpe_ls/internal/parser"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
+
+// Provider provides code completion
+type Provider struct {
+	statements map[string]data.MCSStatement
+}
+
+// NewProvider creates a new completion provider with shared data
+func NewProvider(store *data.Store) *Provider {
+	return &Provider{
+		statements: store.Statements,
+	}
+}
 
 // GetCompletionsAST returns completion items using the AST
 func (p *Provider) GetCompletionsAST(doc *parser.Document, text string, line, character int) []lsp.CompletionItem {
