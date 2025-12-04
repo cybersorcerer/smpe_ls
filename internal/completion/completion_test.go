@@ -296,6 +296,424 @@ func TestCompletionMultilineOperands(t *testing.T) {
 	}
 }
 
+// Test: ++APAR operand completions
+func TestCompletionAparOperands(t *testing.T) {
+	statements := map[string]data.MCSStatement{
+		"++APAR": {
+			Name:        "++APAR",
+			Description: "APAR fix",
+			Parameter:   "SYSMOD-ID",
+			Type:        "MCS",
+			Operands: []data.Operand{
+				{Name: "DESC", Parameter: "description", Type: "string"},
+				{Name: "REWORK", Parameter: "level", Type: "integer"},
+				{Name: "FILES", Parameter: "number", Type: "integer"},
+			},
+		},
+	}
+
+	statementList := []data.MCSStatement{statements["++APAR"]}
+	store := &data.Store{
+		Statements: statements,
+		List:       statementList,
+	}
+
+	p := parser.NewParser(statements)
+	cp := NewProvider(store)
+
+	text := "++APAR(UA12345) "
+	doc := p.Parse(text)
+	items := cp.GetCompletionsAST(doc, text, 0, 16)
+
+	if len(items) == 0 {
+		t.Error("Expected operand completions for ++APAR, got none")
+	}
+
+	// Should include DESC, REWORK, FILES
+	foundDesc := false
+	foundRework := false
+	foundFiles := false
+
+	for _, item := range items {
+		if item.Label == "DESC" {
+			foundDesc = true
+		}
+		if item.Label == "REWORK" {
+			foundRework = true
+		}
+		if item.Label == "FILES" {
+			foundFiles = true
+		}
+	}
+
+	if !foundDesc {
+		t.Error("Expected DESC in ++APAR operand completions")
+	}
+	if !foundRework {
+		t.Error("Expected REWORK in ++APAR operand completions")
+	}
+	if !foundFiles {
+		t.Error("Expected FILES in ++APAR operand completions")
+	}
+}
+
+// Test: ++ASSIGN operand completions
+func TestCompletionAssignOperands(t *testing.T) {
+	statements := map[string]data.MCSStatement{
+		"++ASSIGN": {
+			Name:        "++ASSIGN",
+			Description: "Assign source ID",
+			Type:        "MCS",
+			Operands: []data.Operand{
+				{Name: "SOURCEID", Parameter: "source-id", Type: "string"},
+				{Name: "TO", Parameter: "sysmod-ids", Type: "string"},
+			},
+		},
+	}
+
+	statementList := []data.MCSStatement{statements["++ASSIGN"]}
+	store := &data.Store{
+		Statements: statements,
+		List:       statementList,
+	}
+
+	p := parser.NewParser(statements)
+	cp := NewProvider(store)
+
+	text := "++ASSIGN "
+	doc := p.Parse(text)
+	items := cp.GetCompletionsAST(doc, text, 0, 9)
+
+	if len(items) == 0 {
+		t.Error("Expected operand completions for ++ASSIGN, got none")
+	}
+
+	// Should include SOURCEID and TO
+	foundSourceid := false
+	foundTo := false
+
+	for _, item := range items {
+		if item.Label == "SOURCEID" {
+			foundSourceid = true
+		}
+		if item.Label == "TO" {
+			foundTo = true
+		}
+	}
+
+	if !foundSourceid {
+		t.Error("Expected SOURCEID in ++ASSIGN operand completions")
+	}
+	if !foundTo {
+		t.Error("Expected TO in ++ASSIGN operand completions")
+	}
+}
+
+// Test: ++DELETE operand completions
+func TestCompletionDeleteOperands(t *testing.T) {
+	statements := map[string]data.MCSStatement{
+		"++DELETE": {
+			Name:        "++DELETE",
+			Description: "Delete load module",
+			Parameter:   "NAME",
+			Operands: []data.Operand{
+				{Name: "ALIAS", Parameter: "alias", Type: "string"},
+				{Name: "SYSLIB", Parameter: "ddname", Type: "string"},
+			},
+		},
+	}
+
+	statementList := []data.MCSStatement{statements["++DELETE"]}
+	store := &data.Store{
+		Statements: statements,
+		List:       statementList,
+	}
+
+	p := parser.NewParser(statements)
+	cp := NewProvider(store)
+
+	text := "++DELETE(MYMODULE) "
+	doc := p.Parse(text)
+	items := cp.GetCompletionsAST(doc, text, 0, 19)
+
+	if len(items) == 0 {
+		t.Error("Expected operand completions for ++DELETE, got none")
+	}
+
+	// Should include ALIAS and SYSLIB
+	foundAlias := false
+	foundSyslib := false
+
+	for _, item := range items {
+		if item.Label == "ALIAS" {
+			foundAlias = true
+		}
+		if item.Label == "SYSLIB" {
+			foundSyslib = true
+		}
+	}
+
+	if !foundAlias {
+		t.Error("Expected ALIAS in ++DELETE operand completions")
+	}
+	if !foundSyslib {
+		t.Error("Expected SYSLIB in ++DELETE operand completions")
+	}
+}
+
+// Test: ++HOLD operand completions
+func TestCompletionHoldOperands(t *testing.T) {
+	statements := map[string]data.MCSStatement{
+		"++HOLD": {
+			Name:        "++HOLD",
+			Description: "Place SYSMOD in exception status",
+			Parameter:   "SYSMOD-ID",
+			Type:        "MCS",
+			Operands: []data.Operand{
+				{Name: "ERROR", Type: "boolean"},
+				{Name: "FMID", Parameter: "fmid", Type: "string"},
+				{Name: "REASON", Parameter: "reason-id", Type: "string"},
+				{Name: "DATE", Parameter: "date", Type: "integer"},
+			},
+		},
+	}
+
+	statementList := []data.MCSStatement{statements["++HOLD"]}
+	store := &data.Store{
+		Statements: statements,
+		List:       statementList,
+	}
+
+	p := parser.NewParser(statements)
+	cp := NewProvider(store)
+
+	text := "++HOLD(UA12345) "
+	doc := p.Parse(text)
+	items := cp.GetCompletionsAST(doc, text, 0, 16)
+
+	if len(items) == 0 {
+		t.Error("Expected operand completions for ++HOLD, got none")
+	}
+
+	// Should include ERROR, FMID, REASON, DATE
+	foundError := false
+	foundFmid := false
+	foundReason := false
+
+	for _, item := range items {
+		if item.Label == "ERROR" {
+			foundError = true
+		}
+		if item.Label == "FMID" {
+			foundFmid = true
+		}
+		if item.Label == "REASON" {
+			foundReason = true
+		}
+	}
+
+	if !foundError {
+		t.Error("Expected ERROR in ++HOLD operand completions")
+	}
+	if !foundFmid {
+		t.Error("Expected FMID in ++HOLD operand completions")
+	}
+	if !foundReason {
+		t.Error("Expected REASON in ++HOLD operand completions")
+	}
+}
+
+// Test: ++IF operand completions
+func TestCompletionIfOperands(t *testing.T) {
+	statements := map[string]data.MCSStatement{
+		"++IF": {
+			Name:        "++IF",
+			Description: "Conditional requisite",
+			Type:        "MCS",
+			Operands: []data.Operand{
+				{Name: "FMID", Parameter: "sysmod-id", Type: "string"},
+				{Name: "THEN", Type: "boolean"},
+				{Name: "REQ", Parameter: "sysmod-id", Type: "string"},
+			},
+		},
+	}
+
+	statementList := []data.MCSStatement{statements["++IF"]}
+	store := &data.Store{
+		Statements: statements,
+		List:       statementList,
+	}
+
+	p := parser.NewParser(statements)
+	cp := NewProvider(store)
+
+	text := "++IF "
+	doc := p.Parse(text)
+	items := cp.GetCompletionsAST(doc, text, 0, 5)
+
+	if len(items) == 0 {
+		t.Error("Expected operand completions for ++IF, got none")
+	}
+
+	// Should include FMID, THEN, REQ
+	foundFmid := false
+	foundThen := false
+	foundReq := false
+
+	for _, item := range items {
+		if item.Label == "FMID" {
+			foundFmid = true
+		}
+		if item.Label == "THEN" {
+			foundThen = true
+		}
+		if item.Label == "REQ" {
+			foundReq = true
+		}
+	}
+
+	if !foundFmid {
+		t.Error("Expected FMID in ++IF operand completions")
+	}
+	if !foundThen {
+		t.Error("Expected THEN in ++IF operand completions")
+	}
+	if !foundReq {
+		t.Error("Expected REQ in ++IF operand completions")
+	}
+}
+
+// Test: ++FEATURE operand completions
+func TestCompletionFeatureOperands(t *testing.T) {
+	statements := map[string]data.MCSStatement{
+		"++FEATURE": {
+			Name:        "++FEATURE",
+			Description: "Feature definition",
+			Parameter:   "NAME",
+			Type:        "MCS",
+			Operands: []data.Operand{
+				{Name: "DESC", Parameter: "description", Type: "string"},
+				{Name: "FMID", Parameter: "fmid", Type: "string"},
+				{Name: "PRODUCT", Parameter: "prodid", Type: "string"},
+				{Name: "REWORK", Parameter: "level", Type: "integer"},
+			},
+		},
+	}
+
+	statementList := []data.MCSStatement{statements["++FEATURE"]}
+	store := &data.Store{
+		Statements: statements,
+		List:       statementList,
+	}
+
+	p := parser.NewParser(statements)
+	cp := NewProvider(store)
+
+	text := "++FEATURE(MYFEATURE) "
+	doc := p.Parse(text)
+	items := cp.GetCompletionsAST(doc, text, 0, 21)
+
+	if len(items) == 0 {
+		t.Error("Expected operand completions for ++FEATURE, got none")
+	}
+
+	// Should include DESC, FMID, PRODUCT, REWORK
+	foundDesc := false
+	foundFmid := false
+	foundProduct := false
+
+	for _, item := range items {
+		if item.Label == "DESC" {
+			foundDesc = true
+		}
+		if item.Label == "FMID" {
+			foundFmid = true
+		}
+		if item.Label == "PRODUCT" {
+			foundProduct = true
+		}
+	}
+
+	if !foundDesc {
+		t.Error("Expected DESC in ++FEATURE operand completions")
+	}
+	if !foundFmid {
+		t.Error("Expected FMID in ++FEATURE operand completions")
+	}
+	if !foundProduct {
+		t.Error("Expected PRODUCT in ++FEATURE operand completions")
+	}
+}
+
+// Test: Real file - typing ++ on new line should offer all statements
+func TestCompletionRealFileNewStatement(t *testing.T) {
+	// Load real smpe.json
+	store, err := data.Load("../../data/smpe.json")
+	if err != nil {
+		t.Fatalf("Failed to load smpe.json: %v", err)
+	}
+
+	p := parser.NewParser(store.Statements)
+	cp := NewProvider(store)
+
+	// Simulate test-usermod-simple.smpe content + typing ++ on line 5
+	text := `++USERMOD(TEST002)
+  REWORK(123)
+  DESC(This is a test with PRIMARY(!) inside)
+  .
+
+++`
+	doc := p.Parse(text)
+
+	// Cursor is at line 5, char 2 (after ++)
+	items := cp.GetCompletionsAST(doc, text, 5, 2)
+
+	t.Logf("Got %d completions:", len(items))
+	for i, item := range items {
+		if i < 10 { // Print first 10
+			t.Logf("  - %s", item.Label)
+		}
+	}
+
+	if len(items) < 50 {
+		t.Errorf("Expected many statement completions (all 78 statements), got only %d", len(items))
+	}
+
+	// Should include various types
+	foundUsermod := false
+	foundApar := false
+	foundMac := false
+	foundJar := false
+
+	for _, item := range items {
+		if item.Label == "++USERMOD" {
+			foundUsermod = true
+		}
+		if item.Label == "++APAR" {
+			foundApar = true
+		}
+		if item.Label == "++MAC" {
+			foundMac = true
+		}
+		if item.Label == "++JAR" {
+			foundJar = true
+		}
+	}
+
+	if !foundUsermod {
+		t.Error("Expected ++USERMOD in statement completions")
+	}
+	if !foundApar {
+		t.Error("Expected ++APAR in statement completions")
+	}
+	if !foundMac {
+		t.Error("Expected ++MAC in statement completions")
+	}
+	if !foundJar {
+		t.Error("Expected ++JAR in statement completions")
+	}
+}
+
 // Test: No completions for statement without operands
 func TestCompletionNoOperandsForStatementWithoutOperands(t *testing.T) {
 	_, p, cp := createTestProviders()

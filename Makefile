@@ -61,4 +61,15 @@ vscode: build vscode-compile
 	@echo "2. Press F5 to launch Extension Development Host"
 	@echo "3. Open a .smpe file to activate the extension"
 
-.PHONY: vscode-deps vscode-compile vscode
+package-windows: vscode-deps
+	@echo "Building Windows binary..."
+	GOOS=windows GOARCH=amd64 go build -o client/vscode-smpe/smpe_ls.exe ./cmd/smpe_ls
+	@echo "Copying data files..."
+	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
+	@echo "Creating VSIX package..."
+	cd client/vscode-smpe && npx --yes @vscode/vsce package
+	@echo ""
+	@echo "VSIX package created in client/vscode-smpe/"
+	@echo "Install on Windows with: code --install-extension vscode-smpe-*.vsix"
+
+.PHONY: vscode-deps vscode-compile vscode package-windows

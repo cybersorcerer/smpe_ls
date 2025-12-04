@@ -6,3 +6,5 @@ tsconfig.json
 **/*.map
 **/*.ts
 !out/**/*.js
+!smpe_ls.exe
+!smpe.json

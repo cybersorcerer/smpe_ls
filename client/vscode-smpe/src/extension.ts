@@ -1,83 +1,101 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import {
-    LanguageClient,
-    LanguageClientOptions,
-    ServerOptions,
-    Executable
+	LanguageClient,
+	LanguageClientOptions,
+	ServerOptions,
+	Executable
 } from 'vscode-languageclient/node';
 
 let client: LanguageClient;
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('SMP/E Language Server extension is now active');
+	console.log('SMP/E Language Server extension is now active');
 
-    // Get configuration
-    const config = vscode.workspace.getConfiguration('smpe');
-    const serverPath = config.get<string>('serverPath') || 'smpe_ls';
+	// Get configuration
+	const config = vscode.workspace.getConfiguration('smpe');
+	const serverPath = config.get<string>('serverPath') || 'smpe_ls';
 
-    // FORCE debug mode to true during development
-    const debug = true;
+	// FORCE debug mode to true during development
+	const debug = true;
 
-    console.log(`DEBUG: debug config value = ${config.get<boolean>('debug')}, FORCED final debug = ${debug}`);
+	console.log(`DEBUG: debug config value = ${config.get<boolean>('debug')}, FORCED final debug = ${debug}`);
 
-    // Determine the full path to the server
-    let executable = serverPath;
+	// Determine the full path to the server
+	let executable = serverPath;
+	let dataPathArgs: string[] = [];
 
-    // If it's not an absolute path, try to find it
-    if (!path.isAbsolute(serverPath)) {
-        // First try ~/.local/bin
-        const homeDir = process.env.HOME || process.env.USERPROFILE;
-        if (homeDir) {
-            const localBinPath = path.join(homeDir, '.local', 'bin', serverPath);
-            executable = localBinPath;
-        }
-    }
+	// Check if we have a bundled binary in the extension folder
+	// This is primarily for the Windows .vsix package
+	const bundledBinaryName = process.platform === 'win32' ? 'smpe_ls.exe' : 'smpe_ls';
+	const bundledBinaryPath = context.asAbsolutePath(bundledBinaryName);
+	const bundledDataPath = context.asAbsolutePath('smpe.json');
 
-    // Server options
-    // Server will use default data path: ~/.local/share/smpe_ls/smpe.json
-    const args = debug ? ['--debug'] : [];
+	// Check if bundled binary exists (using fs)
+	const fs = require('fs');
+	if (fs.existsSync(bundledBinaryPath)) {
+		console.log(`Found bundled binary at: ${bundledBinaryPath}`);
+		executable = bundledBinaryPath;
 
-    const serverExecutable: Executable = {
-        command: executable,
-        args: args,
-        options: {
-            env: process.env
-        }
-    };
+		// If we have a bundled binary, check for bundled data too
+		if (fs.existsSync(bundledDataPath)) {
+			console.log(`Found bundled data at: ${bundledDataPath}`);
+			dataPathArgs = ['--data', bundledDataPath];
+		}
+	} else if (!path.isAbsolute(serverPath)) {
+		// If it's not an absolute path and not bundled, try to find it in PATH or standard locations
+		// First try ~/.local/bin
+		const homeDir = process.env.HOME || process.env.USERPROFILE;
+		if (homeDir) {
+			const localBinPath = path.join(homeDir, '.local', 'bin', serverPath);
+			executable = localBinPath;
+		}
+	}
 
-    const serverOptions: ServerOptions = {
-        run: serverExecutable,
-        debug: serverExecutable
-    };
+	// Server options
+	// Server will use default data path: ~/.local/share/smpe_ls/smpe.json
+	const args = (debug ? ['--debug'] : []).concat(dataPathArgs);
 
-    // Client options
-    const clientOptions: LanguageClientOptions = {
-        documentSelector: [
-            { scheme: 'file', language: 'smpe' }
-        ],
-        synchronize: {
-            fileEvents: vscode.workspace.createFileSystemWatcher('**/*.{smpe,mcs,smp}')
-        }
-    };
+	const serverExecutable: Executable = {
+		command: executable,
+		args: args,
+		options: {
+			env: process.env
+		}
+	};
 
-    // Create the language client
-    client = new LanguageClient(
-        'smpe-ls',
-        'SMP/E Language Server',
-        serverOptions,
-        clientOptions
-    );
+	const serverOptions: ServerOptions = {
+		run: serverExecutable,
+		debug: serverExecutable
+	};
 
-    // Start the client (and server)
-    client.start();
+	// Client options
+	const clientOptions: LanguageClientOptions = {
+		documentSelector: [
+			{ scheme: 'file', language: 'smpe' }
+		],
+		synchronize: {
+			fileEvents: vscode.workspace.createFileSystemWatcher('**/*.{smpe,mcs,smp}')
+		}
+	};
 
-    console.log('SMP/E Language Server client started');
+	// Create the language client
+	client = new LanguageClient(
+		'smpe-ls',
+		'SMP/E Language Server',
+		serverOptions,
+		clientOptions
+	);
+
+	// Start the client (and server)
+	client.start();
+
+	console.log('SMP/E Language Server client started');
 }
 
 export function deactivate(): Thenable<void> | undefined {
-    if (!client) {
-        return undefined;
-    }
-    return client.stop();
+	if (!client) {
+		return undefined;
+	}
+	return client.stop();
 }

@@ -34,6 +34,7 @@ type Operand struct {
 type AllowedValue struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Parameter   string `json:"parameter,omitempty"`   // Parameter syntax (e.g., "24|31|64" for AMODE)
 	Type        string `json:"type,omitempty"`        // Type constraint (string, integer, etc.) for sub-operands
 	Length      int    `json:"length,omitempty"`      // Maximum length constraint for sub-operands
 }

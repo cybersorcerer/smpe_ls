@@ -387,9 +387,13 @@ func (p *Provider) validateSubOperandsAST(operandNode *parser.Node, subOperandDe
 	var diagnostics []lsp.Diagnostic
 
 	// Build a map of sub-operand definitions for quick lookup
+	// Support pipe-separated aliases (e.g., "AMODE|AMOD")
 	subOpDefMap := make(map[string]*data.AllowedValue)
 	for i := range subOperandDefs {
-		subOpDefMap[subOperandDefs[i].Name] = &subOperandDefs[i]
+		names := strings.Split(subOperandDefs[i].Name, "|")
+		for _, name := range names {
+			subOpDefMap[strings.TrimSpace(name)] = &subOperandDefs[i]
+		}
 	}
 
 	// Iterate through the children of the operand node to find sub-operands

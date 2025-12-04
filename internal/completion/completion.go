@@ -179,7 +179,7 @@ func (p *Provider) getMCSCompletions(replaceRange *lsp.Range) []lsp.CompletionIt
 
 	// Order statements for consistent display (Control MCS - alphabetically sorted)
 	// TODO: This list should be generated dynamically from smpe.json instead of being hard-coded (see TODO.md)
-	order := []string{"++APAR", "++ASSIGN", "++DELETE", "++FEATURE", "++FUNCTION", "++HOLD", "++IF", "++JAR", "++JARUPD", "++JCLIN", "++MAC", "++USERMOD", "++VER", "++ZAP"}
+	order := []string{"++APAR", "++ASSIGN", "++DELETE", "++FEATURE", "++FUNCTION", "++HOLD", "++IF", "++JAR", "++JARUPD", "++JCLIN", "++MAC", "++MOD", "++USERMOD", "++VER", "++ZAP"}
 
 	// Add all Data Element MCS base names (will be expanded with language variants below)
 	// TODO: This list should be generated dynamically from smpe.json instead of being hard-coded (see TODO.md)
@@ -213,7 +213,7 @@ func (p *Provider) getMCSCompletions(replaceRange *lsp.Range) []lsp.CompletionIt
 				item := lsp.CompletionItem{
 					Label:            variantName,
 					Kind:             lsp.CompletionItemKindKeyword,
-					Detail:           name + " (" + langID + ")",
+					Detail:           stmt.Type,
 					Documentation:    stmt.Description,
 					InsertTextFormat: lsp.InsertTextFormatSnippet,
 				}
@@ -241,7 +241,7 @@ func (p *Provider) getMCSCompletions(replaceRange *lsp.Range) []lsp.CompletionIt
 			item := lsp.CompletionItem{
 				Label:            name,
 				Kind:             lsp.CompletionItemKindKeyword,
-				Detail:           name,
+				Detail:           stmt.Type,
 				Documentation:    stmt.Description,
 				InsertTextFormat: lsp.InsertTextFormatSnippet,
 			}
@@ -306,6 +306,16 @@ func (p *Provider) getOperandCompletions(stmt data.MCSStatement, statementTextBe
 		}
 	}
 
+	// Special handling for ++MOD: context-sensitive completion based on DELETE operand
+	// From syntax_diagrams/mod-delete.png: If DELETE is present, only CSECT, DISTLIB, VERSION are allowed
+	// From syntax_diagrams/mod-add_replace.png: If DELETE is NOT present, all operands except DELETE are allowed
+	isModDeleteMode := false
+	if stmt.Name == "++MOD" {
+		if _, hasDelete := presentOperands["DELETE"]; hasDelete {
+			isModDeleteMode = true
+		}
+	}
+
 	// Calculate range to replace if we're in the middle of typing
 	var replaceRange *lsp.Range
 	if wordStart < character {
@@ -349,6 +359,30 @@ func (p *Provider) getOperandCompletions(stmt data.MCSStatement, statementTextBe
 			}
 		}
 
+		// Context-sensitive filtering for ++MOD based on DELETE mode
+		if stmt.Name == "++MOD" {
+			if isModDeleteMode {
+				// DELETE mode: only CSECT, DISTLIB, VERSION allowed (DELETE already present)
+				if primaryName != "CSECT" && primaryName != "DISTLIB" && primaryName != "VERSION" {
+					continue
+				}
+			} else {
+				// ADD/REPLACE mode: check if any non-DELETE operands are present
+				hasNonDeleteOperands := false
+				for op := range presentOperands {
+					if op != "DELETE" {
+						hasNonDeleteOperands = true
+						break
+					}
+				}
+
+				// If non-DELETE operands are present, don't offer DELETE anymore
+				if hasNonDeleteOperands && primaryName == "DELETE" {
+					continue
+				}
+			}
+		}
+
 		// Check if operand has dependency (e.g., RFDSNPFX depends on FILES)
 		if operand.AllowedIf != "" {
 			// Check if dependency is present
@@ -377,7 +411,7 @@ func (p *Provider) getOperandCompletions(stmt data.MCSStatement, statementTextBe
 		item := lsp.CompletionItem{
 			Label:            primaryName,
 			Kind:             lsp.CompletionItemKindProperty,
-			Detail:           operand.Parameter,
+			Detail:           "Operand",
 			Documentation:    doc,
 			InsertTextFormat: lsp.InsertTextFormatSnippet, // Enable snippet support
 		}
@@ -405,7 +439,7 @@ func (p *Provider) getOperandCompletions(stmt data.MCSStatement, statementTextBe
 			aliasItem := lsp.CompletionItem{
 				Label:            aliasName,
 				Kind:             lsp.CompletionItemKindProperty,
-				Detail:           "alias for " + primaryName,
+				Detail:           "Operand",
 				Documentation:    doc,
 				InsertTextFormat: lsp.InsertTextFormatSnippet, // Enable snippet support
 			}

@@ -82,7 +82,11 @@ func NewParser(statements map[string]data.MCSStatement) *Parser {
 	for stmtName, stmt := range statements {
 		operands[stmtName] = make(map[string]data.Operand)
 		for _, op := range stmt.Operands {
-			operands[stmtName][op.Name] = op
+			// Split aliases (e.g., "DESCRIPTION|DESC" means DESC is an alias for DESCRIPTION)
+			names := strings.Split(op.Name, "|")
+			for _, name := range names {
+				operands[stmtName][name] = op
+			}
 		}
 	}
 
@@ -343,12 +347,33 @@ func (p *Parser) parseOperands(text string, lineNum int, offset int, parent *Nod
 				},
 			}
 
-			// Link to operand definition if we have statement context
+			// Link to operand definition
 			if parent.Type == NodeTypeStatement && parent.StatementDef != nil {
+				// Top-level operand: link from statement's operands
 				if stmtOps, exists := p.operands[parent.Name]; exists {
 					if opDef, exists := stmtOps[operandName]; exists {
 						operandNode.OperandDef = &opDef
 						logger.Debug("Parser: Operand %s linked to definition", operandName)
+					}
+				}
+			} else if parent.Type == NodeTypeOperand && parent.OperandDef != nil {
+				// Sub-operand: link from parent operand's values
+				// Support pipe-separated aliases (e.g., "AMODE|AMOD")
+				for _, val := range parent.OperandDef.Values {
+					names := strings.Split(val.Name, "|")
+					for _, name := range names {
+						if strings.TrimSpace(name) == operandName {
+							// Convert AllowedValue to Operand for linking
+							operandNode.OperandDef = &data.Operand{
+								Name:        val.Name,
+								Parameter:   val.Parameter,
+								Type:        val.Type,
+								Description: val.Description,
+								Length:      val.Length,
+							}
+							logger.Debug("Parser: Sub-operand %s linked to definition", operandName)
+							break
+						}
 					}
 				}
 			}

@@ -979,6 +979,12 @@ func getRequiredOperands(statementType string) []string {
 		// DISTLIB and SYSLIB are important but not enforced as required here
 		// The statement itself requires either add mode (DISTLIB/SYSLIB) or delete mode (DELETE)
 		return []string{}
+	case "++MOD":
+		// From syntax_diagrams/mod_add_replace.png: DISTLIB is required for ADD/REPLACE mode
+		// From syntax_diagrams/mod_delete.png: DELETE mode has no required operands beyond DELETE itself
+		// Note: We return DISTLIB as required, but mutually_exclusive validation in smpe.json
+		// will handle the case where DELETE is present (which makes DISTLIB optional)
+		return []string{"DISTLIB"}
 	case "++JARUPD":
 		// From syntax_diagrams/jar-upd.png:
 		// No operands are strictly required beyond the name parameter

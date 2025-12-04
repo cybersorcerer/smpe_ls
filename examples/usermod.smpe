@@ -44,3 +44,4 @@
 ++VER(?????) /* klasdjlaksdj */
 /* lksdlakjdalskk */ .
 ++ASSIGN SOURCEID(NIX) TO(HUHO) .
+++MOD(HHHH) DISTLIB(DD1) LEPARM(AMODE(31) RMODE(ANY) AC(1) NCAL) FROMDS(DSN(DD1)) /* Test */ .

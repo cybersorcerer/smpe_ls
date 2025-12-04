@@ -488,7 +488,7 @@ func (p *Provider) getOperandCompletionsAST(stmt *parser.Node, text string, line
 		item := lsp.CompletionItem{
 			Label:  primaryName,
 			Kind:   lsp.CompletionItemKindProperty,
-			Detail: op.Description,
+			Detail: "Operand",
 		}
 
 		// Add parameter hint if available
@@ -518,31 +518,91 @@ func (p *Provider) getOperandValueCompletionsAST(operandNode *parser.Node, fullT
 		// These are sub-operands (e.g., DSN, NUMBER for FROMDS)
 		var items []lsp.CompletionItem
 		for _, subOp := range operandNode.OperandDef.Values {
-			item := lsp.CompletionItem{
-				Label:  subOp.Name,
-				Kind:   lsp.CompletionItemKindProperty,
-				Detail: subOp.Description,
+			// Handle aliases (e.g., "AMODE|AMOD" -> ["AMODE", "AMOD"])
+			names := strings.Split(subOp.Name, "|")
+			primaryName := strings.TrimSpace(names[0])
+
+			// Determine if this sub-operand needs a parameter
+			insertText := primaryName
+			if subOp.Parameter != "" {
+				insertText = primaryName + "($0)"
 			}
 
-			// Sub-operands always have parameters (indicated by parent's Parameter field)
-			item.InsertText = subOp.Name + "($0)"
-			item.InsertTextFormat = lsp.InsertTextFormatSnippet
+			item := lsp.CompletionItem{
+				Label:            primaryName,
+				Kind:             lsp.CompletionItemKindProperty,
+				Detail:           "Operand",
+				Documentation:    subOp.Description,
+				InsertText:       insertText,
+				InsertTextFormat: lsp.InsertTextFormatSnippet,
+			}
 
 			items = append(items, item)
+
+			// Add separate completion items for aliases
+			for i := 1; i < len(names); i++ {
+				aliasName := strings.TrimSpace(names[i])
+				aliasInsertText := aliasName
+				if subOp.Parameter != "" {
+					aliasInsertText = aliasName + "($0)"
+				}
+
+				aliasItem := lsp.CompletionItem{
+					Label:            aliasName,
+					Kind:             lsp.CompletionItemKindProperty,
+					Detail:           "Operand",
+					Documentation:    subOp.Description,
+					InsertText:       aliasInsertText,
+					InsertTextFormat: lsp.InsertTextFormatSnippet,
+				}
+				items = append(items, aliasItem)
+			}
 		}
 		return items
 	}
 
-	// Otherwise, these are simple enumerated value completions
+	// Otherwise, these are simple enumerated value completions (e.g., LEPARM attributes)
 	if len(operandNode.OperandDef.Values) > 0 {
 		var items []lsp.CompletionItem
 		for _, value := range operandNode.OperandDef.Values {
+			// Handle aliases (e.g., "AMODE|AMOD" -> ["AMODE", "AMOD"])
+			names := strings.Split(value.Name, "|")
+			primaryName := strings.TrimSpace(names[0])
+
+			// Determine if this value needs a parameter
+			insertText := primaryName
+			if value.Parameter != "" {
+				insertText = primaryName + "($0)"
+			}
+
 			item := lsp.CompletionItem{
-				Label:  value.Name,
-				Kind:   lsp.CompletionItemKindValue,
-				Detail: value.Description,
+				Label:            primaryName,
+				Kind:             lsp.CompletionItemKindProperty,
+				Detail:           "Operand",
+				Documentation:    value.Description,
+				InsertText:       insertText,
+				InsertTextFormat: lsp.InsertTextFormatSnippet,
 			}
 			items = append(items, item)
+
+			// Add separate completion items for aliases
+			for i := 1; i < len(names); i++ {
+				aliasName := strings.TrimSpace(names[i])
+				aliasInsertText := aliasName
+				if value.Parameter != "" {
+					aliasInsertText = aliasName + "($0)"
+				}
+
+				aliasItem := lsp.CompletionItem{
+					Label:            aliasName,
+					Kind:             lsp.CompletionItemKindProperty,
+					Detail:           "Operand",
+					Documentation:    value.Description,
+					InsertText:       aliasInsertText,
+					InsertTextFormat: lsp.InsertTextFormatSnippet,
+				}
+				items = append(items, aliasItem)
+			}
 		}
 		return items
 	}
