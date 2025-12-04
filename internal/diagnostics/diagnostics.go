@@ -985,6 +985,13 @@ func getRequiredOperands(statementType string) []string {
 		// Note: We return DISTLIB as required, but mutually_exclusive validation in smpe.json
 		// will handle the case where DELETE is present (which makes DISTLIB optional)
 		return []string{"DISTLIB"}
+	case "++MOVE":
+		// From syntax_diagrams/move-distlib.png and move-syslib.png:
+		// DISTLIB mode: DISTLIB + TODISTLIB + one of (MAC|MOD|SRC) required
+		// SYSLIB mode: SYSLIB + TOSYSLIB + one of (MAC|SRC|LMOD|FMID) required
+		// We can't easily validate the conditional requirements here, so we return empty
+		// The mutually_exclusive constraints in smpe.json handle most of the validation
+		return []string{}
 	case "++JARUPD":
 		// From syntax_diagrams/jar-upd.png:
 		// No operands are strictly required beyond the name parameter

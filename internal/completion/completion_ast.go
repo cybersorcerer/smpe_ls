@@ -3,6 +3,7 @@ package completion
 import (
 	"strings"
 
+	"github.com/cybersorcerer/smpe_ls/internal/langid"
 	"github.com/cybersorcerer/smpe_ls/internal/logger"
 	"github.com/cybersorcerer/smpe_ls/internal/parser"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
@@ -484,6 +485,28 @@ func (p *Provider) getOperandCompletionsAST(stmt *parser.Node, text string, line
 			}
 		}
 
+		// Context-sensitive filtering for ++MOVE based on DISTLIB vs SYSLIB mode
+		// From syntax_diagrams/move-distlib.png: DISTLIB + TODISTLIB + (MAC|MOD|SRC) + optional FMID
+		// From syntax_diagrams/move-syslib.png: SYSLIB + TOSYSLIB + (MAC|SRC|LMOD) + optional FMID
+		if stmt.Name == "++MOVE" {
+			hasDistlib := presentOperands["DISTLIB"]
+			hasSyslib := presentOperands["SYSLIB"]
+
+			if hasDistlib {
+				// DISTLIB mode: exclude SYSLIB, TOSYSLIB, LMOD
+				if primaryName == "SYSLIB" || primaryName == "TOSYSLIB" || primaryName == "LMOD" {
+					continue
+				}
+			}
+
+			if hasSyslib {
+				// SYSLIB mode: exclude DISTLIB, TODISTLIB, MOD
+				if primaryName == "DISTLIB" || primaryName == "TODISTLIB" || primaryName == "MOD" {
+					continue
+				}
+			}
+		}
+
 		// Build completion item
 		item := lsp.CompletionItem{
 			Label:  primaryName,
@@ -652,4 +675,94 @@ func (p *Provider) isInsideInlineDataAST(doc *parser.Document, line int) bool {
 	}
 
 	return false
+}
+
+// getMCSCompletions returns MCS statement completions
+func (p *Provider) getMCSCompletions(replaceRange *lsp.Range) []lsp.CompletionItem {
+	var items []lsp.CompletionItem
+
+	// Order statements for consistent display (Control MCS - alphabetically sorted)
+	// TODO: This list should be generated dynamically from smpe.json instead of being hard-coded (see TODO.md)
+	order := []string{"++APAR", "++ASSIGN", "++DELETE", "++FEATURE", "++FUNCTION", "++HOLD", "++IF", "++JAR", "++JARUPD", "++JCLIN", "++MAC", "++MOD", "++MOVE", "++USERMOD", "++VER", "++ZAP"}
+
+	// Add all Data Element MCS base names (will be expanded with language variants below)
+	// TODO: This list should be generated dynamically from smpe.json instead of being hard-coded (see TODO.md)
+	dataElementOrder := []string{
+		"++BOOK", "++BSIND", "++CGM", "++CLIST", "++DATA", "++DATA1", "++DATA2",
+		"++DATA3", "++DATA4", "++DATA5", "++DATA6", "++EXEC", "++FONT", "++GDF",
+		"++HELP", "++IMG", "++MSG", "++PARM", "++PNL", "++PROBJ", "++PROC",
+		"++PRODXML", "++PRSRC", "++PSEG", "++PUBLB", "++SAMP", "++SKL", "++TBL",
+		"++TEXT", "++USER1", "++USER2", "++USER3", "++USER4", "++USER5",
+		"++UTIN", "++UTOUT",
+	}
+	order = append(order, dataElementOrder...)
+
+	for _, name := range order {
+		stmt, ok := p.statements[name]
+		if !ok {
+			continue
+		}
+
+		// If this statement requires language variants, generate all variants
+		if stmt.LanguageVariants {
+			for _, langID := range langid.NationalLanguageIdentifiers {
+				variantName := name + langID
+
+				// Create insert text with parameter placeholder if needed
+				insertText := variantName
+				if stmt.Parameter != "" {
+					insertText += "($1)" // $1 = cursor position inside parentheses
+				}
+
+				item := lsp.CompletionItem{
+					Label:            variantName,
+					Kind:             lsp.CompletionItemKindKeyword,
+					Detail:           stmt.Type,
+					Documentation:    stmt.Description,
+					InsertTextFormat: lsp.InsertTextFormatSnippet,
+				}
+
+				// If we have a range to replace (typed + characters), use TextEdit
+				if replaceRange != nil {
+					item.TextEdit = &lsp.TextEdit{
+						Range:   *replaceRange,
+						NewText: insertText,
+					}
+				} else {
+					item.InsertText = insertText
+				}
+
+				items = append(items, item)
+			}
+		} else {
+			// Normal statement without language variants
+			// Create insert text with parameter placeholder if needed
+			insertText := name
+			if stmt.Parameter != "" {
+				insertText += "($1)" // $1 = cursor position inside parentheses
+			}
+
+			item := lsp.CompletionItem{
+				Label:            name,
+				Kind:             lsp.CompletionItemKindKeyword,
+				Detail:           stmt.Type,
+				Documentation:    stmt.Description,
+				InsertTextFormat: lsp.InsertTextFormatSnippet,
+			}
+
+			// If we have a range to replace (typed + characters), use TextEdit
+			if replaceRange != nil {
+				item.TextEdit = &lsp.TextEdit{
+					Range:   *replaceRange,
+					NewText: insertText,
+				}
+			} else {
+				item.InsertText = insertText
+			}
+
+			items = append(items, item)
+		}
+	}
+
+	return items
 }

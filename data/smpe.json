@@ -3986,38 +3986,38 @@
                 "description": "Specifies the ddname of the distribution library in which the member resides. Required for distribution library moves."
             },
             {
-                "name": "FMID",
+				"name": "FMID",
                 "parameter": "FMID-LIST",
                 "type": "string",
                 "mutually_exclusive": "LMOD",
                 "description": "Specifies the FMID that owns the element."
             },
             {
-                "name": "MAC",
+				"name": "MAC",
                 "type": "boolean",
                 "mutually_exclusive": "MOD|SRC|LMOD",
                 "description": "Specifies that the member to be moved is a macro."
             },
             {
-                "name": "MOD",
+				"name": "MOD",
                 "type": "boolean",
                 "mutually_exclusive": "MAC|SRC|LMOD",
                 "description": "Specifies that the member to be moved is a module."
             },
             {
-                "name": "SRC",
+				"name": "SRC",
                 "type": "boolean",
                 "mutually_exclusive": "MAC|MOD|LMOD",
                 "description": "Specifies that the member to be moved is a source."
             },
             {
-                "name": "LMOD",
+				"name": "LMOD",
                 "type": "boolean",
                 "mutually_exclusive": "MAC|MOD|SRC|FMID",
                 "description": "Specifies that the member to be moved is a load module."
             },
             {
-                "name": "SYSLIB",
+				"name": "SYSLIB",
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,

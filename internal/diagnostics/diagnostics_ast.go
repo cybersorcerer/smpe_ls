@@ -333,6 +333,64 @@ func (p *Provider) validateOperandsAST(stmt *parser.Node, operands map[string]*p
 		}
 	}
 
+	// Special validation for ++MOVE based on syntax diagrams
+	// From syntax_diagrams/move-distlib.png and move-syslib.png
+	if stmt.Name == "++MOVE" {
+		hasDistlib := operands["DISTLIB"] != nil
+		hasSyslib := operands["SYSLIB"] != nil
+
+		// DISTLIB mode validation
+		if hasDistlib {
+			// TODISTLIB is required when DISTLIB is present
+			if operands["TODISTLIB"] == nil {
+				diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+					stmt,
+					lsp.SeverityError,
+					"TODISTLIB is required when DISTLIB is specified",
+				))
+			}
+
+			// One of MAC, MOD, or SRC is required in DISTLIB mode
+			if operands["MAC"] == nil && operands["MOD"] == nil && operands["SRC"] == nil {
+				diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+					stmt,
+					lsp.SeverityError,
+					"One of MAC, MOD, or SRC is required when DISTLIB is specified",
+				))
+			}
+		}
+
+		// SYSLIB mode validation
+		if hasSyslib {
+			// TOSYSLIB is required when SYSLIB is present
+			if operands["TOSYSLIB"] == nil {
+				diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+					stmt,
+					lsp.SeverityError,
+					"TOSYSLIB is required when SYSLIB is specified",
+				))
+			}
+
+			// One of MAC, SRC, LMOD, or FMID is required in SYSLIB mode
+			if operands["MAC"] == nil && operands["SRC"] == nil && operands["LMOD"] == nil && operands["FMID"] == nil {
+				diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+					stmt,
+					lsp.SeverityError,
+					"One of MAC, SRC, LMOD, or FMID is required when SYSLIB is specified",
+				))
+			}
+		}
+
+		// At least one mode must be specified (DISTLIB or SYSLIB)
+		if !hasDistlib && !hasSyslib {
+			diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+				stmt,
+				lsp.SeverityError,
+				"Either DISTLIB or SYSLIB must be specified",
+			))
+		}
+	}
+
 	return diagnostics
 }
 
