@@ -36,12 +36,11 @@ client/vscode-smpe/*.vsix
 # Build artifacts
 dist/
 build/
+release/
+cmd/smpe_test/smpe_test
 
 # Others
 .claude/
-docs/
 syntax_diagrams/
-DEVELOPMENT_PLAN.md
-TODO-MCS.md
 
 

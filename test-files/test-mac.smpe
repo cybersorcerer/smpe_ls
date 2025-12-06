@@ -1,4 +1,4 @@
-++MAC(MYMAC) DISTLIB(AMACLIB)
+++MAC(MYMAC) /* EXPECT: NONE */ DISTLIB(AMACLIB)
 /* ++MAC Test File
 Testing ADD/UPDATE and DELETE modes for ++MAC MCS statement
 Valid ++MAC ADD with required DISTLIB
@@ -9,146 +9,146 @@ MYMAC MACRO
 	ST	R8,MY_REG
 	MEND
 /* laskdöaskdöla */
-++MAC(MYMAC2)
+++MAC(MYMAC2) /* EXPECT: WARNING - inline data */
   DISTLIB(AMACLIB)
   SYSLIB(ASYSLIB)
   MALIAS(MAC2A,MAC2B).
 
-++MAC(MYMAC3)
+++MAC(MYMAC3) /* EXPECT: WARNING - inline data */
 /* Valid ++MAC with ASSEM */
   DISTLIB(AMACLIB)
   ASSEM(MOD1,MOD2)
   DISTMOD(AMODLIB)
   DISTSRC(ASRCLIB).
 
-++MAC(MYMAC4)
+++MAC(MYMAC4) /* EXPECT: NONE */
 /* Valid ++MAC with FROMDS */
   DISTLIB(AMACLIB)
   FROMDS(DSN(MY.DATA.SET) NUMBER(1) VOL(WORK01)).
 
-++MAC(MYMAC5)
+++MAC(MYMAC5) /* EXPECT: NONE */
 /* Valid ++MAC with RELFILE */
   DISTLIB(AMACLIB)
   RELFILE(1).
 
-++MAC(MYMAC6)
+++MAC(MYMAC6) /* EXPECT: NONE */
 /* Valid ++MAC with TXLIB */
   DISTLIB(AMACLIB)
   TXLIB(ATXLIB).
 
-++MAC(MYMAC7)
+++MAC(MYMAC7) /* EXPECT: WARNING - inline data */
 /* Missing inline Data ++MAC with SSI */
   DISTLIB(AMACLIB)
   SSI(12345678) .
 
-++MAC(MYMAC8)
+++MAC(MYMAC8) /* EXPECT: WARNING - inline data */
 /* Valid ++MAC with PREFIX and RMID */
   DISTLIB(AMACLIB)
   PREFIX(ABC)
   RMID(PTF0001)
   UMID(PTF0002,PTF0003).
 
-++MAC(MYMAC9)
+++MAC(MYMAC9) /* EXPECT: WARNING - inline data */
 /* Valid ++MAC with VERSION */
   DISTLIB(AMACLIB)
   VERSION(FMID001,FMID002).
 
-++MAC(OLDMAC) DELETE DISTLIB(AMACLIB)
+++MAC(OLDMAC) /* EXPECT: NONE */ DELETE DISTLIB(AMACLIB)
 /* Valid ++MAC DELETE with DISTLIB */
 .
 
-++MAC(OLDMAC2) DELETE
+++MAC(OLDMAC2) /* EXPECT: NONE */ DELETE
 /* Valid ++MAC DELETE without DISTLIB */
 .
 
-++MAC(OLDMAC3) DELETE VERSION(FMID001)
+++MAC(OLDMAC3) /* EXPECT: NONE */ DELETE VERSION(FMID001)
 /* Valid ++MAC DELETE with VERSION */
 .
 
-++MAC(BADMAC)
+++MAC(BADMAC) /* EXPECT: WARNING - inline data */
 /* Invalid: ++MAC without DISTLIB (should show warning/error in non-DELETE mode) */
 .
 
-++MAC(BADMAC2) DELETE ASSEM(MOD1)
+++MAC(BADMAC2) /* EXPECT: ERROR - mutually exclusive */ DELETE ASSEM(MOD1)
 /* Invalid: ++MAC with DELETE and ASSEM (mutually exclusive) */
 .
 
-++MAC(BADMAC3) DELETE DISTMOD(AMODLIB)
+++MAC(BADMAC3) /* EXPECT: ERROR - mutually exclusive */ DELETE DISTMOD(AMODLIB)
 /* Invalid: ++MAC with DELETE and DISTMOD (mutually exclusive) */
 .
 
-++MAC(BADMAC4) DELETE DISTSRC(ASRCLIB)
+++MAC(BADMAC4) /* EXPECT: ERROR - mutually exclusive */ DELETE DISTSRC(ASRCLIB)
 /* Invalid: ++MAC with DELETE and DISTSRC (mutually exclusive) */
 .
 
-++MAC(BADMAC5) DELETE MALIAS(ALIAS1)
+++MAC(BADMAC5) /* EXPECT: ERROR - mutually exclusive */ DELETE MALIAS(ALIAS1)
 /* Invalid: ++MAC with DELETE and MALIAS (mutually exclusive) */
 .
 
 
-++MAC(BADMAC6) DELETE PREFIX(ABC)
+++MAC(BADMAC6) /* EXPECT: ERROR - mutually exclusive */ DELETE PREFIX(ABC)
 /* Invalid: ++MAC with DELETE and PREFIX (mutually exclusive) */
 .
 
-++MAC(BADMAC7) DELETE RMID(PTF0001)
+++MAC(BADMAC7) /* EXPECT: ERROR - mutually exclusive */ DELETE RMID(PTF0001)
 /* Invalid: ++MAC with DELETE and RMID (mutually exclusive) */
 .
 
-++MAC(BADMAC8) DELETE SYSLIB(ASYSLIB)
+++MAC(BADMAC8) /* EXPECT: ERROR - mutually exclusive */ DELETE SYSLIB(ASYSLIB)
 /* Invalid: ++MAC with DELETE and SYSLIB (mutually exclusive) */
 .
 
-++MAC(BADMAC9) DELETE UMID(PTF0001)
+++MAC(BADMAC9) /* EXPECT: ERROR - mutually exclusive */ DELETE UMID(PTF0001)
 /* Invalid: ++MAC with DELETE and UMID (mutually exclusive) */
 .
 
 ++MAC(BADMAC10)
 /* Invalid: ++MAC with RELFILE and FROMDS (mutually exclusive) */
   DISTLIB(AMACLIB)
-  RELFILE(1)
-  FROMDS(DSN(MY.DATA.SET) NUMBER(1)).
+  RELFILE(1) /* EXPECT: ERROR - mutually exclusive */
+  FROMDS(DSN(MY.DATA.SET) NUMBER(1)) /* EXPECT: ERROR - mutually exclusive */ .
 
 ++MAC(BADMAC11)
 /* Invalid: ++MAC with RELFILE and SSI (mutually exclusive) */
   DISTLIB(AMACLIB)
-  RELFILE(1)
-  SSI(12345678).
+  RELFILE(1) /* EXPECT: ERROR - mutually exclusive */
+  SSI(12345678) /* EXPECT: ERROR - mutually exclusive */ .
 
 ++MAC(BADMAC12)
 /* Invalid: ++MAC with RELFILE and TXLIB (mutually exclusive) */
   DISTLIB(AMACLIB)
-  RELFILE(1)
-  TXLIB(ATXLIB).
+  RELFILE(1) /* EXPECT: ERROR - mutually exclusive */
+  TXLIB(ATXLIB) /* EXPECT: ERROR - mutually exclusive */ .
 
 ++MAC(BADMAC13)
 /* Invalid: ++MAC with FROMDS and SSI (mutually exclusive) */
   DISTLIB(AMACLIB)
-  FROMDS(DSN(MY.DATA.SET) NUMBER(1))
-  SSI(12345678).
+  FROMDS(DSN(MY.DATA.SET) NUMBER(1)) /* EXPECT: ERROR - mutually exclusive */
+  SSI(12345678) /* EXPECT: ERROR - mutually exclusive */ .
 
 ++MAC(BADMAC14)
 /* Invalid: ++MAC with FROMDS and TXLIB (mutually exclusive) */
   DISTLIB(AMACLIB)
-  FROMDS(DSN(MY.DATA.SET) NUMBER(1))
-  TXLIB(ATXLIB).
+  FROMDS(DSN(MY.DATA.SET) NUMBER(1)) /* EXPECT: ERROR - mutually exclusive */
+  TXLIB(ATXLIB) /* EXPECT: ERROR - mutually exclusive */ .
 
 ++MAC(BADMAC15)
 /* Invalid: ++MAC with SSI and TXLIB (mutually exclusive) */
   DISTLIB(AMACLIB)
-  SSI(12345678)
-  TXLIB(ATXLIB).
+  SSI(12345678) /* EXPECT: ERROR - mutually exclusive */
+  TXLIB(ATXLIB) /* EXPECT: ERROR - mutually exclusive */ .
 
-++MAC(BADMAC16) DELETE FROMDS(DSN(MY.DATA.SET) NUMBER(1))
+++MAC(BADMAC16) /* EXPECT: ERROR - mutually exclusive */ DELETE FROMDS(DSN(MY.DATA.SET) NUMBER(1))
 /* Invalid: ++MAC with DELETE and FROMDS (mutually exclusive) */
 .
 
-++MAC(BADMAC17) DELETE RELFILE(1)
+++MAC(BADMAC17) /* EXPECT: ERROR - mutually exclusive */ DELETE RELFILE(1)
 /* Invalid: ++MAC with DELETE and RELFILE (mutually exclusive) */ .
 
-++MAC(BADMAC18) DELETE SSI(12345678)
+++MAC(BADMAC18) /* EXPECT: ERROR - mutually exclusive */ DELETE SSI(12345678)
 /* Invalid: ++MAC with DELETE and SSI (mutually exclusive) */
 .
 
-++MAC(BADMAC19) DELETE TXLIB(ATXLIB)
+++MAC(BADMAC19) /* EXPECT: ERROR - mutually exclusive */ DELETE TXLIB(ATXLIB)
 /* Invalid: ++MAC with DELETE and TXLIB (mutually exclusive) */
 .

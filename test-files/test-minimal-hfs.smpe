@@ -1,0 +1,10 @@
+/* Minimal test for single-line vs multi-line HFS statements */
+
+/* Single-line - should generate WARNING */
+++HFS(TEST1) DISTLIB(D1) SYSLIB(S1) TEXT.
+
+/* Multi-line - should generate WARNING */
+++HFS(TEST2)
+    DISTLIB(D1)
+    SYSLIB(S1)
+    TEXT.

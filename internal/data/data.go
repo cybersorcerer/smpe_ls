@@ -23,6 +23,8 @@ type Operand struct {
 	Type              string         `json:"type,omitempty"`
 	Length            int            `json:"length,omitempty"`
 	Required          bool           `json:"required,omitempty"`
+	RequiredGroup     bool           `json:"required_group,omitempty"`
+	RequiredGroupID   string         `json:"required_group_id,omitempty"`
 	Description       string         `json:"description,omitempty"`
 	Values            []AllowedValue `json:"values,omitempty"`
 	MutuallyExclusive string         `json:"mutually_exclusive,omitempty"`

@@ -522,9 +522,10 @@ func (p *Provider) getOperandCompletionsAST(stmt *parser.Node, text string, line
 
 		// Build completion item
 		item := lsp.CompletionItem{
-			Label:  primaryName,
-			Kind:   lsp.CompletionItemKindProperty,
-			Detail: "Operand",
+			Label:         primaryName,
+			Kind:          lsp.CompletionItemKindProperty,
+			Detail:        "Operand",
+			Documentation: op.Description,
 		}
 
 		// Add parameter hint if available
@@ -696,7 +697,19 @@ func (p *Provider) getMCSCompletions(replaceRange *lsp.Range) []lsp.CompletionIt
 
 	// Order statements for consistent display (Control MCS - alphabetically sorted)
 	// TODO: This list should be generated dynamically from smpe.json instead of being hard-coded (see TODO.md)
-	order := []string{"++APAR", "++ASSIGN", "++DELETE", "++FEATURE", "++FUNCTION", "++HOLD", "++IF", "++JAR", "++JARUPD", "++JCLIN", "++MAC", "++MOD", "++MOVE", "++USERMOD", "++VER", "++ZAP"}
+	order := []string{"++APAR", "++ASSIGN", "++DELETE", "++FEATURE", "++FUNCTION", "++HOLD", "++IF", "++JAR", "++JARUPD", "++JCLIN", "++MAC", "++MACUPD", "++MOD", "++MOVE", "++NULL", "++PRODUCT", "++PROGRAM", "++PTF", "++RELEASE", "++RENAME", "++SRC", "++SRCUPD", "++USERMOD", "++VER", "++ZAP"}
+
+	// Add HFS MCS statements (++HFS with language variants, others without)
+	// TODO: This list should be generated dynamically from smpe.json instead of being hard-coded (see TODO.md)
+	hfsOrder := []string{
+		"++AIX1", "++AIX2", "++AIX3", "++AIX4", "++AIX5",
+		"++CLIENT1", "++CLIENT2", "++CLIENT3", "++CLIENT4", "++CLIENT5",
+		"++HFS", "++SHELLSCR",
+		"++OS21", "++OS22", "++OS23", "++OS24", "++OS25",
+		"++UNIX1", "++UNIX2", "++UNIX3", "++UNIX4", "++UNIX5",
+		"++WIN1", "++WIN2", "++WIN3", "++WIN4", "++WIN5",
+	}
+	order = append(order, hfsOrder...)
 
 	// Add all Data Element MCS base names (will be expanded with language variants below)
 	// TODO: This list should be generated dynamically from smpe.json instead of being hard-coded (see TODO.md)

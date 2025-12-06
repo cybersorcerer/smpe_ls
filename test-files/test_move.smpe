@@ -1,0 +1,136 @@
+/* Test file for ++MOVE MCS statement */
+
+/* ========================================== */
+/* Valid ++MOVE statements - DISTLIB mode     */
+/* ========================================== */
+
+/* Valid: DISTLIB mode with MAC */
+++MOVE
+          DISTLIB(ADIST)
+          TODISTLIB(BDIST)
+          MAC(MYMAC01).
+
+/* Valid: DISTLIB mode with MOD */
+++MOVE
+          DISTLIB(CDIST)
+          TODISTLIB(DDIST)
+          MOD(MYMOD01).
+
+/* Valid: DISTLIB mode with SRC */
+++MOVE
+          DISTLIB(EDIST)
+          TODISTLIB(FDIST)
+          SRC(MYSRC01).
+
+/* Valid: DISTLIB mode with multiple members */
+++MOVE
+          DISTLIB(GDIST)
+          TODISTLIB(HDIST)
+          MAC(MAC01)
+          MAC(MAC02)
+          MOD(MOD01)
+          SRC(SRC01).
+
+
+/* ========================================== */
+/* Valid ++MOVE statements - SYSLIB mode      */
+/* ========================================== */
+
+/* Valid: SYSLIB mode with MAC */
+++MOVE
+          SYSLIB(ASYSLIB)
+          TOSYSLIB(BSYSLIB)
+          MAC(SYSMAC01).
+
+/* Valid: SYSLIB mode with SRC */
+++MOVE
+          SYSLIB(CSYSLIB)
+          TOSYSLIB(DSYSLIB)
+          SRC(SYSSRC01).
+
+/* Valid: SYSLIB mode with LMOD */
+++MOVE
+          SYSLIB(ESYSLIB)
+          TOSYSLIB(FSYSLIB)
+          LMOD(LMOD01).
+
+/* Valid: SYSLIB mode with FMID */
+++MOVE
+          SYSLIB(GSYSLIB)
+          TOSYSLIB(HSYSLIB)
+          FMID(ABC1234).
+
+/* Valid: SYSLIB mode with multiple members */
+++MOVE
+          SYSLIB(ISYSLIB)
+          TOSYSLIB(JSYSLIB)
+          MAC(MAC03)
+          SRC(SRC02)
+          LMOD(LMOD02)
+          FMID(DEF5678).
+
+
+/* ========================================== */
+/* INVALID ++MOVE statements                  */
+/* ========================================== */
+
+/* INVALID: Missing mode (neither DISTLIB nor SYSLIB) */
+++MOVE
+          MAC(BADMAC01).
+
+/* INVALID: DISTLIB without TODISTLIB */
+++MOVE
+          DISTLIB(KDIST)
+          MAC(MAC04).
+
+/* INVALID: DISTLIB without MAC/MOD/SRC */
+++MOVE
+          DISTLIB(LDIST)
+          TODISTLIB(MDIST).
+
+/* INVALID: SYSLIB without TOSYSLIB */
+++MOVE
+          SYSLIB(KSYSLIB)
+          MAC(MAC05).
+
+/* INVALID: SYSLIB without MAC/SRC/LMOD/FMID */
+++MOVE
+          SYSLIB(LSYSLIB)
+          TOSYSLIB(MSYSLIB).
+
+/* INVALID: DISTLIB mode with LMOD (not allowed) */
+++MOVE
+          DISTLIB(NDIST)
+          TODISTLIB(ODIST)
+          LMOD(BADLMOD).
+
+/* INVALID: DISTLIB mode with FMID (not allowed) */
+++MOVE
+          DISTLIB(PDIST)
+          TODISTLIB(QDIST)
+          FMID(GHI9012).
+
+/* INVALID: SYSLIB mode with MOD (not allowed) */
+++MOVE
+          SYSLIB(NSYSLIB)
+          TOSYSLIB(OSYSLIB)
+          MOD(BADMOD).
+
+/* INVALID: Both DISTLIB and SYSLIB */
+++MOVE
+          DISTLIB(RDIST)
+          SYSLIB(PSYSLIB)
+          MAC(MAC06).
+
+/* INVALID: Unknown operand */
+++MOVE
+          DISTLIB(SDIST)
+          TODISTLIB(TDIST)
+          MAC(MAC07)
+          BADOPER(VALUE).
+
+/* INVALID: Missing terminator */
+++MOVE
+          DISTLIB(UDIST)
+          TODISTLIB(VDIST)
+          MAC(MAC08)

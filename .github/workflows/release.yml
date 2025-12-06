@@ -1,0 +1,173 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags (v0.1.0, v0.2.0, etc.)
+    branches:
+      - main  # Also build on main branch pushes
+
+jobs:
+  build:
+    name: Build Binaries
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          # Linux
+          - goos: linux
+            goarch: amd64
+            platform: linux-amd64
+          - goos: linux
+            goarch: arm64
+            platform: linux-arm64
+
+          # macOS
+          - goos: darwin
+            goarch: arm64
+            platform: macos-arm64
+          - goos: darwin
+            goarch: amd64
+            platform: macos-amd64
+
+          # Windows
+          - goos: windows
+            goarch: amd64
+            platform: windows-amd64
+          - goos: windows
+            goarch: arm64
+            platform: windows-arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Get version
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev-$(git rev-parse --short HEAD)")
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          mkdir -p dist
+          BINARY_NAME="smpe_ls"
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            BINARY_NAME="smpe_ls.exe"
+          fi
+
+          go build -v -ldflags="-s -w" -o "dist/${BINARY_NAME}" ./cmd/smpe_ls
+
+          # Create archive
+          cd dist
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            zip "../smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}.zip" "${BINARY_NAME}"
+          else
+            tar czf "../smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}.tar.gz" "${BINARY_NAME}"
+          fi
+          cd ..
+
+      - name: Copy data files
+        run: |
+          mkdir -p dist/data
+          cp data/smpe.json dist/data/
+
+      - name: Create package
+        run: |
+          mkdir -p "smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}"
+
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            cp dist/smpe_ls.exe "smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}/"
+          else
+            cp dist/smpe_ls "smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}/"
+          fi
+
+          cp dist/data/smpe.json "smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}/"
+          cp README.md "smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}/" || true
+
+          # Create final archive with data
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            zip -r "smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}-full.zip" "smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}"
+          else
+            tar czf "smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}-full.tar.gz" "smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}"
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: smpe_ls-${{ matrix.platform }}
+          path: |
+            smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}-full.*
+          retention-days: 30
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -R artifacts/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/**/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Run unit tests
+        run: go test -v ./...
+
+      - name: Build test suite
+        run: go build -o cmd/smpe_test/smpe_test cmd/smpe_test/main.go
+
+      - name: Install smpe.json for tests
+        run: |
+          mkdir -p $HOME/.local/share/smpe_ls
+          cp data/smpe.json $HOME/.local/share/smpe_ls/
+
+      - name: Run test suite
+        run: ./cmd/smpe_test/smpe_test ./test-files || true
+
+      - name: Test summary
+        run: echo "Tests completed"

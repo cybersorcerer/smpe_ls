@@ -1,0 +1,99 @@
+/* Test file for ++ZAP MCS statement */
+
+/* ========================================== */
+/* Valid ++ZAP statements                     */
+/* ========================================== */
+
+/* Valid: Minimal - only name parameter */
+++ZAP(MYZAP01).
+
+/* Valid: With DISTLIB */
+++ZAP(MYZAP02)
+          DISTLIB(ADIST).
+
+/* Valid: With DALIAS */
+++ZAP(MYZAP03)
+          DALIAS(ALIAS1).
+
+/* Valid: With multiple DALIAS (loop in diagram) */
+++ZAP(MYZAP04)
+          DALIAS(ALIAS2)
+          DALIAS(ALIAS3)
+          DALIAS(ALIAS4).
+
+/* Valid: With TALIAS */
+++ZAP(MYZAP05)
+          TALIAS(TALIAS1).
+
+/* Valid: With multiple TALIAS (loop in diagram) */
+++ZAP(MYZAP06)
+          TALIAS(TALIAS2)
+          TALIAS(TALIAS3).
+
+/* Valid: With DISTLIB and DALIAS */
+++ZAP(MYZAP07)
+          DISTLIB(BDIST)
+          DALIAS(ALIAS5).
+
+/* Valid: With DISTLIB and TALIAS */
+++ZAP(MYZAP08)
+          DISTLIB(CDIST)
+          TALIAS(TALIAS4).
+
+/* Valid: With DISTLIB and multiple DALIAS */
+++ZAP(MYZAP09)
+          DISTLIB(DDIST)
+          DALIAS(ALIAS6)
+          DALIAS(ALIAS7).
+
+
+/* ========================================== */
+/* INVALID ++ZAP statements                   */
+/* ========================================== */
+
+/* INVALID: DALIAS and TALIAS together (mutually exclusive) */
+++ZAP(BADZAP01)
+          DALIAS(ALIAS8)
+          TALIAS(TALIAS5).
+
+/* INVALID: DALIAS and TALIAS together with DISTLIB */
+++ZAP(BADZAP02)
+          DISTLIB(EDIST)
+          DALIAS(ALIAS9)
+          TALIAS(TALIAS6).
+
+/* INVALID: Multiple DALIAS and TALIAS mixed (mutually exclusive) */
+++ZAP(BADZAP03)
+          DALIAS(ALIAS10)
+          DALIAS(ALIAS11)
+          TALIAS(TALIAS7).
+
+/* INVALID: Missing name parameter */
+++ZAP
+          DISTLIB(FDIST).
+
+/* INVALID: Unknown operand */
+++ZAP(BADZAP04)
+          DISTLIB(GDIST)
+          BADOPER(VALUE).
+
+/* INVALID: Duplicate DISTLIB */
+++ZAP(BADZAP05)
+          DISTLIB(HDIST)
+          DISTLIB(IDIST).
+
+/* INVALID: Empty DALIAS parameter */
+++ZAP(BADZAP06)
+          DALIAS().
+
+/* INVALID: Empty TALIAS parameter */
+++ZAP(BADZAP07)
+          TALIAS().
+
+/* INVALID: Empty DISTLIB parameter */
+++ZAP(BADZAP08)
+          DISTLIB().
+
+/* INVALID: Missing terminator */
+++ZAP(BADZAP09)
+          DISTLIB(JDIST)

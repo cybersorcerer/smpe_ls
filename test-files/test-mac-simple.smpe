@@ -1,0 +1,12 @@
+++MAC(TEST1) /* EXPECT: WARNING - inline data */ DISTLIB(AMACLIB)
+/* Test: Missing terminator */
+.
+++MAC(TEST2) /* EXPECT: WARNING - inline data */ DISTLIB(AMACLIB)
+.
+/* EXPECT: NONE */
+++VER(Z038) .
+
+++HOLD(U00001) /* EXPECT: ERROR - One of the following operands must be specified */ FMID(HDP0001) CLASS(ABC) REASON(XYZ) .
+++MAC(tetete) /* EXPECT: WARNING - empty parameter */ FROMDS(DSN(my.test) NUMBER(12) UNIT(SYSDA) VOL()) .
+/* EXPECT: NONE */
+++APAR(A1234567) DESCRIPTION(My Description) FILES(1) RFDSNPFX(HUHU) REWORK(12345) .

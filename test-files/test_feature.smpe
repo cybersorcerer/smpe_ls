@@ -1,0 +1,101 @@
+/* Test file for ++FEATURE MCS statement */
+
+/* ========================================== */
+/* Valid ++FEATURE statements                 */
+/* ========================================== */
+
+/* Valid: Minimal - only name parameter, no operands */
+++FEATURE(FEAT001).
+
+/* Valid: With DESCRIPTION */
+++FEATURE(FEAT002)
+          DESCRIPTION('Database Enhancement Feature').
+
+/* Valid: With DESC alias */
+++FEATURE(FEAT003)
+          DESC('Security Enhancement Package').
+
+/* Valid: With DESCRIPTION and single FMID */
+++FEATURE(FEAT004)
+          DESCRIPTION('Performance Optimization')
+          FMID(ABC1234).
+
+/* Valid: With DESCRIPTION and multiple FMIDs */
+++FEATURE(FEAT005)
+          DESCRIPTION('Networking Enhancements')
+          FMID(DEF5678)
+          FMID(GHI9012)
+          FMID(JKL3456).
+
+/* Valid: With PRODUCT */
+++FEATURE(FEAT006)
+          DESCRIPTION('Application Framework')
+          PRODUCT(MYAPP,01.02.00).
+
+/* Valid: With PRODUCT and REWORK */
+++FEATURE(FEAT007)
+          DESCRIPTION('Core Library Updates')
+          PRODUCT(CORELIB,02.00.00)
+          REWORK(2024365).
+
+/* Valid: All operands */
+++FEATURE(FEAT008)
+          DESCRIPTION('Complete Feature Package')
+          FMID(MNO7890)
+          FMID(PQR1234)
+          PRODUCT(TESTPRD,03.05.02)
+          REWORK(2024366).
+
+/* Valid: Only FMID, no DESCRIPTION */
+++FEATURE(FEAT009)
+          FMID(STU5678).
+
+/* Valid: Only PRODUCT */
+++FEATURE(FEAT010)
+          PRODUCT(APPPRD,01.00.00).
+
+/* Valid: FMID and PRODUCT, no DESCRIPTION */
+++FEATURE(FEAT011)
+          FMID(VWX9012)
+          PRODUCT(UTILPKG,02.01.00).
+
+
+/* ========================================== */
+/* INVALID ++FEATURE statements               */
+/* ========================================== */
+
+/* INVALID: Missing name parameter */
+++FEATURE
+          DESCRIPTION('Missing Name').
+
+/* INVALID: Unknown operand */
+++FEATURE(BAD001)
+          DESCRIPTION('Feature with bad operand')
+          BADOPER(TEST).
+
+/* INVALID: Duplicate DESCRIPTION */
+++FEATURE(BAD002)
+          DESCRIPTION('First description')
+          DESCRIPTION('Second description').
+
+/* INVALID: DESCRIPTION with DESC (duplicate via alias) */
+++FEATURE(BAD003)
+          DESCRIPTION('Using full name')
+          DESC('Using alias').
+
+/* INVALID: Missing terminator */
+++FEATURE(BAD004)
+          DESCRIPTION('No terminator')
+
+/* INVALID: Empty DESCRIPTION parameter */
+++FEATURE(BAD005)
+          DESCRIPTION().
+
+/* INVALID: PRODUCT with invalid format */
+++FEATURE(BAD006)
+          PRODUCT(NOVER).
+
+/* INVALID: REWORK without PRODUCT */
+++FEATURE(BAD007)
+          DESCRIPTION('REWORK needs PRODUCT context')
+          REWORK(2024001).

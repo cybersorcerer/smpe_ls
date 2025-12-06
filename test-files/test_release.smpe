@@ -1,0 +1,58 @@
+/* Test file for ++RELEASE MCS statement */
+
+/* ========================================== */
+/* Valid ++RELEASE statements                 */
+/* ========================================== */
+
+/* Valid: ++RELEASE with USER category */
+++RELEASE (UZ12345)         /* Remove this PTF          */
+          FMID(FXY1040)     /* for this function        */
+          USER              /* from hold user status    */
+          REASON(CPU0A)     /* for CPU 0A update.       */.
+
+/* Valid: ++RELEASE with ERROR category */
+++RELEASE (UZ12346)
+          FMID(FXY1041)
+          ERROR.
+
+/* Valid: ++RELEASE with FIXCAT category */
+++RELEASE (UZ12347)
+          FMID(FXY1042)
+          FIXCAT(IBM.APAR.FIX).
+
+/* Valid: ++RELEASE with SYSTEM category */
+++RELEASE (UZ12348)
+          FMID(FXY1043)
+          SYSTEM.
+
+/* Valid: ++RELEASE with REASON */
+++RELEASE (UZ12349)
+          FMID(FXY1044)
+          USER
+          REASON(TEST).
+
+
+/* ========================================== */
+/* INVALID ++RELEASE statements               */
+/* ========================================== */
+
+/* INVALID: Missing required category (ERROR, FIXCAT, SYSTEM, or USER) */
+++RELEASE (BADREL01)
+          FMID(FXY1045).
+
+/* INVALID: Unknown operand */
+++RELEASE (BADREL02)
+          FMID(FXY1046)
+          USER
+          BADOPER(VALUE).
+
+/* INVALID: Duplicate FMID */
+++RELEASE (BADREL03)
+          FMID(FXY1047)
+          FMID(FXY1048)
+          USER.
+
+/* INVALID: Missing terminator */
+++RELEASE (BADREL04)
+          FMID(FXY1049)
+          USER

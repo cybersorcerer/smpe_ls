@@ -1,0 +1,31 @@
+/* Test file for ++VER MCS statement */
+
+/* Valid: Minimal ++VER */
+++VER(Z038) FMID(HBB7780).
+
+/* Valid: With PRE */
+++VER(Z038) FMID(HBB7780)
+          PRE(UZ12345).
+
+/* Valid: With multiple PRE */
+++VER(Z038) FMID(HBB7780)
+          PRE(UZ12345)
+          PRE(UZ23456).
+
+/* Valid: With REQ */
+++VER(Z038) FMID(HBB7780)
+          REQ(HBB7770).
+
+/* INVALID: Missing FMID parameter */
+++VER(Z038).
+
+/* INVALID: Unknown operand */
+++VER(Z038) FMID(HBB7781)
+          BADOPER(VALUE).
+
+/* INVALID: Duplicate FMID */
+++VER(Z038) FMID(HBB7782)
+          FMID(HBB7783).
+
+/* INVALID: Missing terminator */
+++VER(Z038) FMID(HBB7784)

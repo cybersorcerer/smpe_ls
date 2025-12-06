@@ -1,0 +1,55 @@
+/* Test file for ++FUNCTION MCS statement */
+
+/* Valid: Minimal ++FUNCTION */
+++FUNCTION(ABC1234).
+
+/* Valid: With DESCRIPTION */
+++FUNCTION(DEF5678)
+          DESCRIPTION('Test Function').
+
+/* Valid: With FESN */
+++FUNCTION(GHI9012)
+          FESN(FE12345).
+
+/* Valid: With FMID */
+++FUNCTION(JKL3456)
+          FMID(HBB7780).
+
+/* Valid: With PRE */
+++FUNCTION(MNO7890)
+          PRE(UZ12345).
+
+/* Valid: With REQ */
+++FUNCTION(PQR1234)
+          REQ(HBB7770).
+
+/* Valid: With SUP */
+++FUNCTION(STU5678)
+          SUP(UZ23456).
+
+/* Valid: With VERSION */
+++FUNCTION(VWX9012)
+          VERSION(01.00.00).
+
+/* Valid: All operands */
+++FUNCTION(YZA3456)
+          DESCRIPTION('Complete Function')
+          FESN(FE67890)
+          FMID(HBB7781)
+          PRE(UZ34567)
+          REQ(HBB7771)
+          SUP(UZ45678)
+          VERSION(02.00.00).
+
+/* INVALID: Unknown operand */
+++FUNCTION(BADFUNC01)
+          BADOPER(VALUE).
+
+/* INVALID: Duplicate DESCRIPTION */
+++FUNCTION(BADFUNC02)
+          DESCRIPTION('First')
+          DESCRIPTION('Second').
+
+/* INVALID: Missing terminator */
+++FUNCTION(BADFUNC03)
+          DESCRIPTION('No terminator')

@@ -1,0 +1,133 @@
+/* Test file for ++SRC MCS statement */
+
+/* ========================================== */
+/* Valid ++SRC statements (ADD/REPLACE mode)  */
+/* ========================================== */
+
+/* Valid: Minimal ADD mode with inline data */
+++SRC(MYSRC01)
+          DISTLIB(ADIST).
+* Source code would follow here
+  END
+
+/* Valid: With DISTMOD */
+++SRC(MYSRC02)
+          DISTLIB(BDIST)
+          DISTMOD(CDIST).
+* Source code
+
+/* Valid: With SYSLIB */
+++SRC(MYSRC03)
+          DISTLIB(DDIST)
+          SYSLIB(ESYSLIB).
+* Source
+
+/* Valid: With VERSION */
+++SRC(MYSRC04)
+          DISTLIB(FDIST)
+          VERSION(HBB7780).
+* Code
+
+/* Valid: Using FROMDS instead of inline data */
+++SRC(MYSRC05)
+          DISTLIB(GDIST)
+          FROMDS(DSN(MY.SOURCE.LIB) NUMBER(1)).
+
+/* Valid: Using RELFILE */
+++SRC(MYSRC06)
+          DISTLIB(HDIST)
+          RELFILE(2).
+
+/* Valid: Using TXLIB */
+++SRC(MYSRC07)
+          DISTLIB(IDIST)
+          TXLIB(JTXLIB).
+
+/* Valid: With RMID and UMID */
+++SRC(MYSRC08)
+          DISTLIB(KDIST)
+          RMID(ABC1234)
+          UMID(DEF5678).
+* Source data
+
+/* Valid: With all operands */
+++SRC(MYSRC09)
+          DISTLIB(LDIST)
+          DISTMOD(MDIST)
+          SYSLIB(NSYSLIB)
+          RMID(GHI9012)
+          UMID(JKL3456)
+          VERSION(HBB7781).
+* Complete source
+
+
+/* ========================================== */
+/* Valid ++SRC statements (DELETE mode)       */
+/* ========================================== */
+
+/* Valid: DELETE mode - DISTLIB not required */
+++SRC(DELSRC01) DELETE.
+
+/* Valid: DELETE with DISTLIB (optional in DELETE mode) */
+++SRC(DELSRC02) DELETE
+          DISTLIB(PDIST).
+
+
+/* ========================================== */
+/* INVALID ++SRC statements                   */
+/* ========================================== */
+
+/* INVALID: Missing DISTLIB in ADD mode */
+++SRC(BADSRC01)
+          SYSLIB(QSYSLIB).
+* This should fail
+
+/* INVALID: Missing DISTLIB, only VERSION */
+++SRC(BADSRC02)
+          VERSION(HBB7782).
+
+/* INVALID: DELETE with FROMDS (mutually exclusive) */
+++SRC(BADSRC03) DELETE
+          FROMDS(DSN(MY.LIB) NUMBER(1)).
+
+/* INVALID: DELETE with DISTMOD (mutually exclusive) */
+++SRC(BADSRC04) DELETE
+          DISTMOD(RDIST).
+
+/* INVALID: DELETE with SYSLIB (mutually exclusive) */
+++SRC(BADSRC05) DELETE
+          SYSLIB(SSYSLIB).
+
+/* INVALID: DELETE with RMID (mutually exclusive) */
+++SRC(BADSRC06) DELETE
+          RMID(MNO7890).
+
+/* INVALID: Unknown operand */
+++SRC(BADSRC07)
+          DISTLIB(TDIST)
+          BADOPER(VALUE).
+
+/* INVALID: Duplicate DISTLIB */
+++SRC(BADSRC08)
+          DISTLIB(UDIST)
+          DISTLIB(VDIST).
+
+/* INVALID: FROMDS and RELFILE together (mutually exclusive) */
+++SRC(BADSRC09)
+          DISTLIB(WDIST)
+          FROMDS(DSN(TEST.LIB) NUMBER(1))
+          RELFILE(3).
+
+/* INVALID: FROMDS and TXLIB together (mutually exclusive) */
+++SRC(BADSRC10)
+          DISTLIB(XDIST)
+          FROMDS(DSN(DATA.LIB) NUMBER(2))
+          TXLIB(YTXLIB).
+
+/* INVALID: Missing terminator */
+++SRC(BADSRC11)
+          DISTLIB(ZDIST)
+
+/* INVALID: Empty DISTLIB parameter */
+++SRC(BADSRC12)
+          DISTLIB().

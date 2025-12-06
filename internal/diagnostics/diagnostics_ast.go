@@ -253,15 +253,23 @@ func (p *Provider) validateOperandsAST(stmt *parser.Node, operands map[string]*p
 	}
 
 	// Check for missing required operands
+	// Note: Operands with required_group are handled separately below
 	requiredOperands := getRequiredOperands(stmt.Name)
 	for _, requiredOp := range requiredOperands {
 		// Check if any alias of this operand is present
 		found := false
+		isRequiredGroup := false
 		for _, op := range stmtDef.Operands {
 			names := strings.Split(op.Name, "|")
 			primaryName := names[0]
 
 			if primaryName == requiredOp {
+				// Skip if this is part of a required_group (handled separately)
+				if op.RequiredGroup {
+					isRequiredGroup = true
+					break
+				}
+
 				// Check if this operand (or any of its aliases) is present
 				for _, name := range names {
 					if _, exists := operands[name]; exists {
@@ -273,7 +281,7 @@ func (p *Provider) validateOperandsAST(stmt *parser.Node, operands map[string]*p
 			}
 		}
 
-		if !found {
+		if !found && !isRequiredGroup {
 			diagnostics = append(diagnostics, p.createDiagnosticFromNode(
 				stmt,
 				lsp.SeverityWarning,
@@ -345,6 +353,51 @@ func (p *Provider) validateOperandsAST(stmt *parser.Node, operands map[string]*p
 		}
 	}
 
+	// Check for required_group: when multiple operands are marked as required + required_group,
+	// at least one of them must be present
+	requiredGroups := make(map[string][]string) // required_group_id -> list of operand names
+	for _, op := range stmtDef.Operands {
+		if op.Required && op.RequiredGroup && op.RequiredGroupID != "" {
+			// Use the required_group_id as the group key
+			names := strings.Split(op.Name, "|")
+			requiredGroups[op.RequiredGroupID] = append(requiredGroups[op.RequiredGroupID], names[0])
+		}
+	}
+
+	// For each required group, check if at least one member is present
+	for _, groupMembers := range requiredGroups {
+		atLeastOnePresent := false
+		for _, member := range groupMembers {
+			// Check all aliases for this member
+			for _, op := range stmtDef.Operands {
+				names := strings.Split(op.Name, "|")
+				if names[0] == member {
+					// Check if any alias is present
+					for _, name := range names {
+						if _, exists := operands[name]; exists {
+							atLeastOnePresent = true
+							break
+						}
+					}
+					break
+				}
+			}
+			if atLeastOnePresent {
+				break
+			}
+		}
+
+		if !atLeastOnePresent {
+			// Build a human-readable list of options
+			optionsList := strings.Join(groupMembers, ", ")
+			diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+				stmt,
+				lsp.SeverityError,
+				"One of the following operands must be specified: "+optionsList,
+			))
+		}
+	}
+
 	// Special validation for ++MOVE based on syntax diagrams
 	// From syntax_diagrams/move-distlib.png and move-syslib.png
 	if stmt.Name == "++MOVE" {
@@ -412,7 +465,26 @@ func (p *Provider) checkMissingInlineData(doc *parser.Document) []lsp.Diagnostic
 
 	// If a statement expecting inline data is followed by another statement (or comment + statement),
 	// it means the inline data is missing
-	for i, stmt := range doc.StatementsExpectingInline {
+	for _, stmt := range doc.StatementsExpectingInline {
+		// Check if statement has operands that indicate data is NOT inline
+		// FROMDS, RELFILE, TXLIB, SHSCRIPT mean data comes from elsewhere
+		// DELETE is a special case for HFS that removes files (no inline data needed)
+		hasExternalDataSource := false
+		for _, child := range stmt.Children {
+			if child.Type == parser.NodeTypeOperand {
+				opName := child.Name
+				if opName == "FROMDS" || opName == "RELFILE" || opName == "TXLIB" || opName == "SHSCRIPT" || opName == "DELETE" {
+					hasExternalDataSource = true
+					break
+				}
+			}
+		}
+
+		// Skip inline data check if data comes from external source
+		if hasExternalDataSource {
+			continue
+		}
+
 		// Find the next statement after this one in the main statements list
 		stmtIndex := -1
 		for j, s := range doc.Statements {
@@ -422,33 +494,55 @@ func (p *Provider) checkMissingInlineData(doc *parser.Document) []lsp.Diagnostic
 			}
 		}
 
-		if stmtIndex != -1 && stmtIndex < len(doc.Statements)-1 {
-			// Check if the statement actually has inline data
-			// The parser tracked whether actual non-empty, non-comment lines were found
-			if !stmt.HasInlineData {
+		if !stmt.HasInlineData {
+			if stmtIndex != -1 && stmtIndex < len(doc.Statements)-1 {
+				// Statement is not the last one - inline data should come before next statement
 				diagnostics = append(diagnostics, p.createDiagnosticFromNode(
 					stmt,
 					lsp.SeverityWarning,
-					"Statement "+stmt.Name+" expects inline data but none found before next statement",
+					p.getMissingInlineDataMessage(stmt)+" before next statement",
 				))
-			}
-		}
-
-		// Also check if this is the last statement expecting inline data
-		// and there's no more content after it - that's also missing data
-		if i == len(doc.StatementsExpectingInline)-1 && stmtIndex == len(doc.Statements)-1 {
-			// This is the last statement in the document and it expects inline data
-			if !stmt.HasInlineData {
+			} else if stmtIndex == len(doc.Statements)-1 {
+				// This is the last statement in the document - inline data is missing
 				diagnostics = append(diagnostics, p.createDiagnosticFromNode(
 					stmt,
 					lsp.SeverityWarning,
-					"Statement "+stmt.Name+" expects inline data but none found",
+					p.getMissingInlineDataMessage(stmt),
 				))
 			}
 		}
 	}
 
 	return diagnostics
+}
+
+// getMissingInlineDataMessage returns a statement-specific message for missing inline data
+func (p *Provider) getMissingInlineDataMessage(stmt *parser.Node) string {
+	// Build list of alternative operands based on statement type
+	var alternatives []string
+
+	// Check which operands are available for this statement
+	if stmt.StatementDef != nil {
+		for _, op := range stmt.StatementDef.Operands {
+			opNames := strings.Split(op.Name, "|")
+			primaryName := opNames[0]
+
+			// These operands indicate external data sources
+			if primaryName == "FROMDS" || primaryName == "RELFILE" ||
+			   primaryName == "TXLIB" || primaryName == "SHSCRIPT" {
+				alternatives = append(alternatives, primaryName)
+			}
+		}
+	}
+
+	// Build the message
+	baseMsg := stmt.Name + " expects inline data"
+
+	if len(alternatives) > 0 {
+		return baseMsg + " or one of " + strings.Join(alternatives, ", ")
+	}
+
+	return baseMsg + " but none found"
 }
 
 // validateSubOperandsAST validates sub-operands within an operand's parameter using AST
@@ -601,11 +695,50 @@ func getRequiredOperands(statementType string) []string {
 		// Since this is conditional, we don't enforce it here
 		// The mutually_exclusive validation handles the DELETE operand constraints
 		return []string{}
+	case "++SRC":
+		// From syntax_diagrams/src-add-replace.png and src-delete.png:
+		// DISTLIB is required in ADD/REPLACE mode (when DELETE is not specified)
+		// In DELETE mode, DELETE is specified and makes DISTLIB optional (via mutually_exclusive)
+		// We return DISTLIB as required, but mutually_exclusive validation in smpe.json
+		// will handle the case where DELETE is present (which makes DISTLIB optional)
+		return []string{"DISTLIB"}
+	case "++RENAME":
+		// From syntax_diagrams/rename.png:
+		// TONAME is required (must follow old_name parameter)
+		return []string{"TONAME"}
 	case "++USERMOD":
 		// From syntax_diagrams/usermod.png:
 		// No operands are strictly required, all are optional
 		// RFDSNPFX has allowed_if dependency on FILES (handled automatically)
 		return []string{}
+	case "++PRODUCT":
+		// From syntax_diagrams/product.png:
+		// DESCRIPTION (or DESC) and SREL are required operands
+		return []string{"DESCRIPTION", "SREL"}
+	case "++PROGRAM":
+		// From syntax_diagrams/program-add-replace.png and program-delete.png:
+		// DISTLIB is required for ADD/REPLACE mode
+		// In DELETE mode, DELETE is specified and makes DISTLIB optional (via mutually_exclusive)
+		// We return DISTLIB as required, but mutually_exclusive validation in smpe.json
+		// will handle the case where DELETE is present (which makes DISTLIB optional)
+		return []string{"DISTLIB"}
+	case "++PTF":
+		// From syntax_diagrams/ptf.png:
+		// No operands are strictly required, all are optional
+		// RFDSNPFX has allowed_if dependency on FILES (handled automatically)
+		return []string{}
+	case "++FEATURE":
+		// From syntax_diagrams/feature.png:
+		// No operands are strictly required, all are optional
+		// The diagram shows DESCRIPTION, FMID, PRODUCT, and REWORK can all be bypassed
+		return []string{}
+	case "++RELEASE":
+		// From syntax_diagrams/release.png:
+		// FMID and REASON are required
+		// One of ERROR/FIXCAT/SYSTEM/USER is required (mutually_exclusive group)
+		// Note: We don't list ERROR/FIXCAT/SYSTEM/USER here because they are handled
+		// by the mutually_exclusive required group validation in smpe.json
+		return []string{"FMID", "REASON"}
 	default:
 		// No required operands for other statements (based on current syntax diagrams)
 		return []string{}

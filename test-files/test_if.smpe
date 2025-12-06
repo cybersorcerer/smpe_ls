@@ -1,0 +1,76 @@
+/* Test file for ++IF MCS statement */
+
+/* ========================================== */
+/* Valid ++IF statements                      */
+/* ========================================== */
+
+/* Valid: Basic IF with required FMID and REQ */
+++IF
+          FMID(ABC1234)
+          REQ(DEF5678)
+          THEN.
+
+/* Valid: IF with FMID and REQ, no THEN */
+++IF
+          FMID(GHI9012)
+          REQ(JKL3456).
+
+/* Valid: IF with all operands */
+++IF
+          FMID(MNO7890)
+          REQ(PQR1234)
+          THEN.
+
+/* Valid: Multiple FMIDs */
+++IF
+          FMID(STU5678)
+          FMID(VWX9012)
+          REQ(YZA3456)
+          THEN.
+
+
+/* ========================================== */
+/* INVALID ++IF statements                    */
+/* ========================================== */
+
+/* INVALID: Missing FMID (required operand) */
+++IF
+          REQ(BCD7890).
+
+/* INVALID: Missing REQ (required operand) */
+++IF
+          FMID(EFG1234).
+
+/* INVALID: Missing both FMID and REQ */
+++IF
+          THEN.
+
+/* INVALID: Only THEN, no required operands */
+++IF THEN.
+
+/* INVALID: Unknown operand */
+++IF
+          FMID(HIJ5678)
+          REQ(KLM9012)
+          BADOPER(VALUE).
+
+/* INVALID: Duplicate REQ */
+++IF
+          FMID(NOP3456)
+          REQ(QRS7890)
+          REQ(TUV1234).
+
+/* INVALID: Empty FMID parameter */
+++IF
+          FMID()
+          REQ(WXY5678).
+
+/* INVALID: Empty REQ parameter */
+++IF
+          FMID(ZAB9012)
+          REQ().
+
+/* INVALID: Missing terminator */
+++IF
+          FMID(CDE3456)
+          REQ(FGH7890)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/diagnostics"
+	"github.com/cybersorcerer/smpe_ls/internal/parser"
 )
 
 func main() {
@@ -16,6 +17,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	p := parser.NewParser(store.Statements)
 	dp := diagnostics.NewProvider(store)
 
 	testCases := []struct {
@@ -44,7 +46,8 @@ func main() {
 		fmt.Printf("\n========== Test %d: %s ==========\n", i+1, tc.name)
 		fmt.Printf("Content: %s\n", tc.content)
 
-		diags := dp.Analyze(tc.content)
+		doc := p.Parse(tc.content)
+		diags := dp.AnalyzeAST(doc)
 		fmt.Printf("Diagnostics: %d\n", len(diags))
 		for _, diag := range diags {
 			fmt.Printf("  - %s\n", diag.Message)

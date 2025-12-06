@@ -1,0 +1,45 @@
+/* Test file for ++PRODUCT MCS statement */
+
+/* ========================================== */
+/* Valid ++PRODUCT statements                 */
+/* ========================================== */
+
+/* Valid: Basic ++PRODUCT with required operands */
+++PRODUCT (MYPROD,01.00.00)
+         DESCRIPTION('Test Product Description')
+         SREL(Z038).
+
+/* Valid: Complete ++PRODUCT with all operands */
+++PRODUCT (TEST,02.01.00)
+		 DESCRIPTION(Test)
+         SREL(Z038,Z039)
+         URL('http://example.com/product')
+         VENDOR('Test Vendor')
+         REWORK(1)
+.
+
+
+/* ========================================== */
+/* INVALID ++PRODUCT statements               */
+/* ========================================== */
+
+/* INVALID: Missing SREL (required) */
+++PRODUCT INCOMPLETE,01.00.00.
+
+/* INVALID: Missing SREL (required) */
+++PRODUCT MISSING,01.00.00
+         DESCRIPTION('Has description but missing SREL').
+
+/* INVALID: Unknown operand */
+++PRODUCT BADPROD01,01.00.00
+         SREL(Z038)
+         BADOPER(VALUE).
+
+/* INVALID: Duplicate SREL */
+++PRODUCT BADPROD02,01.00.00
+         SREL(Z038)
+         SREL(Z039).
+
+/* INVALID: Missing terminator */
+++PRODUCT BADPROD03,01.00.00
+         SREL(Z038)

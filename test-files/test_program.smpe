@@ -1,0 +1,50 @@
+/* Test file for ++PROGRAM MCS statement */
+
+/* ========================================== */
+/* Valid ++PROGRAM statements                 */
+/* ========================================== */
+
+/* Valid: Basic ++PROGRAM with DISTLIB and RELFILE */
+++PROGRAM MYPROG
+         DISTLIB(ADIST)
+         SYSLIB(ASYSLIB)
+         RELFILE(1).
+
+/* Valid: Complete ++PROGRAM with multiple operands */
+++PROGRAM TESTPROG
+         DISTLIB(BDIST)
+         ALIAS(TESTALIAS,TESTALIAS2)
+         LKLIB(BLKLIB)
+         RMID(ABC1234)
+         VERSION(HBB7780).
+
+/* Valid: DELETE mode */
+++PROGRAM DELPROG DELETE
+         DISTLIB(CDIST)
+         VERSION(HBB7780).
+
+
+/* ========================================== */
+/* INVALID ++PROGRAM statements               */
+/* ========================================== */
+
+/* INVALID: Missing both DISTLIB and SYSLIB (one is required) */
+++PROGRAM INCOMPLETE.
+
+/* INVALID: Missing both DISTLIB and SYSLIB */
+++PROGRAM MISSINGDIST
+         RELFILE(2).
+
+/* INVALID: Unknown operand */
+++PROGRAM BADPROG01
+         DISTLIB(DDIST)
+         BADOPER(VALUE).
+
+/* INVALID: Duplicate DISTLIB */
+++PROGRAM BADPROG02
+         DISTLIB(EDIST)
+         DISTLIB(FDIST).
+
+/* INVALID: Missing terminator */
+++PROGRAM BADPROG03
+         DISTLIB(GDIST)

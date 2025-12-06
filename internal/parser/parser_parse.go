@@ -182,8 +182,10 @@ func (p *Parser) Parse(text string) *Document {
 						}
 
 						// Count non-empty lines after this statement as inline data
+						// Skip comment lines (lines starting with /* after trimming)
 						for lineIdx := stmt.StartLine + len(stmt.Lines); lineIdx < endLine; lineIdx++ {
-							if strings.TrimSpace(cleanLines[lineIdx]) != "" {
+							line := strings.TrimSpace(cleanLines[lineIdx])
+							if line != "" && !strings.HasPrefix(line, "/*") {
 								currentStatement.HasInlineData = true
 								currentStatement.InlineDataLines++
 							}

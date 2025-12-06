@@ -1,0 +1,155 @@
+/* Test file for ++HOLD MCS statement */
+/* Tests required_group validation for ERROR|FIXCAT|SYSTEM|USER */
+
+/* ========================================== */
+/* Valid ++HOLD statements                    */
+/* ========================================== */
+
+/* Valid: ERROR hold */
+++HOLD(UZ12345)
+          ERROR
+          FMID(HBB7780)
+          REASON(ABC1234)
+          DATE(24365).
+
+/* Valid: ERROR hold with ERR alias */
+++HOLD(UZ12346)
+          ERR
+          FMID(HBB7781)
+          REASON(DEF5678).
+
+/* Valid: FIXCAT hold with CATEGORY */
+++HOLD(UZ12347)
+          FIXCAT(CATEGORY(HARDWARE))
+		  F6
+          FMID(HBB7782)
+          REASON(GHI9012).
+
+/* Valid: FIXCAT with multiple categories */
+++HOLD(UZ12348)
+          FIXCAT(CATEGORY(SOFTWARE,PERFORMANCE))
+          FMID(HBB7783)
+          REASON(JKL3456)
+          CLASS(HIPER).
+
+/* Valid: SYSTEM hold */
+++HOLD(UZ12349)
+          SYSTEM
+          FMID(HBB7784)
+          REASON(ACTION)
+          COMMENT('Requires special processing').
+
+/* Valid: SYSTEM hold with SYS alias */
+++HOLD(UZ12350)
+          SYS
+          FMID(HBB7785)
+          REASON(IPL).
+
+/* Valid: USER hold */
+++HOLD(UZ12351)
+          USER
+          FMID(HBB7786)
+          REASON(CUSTOM01)
+          COMMENT('User defined hold').
+
+/* Valid: With all optional operands */
+++HOLD(UZ12352)
+          ERROR
+          FMID(HBB7787)
+          REASON(DB2BIND)
+          DATE(24366)
+          CLASS(PE)
+          COMMENT('DB2 rebind required').
+
+
+/* ========================================== */
+/* INVALID ++HOLD statements                  */
+/* ========================================== */
+
+/* INVALID: Missing one of ERROR|FIXCAT|SYSTEM|USER (required_group) */
+++HOLD(BAD0001)
+          FMID(HBB7788)
+          REASON(DDDEF).
+
+/* INVALID: Missing FMID */
+++HOLD(BAD0002)
+          ERROR
+          REASON(DELETE).
+
+/* INVALID: Missing REASON */
+++HOLD(BAD0003)
+          SYSTEM
+          FMID(HBB7789).
+
+/* INVALID: Missing all required operands */
+++HOLD(BAD0004).
+
+/* INVALID: Only optional operands */
+++HOLD(BAD0005)
+          DATE(24367)
+          CLASS(ERREL)
+          COMMENT('Missing required operands').
+
+
+/* ========================================== */
+/* Test mutually_exclusive                    */
+/* ========================================== */
+
+/* INVALID: ERROR and FIXCAT together (mutually exclusive) */
+++HOLD(BAD0006)
+          ERROR
+          FIXCAT
+          FMID(HBB7790)
+          REASON(AO).
+
+/* INVALID: SYSTEM and USER together (mutually exclusive) */
+++HOLD(BAD0007)
+          SYSTEM
+          USER
+          FMID(HBB7791)
+          REASON(DOC).
+
+/* INVALID: Multiple hold types (all mutually exclusive) */
+++HOLD(BAD0008)
+          ERROR
+          FIXCAT
+          SYSTEM
+          USER
+          FMID(HBB7792)
+          REASON(ENH).
+
+
+/* ========================================== */
+/* Test REASON values (SYSTEM reason IDs)     */
+/* ========================================== */
+
+/* Valid: Various SYSTEM reason IDs */
+++HOLD(UZ12353)
+          SYSTEM
+          FMID(HBB7793)
+          REASON(ACTION).
+
+++HOLD(UZ12354)
+          SYSTEM
+          FMID(HBB7794)
+          REASON(DB2BIND).
+
+++HOLD(UZ12355)
+          SYSTEM
+          FMID(HBB7795)
+          REASON(DDDEF).
+
+++HOLD(UZ12356)
+          SYSTEM
+          FMID(HBB7796)
+          REASON(IPL).
+
+++HOLD(UZ12357)
+          SYSTEM
+          FMID(HBB7797)
+          REASON(FULLGEN).
+
+++HOLD(UZ12358)
+          SYSTEM
+          FMID(HBB7798)
+          REASON(RESTART).

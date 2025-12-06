@@ -1,0 +1,123 @@
+/* Test file for required operand validation */
+/* Tests both required_group and regular required operands */
+
+/* ========================================== */
+/* Test 1: ++RELEASE with required_group     */
+/* ========================================== */
+
+/* Valid: Has USER (one of ERROR|FIXCAT|SYSTEM|USER), FMID, and REASON */
+++RELEASE(UZ12345)
+          FMID(FXY1040)
+          USER
+          REASON(CPU0A).
+
+/* Valid: Has ERROR instead of USER */
+++RELEASE(UZ12346)
+          ERROR
+          FMID(FXY1041)
+          REASON(ACTION)
+          DATE(2024/12/05).
+
+/* Valid: Has FIXCAT */
+++RELEASE(UZ12347)
+          FIXCAT
+          FMID(FXY1042)
+          REASON(DB2BIND).
+
+/* Valid: Has SYSTEM (with alias SYS) */
+++RELEASE(UZ12348)
+          SYS
+          FMID(FXY1043)
+          REASON(IPL).
+
+/* INVALID: Missing one of ERROR|FIXCAT|SYSTEM|USER (required_group) */
+++RELEASE(UZ12349)
+          FMID(FXY1044)
+          REASON(DDDEF).
+
+/* INVALID: Missing FMID (regular required) */
+++RELEASE(UZ12350)
+          ERROR
+          REASON(DELETE).
+
+/* INVALID: Missing REASON (regular required) */
+++RELEASE(UZ12351)
+          USER
+          FMID(FXY1045).
+
+/* INVALID: Missing all required operands */
+++RELEASE(UZ12352).
+
+
+/* ========================================== */
+/* Test 2: ++PRODUCT with regular required   */
+/* ========================================== */
+
+/* Valid: Has both DESCRIPTION and SREL */
+++PRODUCT(MYPROD,01.00.00)
+          DESCRIPTION('Test Product')
+          SREL(Z038).
+
+/* Valid: Using DESC alias instead of DESCRIPTION */
+++PRODUCT(TESTPRD,02.00.00)
+          DESC('Another Product')
+          SREL(Z038,Z039)
+          URL('http://example.com')
+          VENDOR('IBM').
+
+/* INVALID: Missing SREL (regular required) */
+++PRODUCT(BADPROD1,01.00.00)
+          DESCRIPTION('Product without SREL').
+
+/* INVALID: Missing DESCRIPTION (regular required) */
+++PRODUCT(BADPROD2,01.00.00)
+          SREL(Z038).
+
+/* INVALID: Missing both required operands */
+++PRODUCT(BADPROD3,01.00.00).
+
+
+/* ========================================== */
+/* Test 3: ++PROGRAM with regular required   */
+/* ========================================== */
+
+/* Valid: Has DISTLIB */
+++PROGRAM(MYPROG)
+          DISTLIB(ADIST)
+          SYSLIB(ASYSLIB)
+          RELFILE(1).
+
+/* Valid: DELETE mode - DISTLIB not required due to mutually_exclusive */
+++PROGRAM(DELPROG) DELETE
+          DISTLIB(BDIST).
+
+/* INVALID: Missing DISTLIB (regular required in ADD mode) */
+++PROGRAM(BADPROG1)
+          SYSLIB(CSYSLIB)
+          RELFILE(2).
+
+/* INVALID: Missing DISTLIB, has only optional operands */
+++PROGRAM(BADPROG2)
+          ALIAS(TESTALIAS)
+          VERSION(HBB7780).
+
+
+/* ========================================== */
+/* Test 4: ++ASSIGN with regular required    */
+/* ========================================== */
+
+/* Valid: Has both SOURCEID and TO */
+++ASSIGN
+          SOURCEID(ABC1234)
+          TO(DEF5678).
+
+/* INVALID: Missing TO (regular required) */
+++ASSIGN
+          SOURCEID(GHI9012).
+
+/* INVALID: Missing SOURCEID (regular required) */
+++ASSIGN
+          TO(JKL3456).
+
+/* INVALID: Missing both required operands */
+++ASSIGN.

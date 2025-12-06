@@ -1,0 +1,114 @@
+/* Test file for ++MOD MCS statement */
+
+/* ========================================== */
+/* Valid ++MOD statements (ADD/REPLACE mode)  */
+/* ========================================== */
+
+/* Valid: Minimal ADD mode with inline data */
+++MOD(MYMOD01)
+          DISTLIB(ADIST).
+* Module object code would follow here
+  END
+
+/* Valid: With SYSLIB */
+++MOD(MYMOD02)
+          DISTLIB(BDIST)
+          SYSLIB(ASYSLIB).
+* Object code
+
+/* Valid: With CSECT */
+++MOD(MYMOD03)
+          DISTLIB(CDIST)
+          CSECT(CSECT1,CSECT2).
+* Object code
+
+/* Valid: Using FROMDS instead of inline data */
+++MOD(MYMOD04)
+          DISTLIB(DDIST)
+          FROMDS(DSN(MY.OBJ.LIB) NUMBER(1)).
+
+/* Valid: Using RELFILE */
+++MOD(MYMOD05)
+          DISTLIB(EDIST)
+          RELFILE(2).
+
+/* Valid: Using TXLIB */
+++MOD(MYMOD06)
+          DISTLIB(FDIST)
+          TXLIB(ATXLIB).
+
+/* Valid: With all operands */
+++MOD(MYMOD07)
+          DISTLIB(GDIST)
+          SYSLIB(BSYSLIB)
+          CSECT(CSECT3)
+          VERSION(HBB7780).
+* Complete module
+
+
+/* ========================================== */
+/* Valid ++MOD statements (DELETE mode)       */
+/* ========================================== */
+
+/* Valid: DELETE mode - DISTLIB not required */
+++MOD(DELMOD01) DELETE.
+
+/* Valid: DELETE with DISTLIB (optional in DELETE mode) */
+++MOD(DELMOD02) DELETE
+          DISTLIB(HDIST).
+
+
+/* ========================================== */
+/* INVALID ++MOD statements                   */
+/* ========================================== */
+
+/* INVALID: Missing DISTLIB in ADD mode */
+++MOD(BADMOD01)
+          SYSLIB(CSYSLIB).
+* This should fail
+
+/* INVALID: Missing DISTLIB, only CSECT */
+++MOD(BADMOD02)
+          CSECT(CSECT4).
+
+/* INVALID: DELETE with FROMDS (mutually exclusive) */
+++MOD(BADMOD03) DELETE
+          FROMDS(DSN(MY.LIB) NUMBER(1)).
+
+/* INVALID: DELETE with CSECT (mutually exclusive) */
+++MOD(BADMOD04) DELETE
+          CSECT(CSECT5).
+
+/* INVALID: DELETE with SYSLIB (mutually exclusive) */
+++MOD(BADMOD05) DELETE
+          SYSLIB(DSYSLIB).
+
+/* INVALID: Unknown operand */
+++MOD(BADMOD06)
+          DISTLIB(IDIST)
+          BADOPER(VALUE).
+
+/* INVALID: Duplicate DISTLIB */
+++MOD(BADMOD07)
+          DISTLIB(JDIST)
+          DISTLIB(KDIST).
+
+/* INVALID: FROMDS and RELFILE together (mutually exclusive) */
+++MOD(BADMOD08)
+          DISTLIB(LDIST)
+          FROMDS(DSN(TEST.LIB) NUMBER(1))
+          RELFILE(3).
+
+/* INVALID: FROMDS and TXLIB together (mutually exclusive) */
+++MOD(BADMOD09)
+          DISTLIB(MDIST)
+          FROMDS(DSN(DATA.LIB) NUMBER(2))
+          TXLIB(BTXLIB).
+
+/* INVALID: Missing terminator */
+++MOD(BADMOD10)
+          DISTLIB(NDIST)
+
+/* INVALID: Empty DISTLIB parameter */
+++MOD(BADMOD11)
+          DISTLIB().

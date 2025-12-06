@@ -1,0 +1,45 @@
+/* Test file for ++APAR MCS statement */
+
+/* Valid: Minimal ++APAR */
+++APAR(UZ12345).
+
+/* Valid: With DESCRIPTION */
+++APAR(UZ12346)
+          DESCRIPTION('Test APAR for bug fix').
+
+/* Valid: With FILES */
+++APAR(UZ12347)
+          FILES(100).
+
+/* Valid: With RFDSNPFX */
+++APAR(UZ12348)
+          FILES(50)
+          RFDSNPFX(MY.APAR).
+
+/* Valid: With REWORK */
+++APAR(UZ12349)
+          REWORK(2024365).
+
+/* Valid: All operands */
+++APAR(UZ12350)
+          DESCRIPTION('Complete APAR')
+          FILES(200)
+          RFDSNPFX(FULL.APAR)
+          REWORK(2024366).
+
+/* INVALID: RFDSNPFX without FILES */
+++APAR(BADAPAR01)
+          RFDSNPFX(BAD.APAR).
+
+/* INVALID: Unknown operand */
+++APAR(BADAPAR02)
+          BADOPER(VALUE).
+
+/* INVALID: Duplicate DESCRIPTION */
+++APAR(BADAPAR03)
+          DESCRIPTION('First')
+          DESCRIPTION('Second').
+
+/* INVALID: Missing terminator */
+++APAR(BADAPAR04)
+          DESCRIPTION('No terminator')

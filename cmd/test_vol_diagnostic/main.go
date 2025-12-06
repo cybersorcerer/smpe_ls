@@ -6,6 +6,7 @@ import (
 
 	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/diagnostics"
+	"github.com/cybersorcerer/smpe_ls/internal/parser"
 )
 
 func main() {
@@ -17,7 +18,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Create diagnostics provider
+	// Create parser and diagnostics provider
+	p := parser.NewParser(store.Statements)
 	dp := diagnostics.NewProvider(store)
 
 	// Test case from test-mac-simple.smpe line 9
@@ -25,8 +27,11 @@ func main() {
 
 	fmt.Printf("Testing diagnostics for:\n%s\n\n", testContent)
 
-	// Analyze
-	diags := dp.Analyze(testContent)
+	// Parse the document
+	doc := p.Parse(testContent)
+
+	// Analyze using AST
+	diags := dp.AnalyzeAST(doc)
 
 	fmt.Printf("Found %d diagnostic(s):\n", len(diags))
 	for i, diag := range diags {

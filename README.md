@@ -1,351 +1,457 @@
 # SMP/E Language Server
 
-A Language Server Protocol (LSP) implementation for SMP/E (System Modification Program/Extended) written in Go.
+A modern Language Server Protocol (LSP) implementation for SMP/E (System Modification Program/Extended) written in Go.
 
-## Features
+[![Version](https://img.shields.io/badge/version-0.7.0-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
+[![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
-### Release 0.3.0 (Current)
+## ✨ Features
 
-**New Features:**
+- **🎨 Syntax Highlighting** - Color coding for MCS statements, operands, and comments
+- **💡 Intelligent Code Completion** - Context-aware completion for statements and operands
+- **🔍 Real-time Diagnostics** - Instant validation of SMP/E syntax and semantics
+- **📖 Hover Documentation** - Inline documentation from IBM SMP/E Reference
+- **🌍 Multi-platform** - Native binaries for Linux, macOS, and Windows (AMD64 & ARM64)
+- **⚡ Fast & Lightweight** - Written in Go with zero external dependencies
 
-- **++MAC Statement Support** - Macro library management with context-sensitive validation
-  - ADD/UPDATE mode: DISTLIB required, mutually exclusive operands validated
-  - DELETE mode: Special validation for DELETE with FROMDS/RELFILE/SSI/TXLIB
-- **++MACUPD Statement Support** - Macro update operations with inline data support
-- **++MOD Statement Support** - Load module operations with inline data support
-- **++SRC Statement Support** - Source code operations with inline Assembler/C/etc. support
-- **++SRCUPD Statement Support** - Source update operations with inline data support
-- **Inline Data Architecture** - Dynamic inline data handling via `inline_data` attribute in smpe.json
-  - Supports ++JCLIN (JCL), ++MAC (Assembler), ++MACUPD, ++MOD, ++SRC, ++SRCUPD
-  - No SMP/E diagnostics or completions inside inline data regions
-  - External data operands (FROMDS, RELFILE, SSI, TXLIB) properly detected
-- **Enhanced Syntax Highlighting** - Inline data (JCL/Assembler/REXX) displayed as plain text without false SMP/E highlighting
-- **Visual Diagnostic Severity** - Unicode symbols in diagnostic messages for better distinction:
-  - 🔴 ERROR
-  - ⚠️ WARNING
-  - ℹ️ INFORMATION
-  - 💡 HINT
+## 📦 Installation
 
-**Enhanced Diagnostics:**
+### Platform-Specific Installation
 
-- Fixed dataset name handling - dots in DSN(MY.DATA.SET) no longer treated as statement terminators
-- Boolean operand parsing - DELETE, NOAPARS, etc. now correctly validated
-- Improved terminator detection - only detects periods outside parentheses
-- Completion now shows actual statement names instead of generic "MCS"
-- Hover now shows correct statement/operand names instead of "MCS"
+Download pre-built binaries for your platform from the [latest release](https://github.com/cybersorcerer/smpe_ls/releases/latest).
 
-### Release 0.2.0
+**Available platforms:**
+- Linux (AMD64, ARM64)
+- macOS (Apple Silicon, Intel)
+- Windows (AMD64, ARM64)
 
-**New Features:**
+**Installation paths:**
+- **Linux/macOS:** Binary in `/usr/local/bin/`, data in `~/.local/share/smpe_ls/`
+- **Windows:** Binary and data in `%LOCALAPPDATA%\smpe_ls\`
 
-- **Multiline Parameter Support** - Correctly parses operand parameters spanning multiple lines
-- **Malformed Parenthesis Detection** - Diagnostics for missing closing parentheses in statement and operand parameters
-- **Flexible Whitespace Handling** - Supports both `OPERAND(...)` and `OPERAND (...)` syntax
-- **++JCLIN Statement Support** - Full support including inline JCL data handling
-- **++JAR Statement Support** - JAR file management operations
-- **++JARUPD Statement Support** - JAR update operations
-- **++VER Statement Support** - Version specification
-- **++ZAP Statement Support** - Superzap operations
-- **Improved Completion** - mutually_exclusive operands now shown in completion (validated via diagnostics)
+📋 For detailed installation instructions, see [INSTALL.md](INSTALL.md)
 
-**Enhanced Diagnostics:**
-
-- Detects unbalanced parentheses in statement parameters (e.g., `++APAR(A12345`)
-- Detects unbalanced parentheses in operand parameters (e.g., `TO(A12345, A23456`)
-- Validates mutually exclusive operands (e.g., ++JCLIN FROMDS vs RELFILE)
-- Properly handles ++JCLIN inline data (skips diagnostics for JCL lines)
-
-### Release 0.1.0
-
-Core features:
-
-- **Syntax Highlighting** - Color coding for MCS statements, operands, and comments (`/* */`)
-- **Context-Aware Code Completion**
-  - MCS statement completion with parameter placeholders
-  - Operand completion based on statement type
-  - Context-sensitive value completion (e.g., SYSMOD IDs from document)
-  - Special handling for ++HOLD REASON operand based on hold type (ERROR, SYSTEM, FIXCAT, USER)
-- **Diagnostics** - Real-time validation including:
-  - Missing or malformed statement terminators (`.`)
-  - Missing required statement parameters
-  - Missing required operands (derived from syntax diagrams)
-  - Empty operand parameters
-  - Unknown operands
-  - Duplicate operands
-  - Dependency violations (e.g., RFDSNPFX requires FILES)
-  - Unknown statement types
-- **Hover Information** - Documentation and parameter details for statements and operands
-
-## Supported MCS Statements
-
-Version 0.3.0 supports 17 MCS statements with full diagnostics validation:
-
-**Control MCS:**
-
-- `++APAR` - Service SYSMOD (temporary fix)
-- `++ASSIGN` - Source ID Assignment
-- `++DELETE` - Delete Load Module
-- `++FEATURE` - SYSMOD Set Description
-- `++FUNCTION` - Function SYSMOD
-- `++HOLD` - Exception Status
-- `++IF` - Conditional Processing
-- `++JAR` - JAR file management
-- `++JARUPD` - JAR update operations
-- `++JCLIN` - Job Control Language Input with inline JCL support
-- `++MAC` - Macro library management (NEW in 0.3.0)
-- `++MACUPD` - Macro update operations (NEW in 0.3.0)
-- `++MOD` - Load module operations (NEW in 0.3.0)
-- `++SRC` - Source code operations (NEW in 0.3.0)
-- `++SRCUPD` - Source update operations (NEW in 0.3.0)
-- `++VER` - Version specification
-- `++ZAP` - Superzap operations
-
-**Additional Statements in smpe.json (completion and hover available):**
-
-- All Data Element MCS with language variants (++BOOK, ++CLIST, ++EXEC, ++FONT, ++HELP, ++MSG, ++PARM, etc.)
-- Additional Control MCS (++MOVE, ++NULL, ++PRODUCT, ++PROGRAM, ++PTF, ++RELEASE, ++RENAME, ++USERMOD)
-
-## Installation
-
-### Prerequisites
-
-- Go 1.19 or later
-- VSCode (for testing)
-- Node.js and npm (for VSCode extension)
-
-### Build and Install
+### Build from Source
 
 ```bash
-# Build the language server
-make build
-
-# Install to ~/.local/bin
+git clone https://github.com/cybersorcerer/smpe_ls.git
+cd smpe_ls
 make install
-
-# Build VSCode extension
-make vscode
 ```
 
-## Usage
+## 🚀 Quick Start
 
-### VSCode
+### VSCode Extension
 
-1. Build the VSCode extension:
+1. Install the language server:
+   ```bash
+   make install
+   ```
 
+2. Build the VSCode extension:
    ```bash
    make vscode
    ```
 
-2. Open `client/vscode-smpe` in VSCode
+3. Open `client/vscode-smpe` in VSCode and press F5
 
-3. Press F5 to launch Extension Development Host
+4. Create a `.smpe` file and start coding!
 
-4. Create or open a `.smpe`, `.mcs`, or `.smp` file
+### Command Line
 
-5. Start typing SMP/E statements and enjoy the language features!
+```bash
+# Show version
+smpe_ls --version
 
-### Configuration
+# Enable debug logging
+smpe_ls --debug
 
-VSCode settings (`.vscode/settings.json`):
+# Use custom data file
+smpe_ls --data /path/to/smpe.json
+```
+
+## 📝 Example
+
+```smpe
+/* Sample SMP/E MCS statements */
+++APAR(AB12345)
+    DESCRIPTION('Fix for security vulnerability')
+    FILES(5)
+    RFDSNPFX(APARA12)
+    REWORK(20250101).
+
+++FUNCTION(HBB7790)
+    DESCRIPTION('Base function for product XYZ')
+    FMID(HBB7780)
+    VERSION(01.00.00).
+
+++HOLD(AB12345)
+    FMID(HBB7790)
+    REASON(B12345)
+    ERROR
+    COMMENT('Critical security fix required').
+
+/* Inline JCL data support */
+++JCLIN.
+//SMPMCS   JOB (ACCT),'INSTALL',CLASS=A
+//STEP1    EXEC PGM=IEWL
+//SYSLMOD  DD DSN=SYS1.LINKLIB,DISP=SHR
+++JCLIN.
+```
+
+## 🎯 Supported MCS Statements
+
+### Version 0.7.0 (Current)
+
+**Control MCS (25 statements with full diagnostics):**
+
+| Statement | Description | Diagnostics |
+|-----------|-------------|-------------|
+| `++APAR` | Service SYSMOD (temporary fix) | ✅ |
+| `++ASSIGN` | Source ID Assignment | ✅ |
+| `++DELETE` | Delete Load Module | ✅ |
+| `++FEATURE` | SYSMOD Set Description | ✅ |
+| `++FUNCTION` | Function SYSMOD | ✅ |
+| `++HOLD` | Exception Status | ✅ |
+| `++IF` | Conditional Processing | ✅ |
+| `++JAR` | JAR file management | ✅ |
+| `++JARUPD` | JAR update operations | ✅ |
+| `++JCLIN` | Job Control Language Input | ✅ |
+| `++MAC` | Macro library management | ✅ |
+| `++MACUPD` | Macro update operations | ✅ |
+| `++MOD` | Load module operations | ✅ |
+| `++MOVE` | Move module operations | ✅ |
+| `++NULL` | Null SYSMOD | ✅ |
+| `++PRODUCT` | Product definition | ✅ |
+| `++PROGRAM` | Program/module definition | ✅ |
+| `++PTF` | Program Temporary Fix | ✅ |
+| `++RELEASE` | Release from hold status | ✅ |
+| `++RENAME` | Rename operations | ✅ |
+| `++SRC` | Source code operations | ✅ |
+| `++SRCUPD` | Source update operations | ✅ |
+| `++USERMOD` | User modification | ✅ |
+| `++VER` | Version specification | ✅ |
+| `++ZAP` | Superzap operations | ✅ |
+
+**HFS MCS (27 statements with full diagnostics):**
+
+All HFS-type statements share the same syntax and validation rules:
+
+| Statement | Description | Diagnostics |
+|-----------|-------------|-------------|
+| `++HFS` | HFS file operations (supports 32 language variants: ++HFSxxx*) | ✅ |
+| `++SHELLSCR` | Shell script operations | ✅ |
+| `++AIX1` - `++AIX5` | AIX client file operations (5 variants) | ✅ |
+| `++CLIENT1` - `++CLIENT5` | Generic client file operations (5 variants) | ✅ |
+| `++OS21` - `++OS25` | OS/2 client file operations (5 variants) | ✅ |
+| `++UNIX1` - `++UNIX5` | UNIX client file operations (5 variants) | ✅ |
+| `++WIN1` - `++WIN5` | Windows client file operations (5 variants) | ✅ |
+
+*`++HFS` can also be coded as `++HFSxxx` where xxx is one of 32 national language identifiers (e.g., `++HFSENU`, `++HFSDEU`, `++HFSJPN`). All language variants are supported in completion, diagnostics, and hover.
+
+**Data Element MCS:**
+- All data element statements with language variants (++BOOK, ++CLIST, ++EXEC, ++FONT, ++HELP, ++MSG, ++PARM, etc.)
+- Completion and hover available for all statements
+
+## 🧪 Testing
+
+The project includes comprehensive test coverage:
+
+```bash
+# Run all tests
+make test-all
+
+# Run unit tests only (completion, diagnostics, hover, parser)
+make test
+
+# Run central test suite (all .smpe test files)
+make test-suite
+```
+
+**Test Coverage:**
+- 57 unit tests across 4 modules
+- 27 integration test files with 24 passing
+- Tests for completion, diagnostics, hover, and parser
+
+## 🏗️ Building for All Platforms
+
+```bash
+# Build for all platforms
+make build-all
+
+# Create release packages
+make release
+
+# Results in:
+# - dist/smpe_ls-linux-amd64
+# - dist/smpe_ls-linux-arm64
+# - dist/smpe_ls-macos-arm64
+# - dist/smpe_ls-macos-amd64
+# - dist/smpe_ls-windows-amd64.exe
+# - dist/smpe_ls-windows-arm64.exe
+```
+
+## 📋 What's New
+
+### Version 0.7.0 (Latest)
+
+**New Features:**
+- ✨ **HFS Statement Support** - Added 10 missing HFS-type statements (++AIX1-5, ++CLIENT1-5)
+- 🌍 **National Language Identifiers** - Full support for ++HFSxxx variants (32 language identifiers)
+- ✨ **Hover Unit Tests** - Complete test coverage for hover functionality (11 tests)
+- 📊 **Enhanced Test Suite** - Human-readable test output with detailed diagnostics
+- 🤖 **GitHub Actions** - Automated multi-platform builds and releases
+- 🔧 **Cross-compilation** - Native binaries for 6 platforms (Linux, macOS, Windows - AMD64 & ARM64)
+- 📦 **Release Automation** - Automatic GitHub releases on version tags
+- 🎯 **Makefile Improvements** - New targets: `test-suite`, `test-all`, `build-all`, `release`
+
+**HFS Statements:**
+- Added ++AIX1-5 (AIX client elements)
+- Added ++CLIENT1-5 (generic client elements)
+- ++HFS now supports all 32 national language identifier variants (++HFSENU, ++HFSDEU, etc.)
+- Total HFS-type statements: 27 (2 base + 25 platform-specific variants)
+
+**Test Infrastructure:**
+- Central test runner with grouped results (passed/failed)
+- Diagnostics organized by severity (🔴 Errors → ⚠️ Warnings → ℹ️ Info)
+- Pass rate statistics and detailed failure reporting
+- 19 comprehensive test files with valid and invalid test cases
+
+**CI/CD:**
+- Automatic builds on push to main branch
+- Release builds on version tags with GitHub Releases
+- Code coverage reporting to Codecov
+- golangci-lint integration
+
+### Version 0.6.0
+
+**New Features:**
+- Complete AST-based refactoring for completion and diagnostics
+- All 25 Control MCS statements with full diagnostics validation
+- Enhanced statement validation (++PRODUCT, ++PROGRAM, ++PTF, ++RELEASE)
+- Improved required operand validation
+- Better error messages for missing inline data
+
+### Version 0.5.0
+
+**New Features:**
+- ++MOVE statement with complex DISTLIB/SYSLIB mode validation
+- Enhanced inline data handling
+- Improved diagnostics for mutually exclusive operands
+
+### Version 0.4.0
+
+**New Features:**
+- ++NULL statement support
+- Refactored diagnostics and completion to use AST
+- Enhanced multiline statement handling
+
+### Version 0.3.0
+
+**New Features:**
+- ++MAC, ++MACUPD, ++MOD, ++SRC, ++SRCUPD statement support
+- Dynamic inline data handling via smpe.json
+- Enhanced syntax highlighting for inline data
+- Visual diagnostic severity with Unicode symbols (🔴 ⚠️ ℹ️ 💡)
+
+### Version 0.2.0
+
+**New Features:**
+- Multiline parameter support
+- Malformed parenthesis detection
+- ++JCLIN, ++JAR, ++JARUPD, ++VER, ++ZAP statement support
+- Improved completion for mutually exclusive operands
+
+### Version 0.1.0
+
+**Initial Release:**
+- Syntax highlighting
+- Context-aware code completion
+- Real-time diagnostics
+- Hover information
+
+## 🔧 Configuration
+
+### VSCode Settings
+
+Add to `.vscode/settings.json`:
 
 ```json
 {
   "smpe.serverPath": "smpe_ls",
-  "smpe.debug": false
+  "smpe.debug": false,
+  "smpe.dataPath": "~/.local/share/smpe_ls/smpe.json"
 }
-```
-
-- `smpe.serverPath`: Path to the smpe_ls executable (default: searches in ~/.local/bin)
-- `smpe.debug`: Enable debug logging (logs to ~/.local/share/smpe_ls/log)
-
-### Command Line Options
-
-```bash
-smpe_ls [options]
-
-Options:
-  --debug          Enable debug logging
-  --version        Show version
-  --data <path>    Path to smpe.json data file (default: data/smpe.json)
-```
-
-### Building
-
-```bash
-# Build only
-make build
-
-# Build and install
-make install
-
-# Clean build artifacts
-make clean
-
-# Run tests
-make test
 ```
 
 ### Logging
 
-The server logs to `~/.local/share/smpe_ls/log`
+Logs are written to:
+- **Linux/macOS:** `~/.local/share/smpe_ls/smpe_ls.log`
+- **Windows:** `%LOCALAPPDATA%\smpe_ls\smpe_ls.log`
 
 Enable debug logging:
-
 ```bash
 smpe_ls --debug
 ```
 
-Or in VSCode settings:
-
+Or in VSCode:
 ```json
 {
   "smpe.debug": true
 }
 ```
 
-## Architecture
+## 🏛️ Architecture
 
 ### Parser Strategy
 
-Uses a **Recursive Descent Parser** with no external dependencies:
-
-- One parser function per MCS statement type
-- Grammar derived from syntax diagrams
-- Semantic information from smpe.json
+**Recursive Descent Parser** with AST generation:
+- Statement-specific parser functions
+- Grammar derived from IBM SMP/E Reference documentation
+- Zero external parser dependencies
 
 ### Data Sources
 
-1. **Syntax Diagrams** (`syntax_diagrams/*.png`)
-   - Define grammar and structure
-   - Used for parser implementation
-   - Show mandatory vs. optional operands
+**smpe.json** (`data/smpe.json`)
+- Statement and operand descriptions
+- Grammar rules and validation logic
+- Completion and hover information
+- Required operands and mutually exclusive operands
 
-2. **smpe.json** (`data/smpe.json`)
-   - Statement descriptions
-   - Operand details and allowed values
-   - Used for hover info and completion
+### Components
 
-## Examples
-
-### Example SMP/E File
-
-```smpe
-/* Sample SMP/E MCS statements */
-++APAR(AB12345)
-    DESCRIPTION(Fix for security vulnerability)
-    FILES(5)
-    RFDSNPFX(APARA12)
-    REWORK(20250101)
-    .
-
-++FUNCTION(HBB7790)
-    DESCRIPTION(Base function for product XYZ)
-    FILES(100)
-    RFDSNPFX(FUNC123)
-    .
-
-++HOLD(AB12345)
-    FMID(HBB7790)
-    REASON(B12345)
-    ERROR
-    COMMENT(Critical security fix required before apply)
-    .
-
-++IF FMID(HBB7790)
-    THEN
-    REQ(FEATURE)
-    .
-
-/* NEW in 0.2.0: Multiline parameters */
-++ASSIGN
-    SOURCEID(PROD2025)
-    TO(
-        AB12345,
-        AB23456,
-        AB34567
-    )
-    .
-
-/* NEW in 0.2.0: ++JCLIN with inline JCL data */
-++JCLIN.
-//SMPMCS   JOB (ACCT),'INSTALL',CLASS=A,MSGCLASS=X
-//STEP1    EXEC PGM=IEWL
-//SYSLMOD  DD DSN=SYS1.LINKLIB,DISP=SHR
-/*
-
-/* NEW in 0.2.0: ++JAR statement */
-++JAR(MYJAR) DISTLIB(AJARLIB) SYSLIB(SJARLIB) RELFILE(2)
-    PARM(PATHMODE(0,6,4,4))
-    LINK('../myapp.jar')
-    .
+```
+smpe_ls/
+├── cmd/
+│   ├── smpe_ls/        # Language server binary
+│   └── smpe_test/      # Central test suite
+├── internal/
+│   ├── completion/     # Code completion provider
+│   ├── diagnostics/    # Syntax validation
+│   ├── hover/          # Documentation provider
+│   ├── parser/         # AST parser
+│   └── handler/        # LSP protocol handler
+├── client/
+│   └── vscode-smpe/    # VSCode extension
+└── data/
+    └── smpe.json       # Statement definitions
 ```
 
-## Troubleshooting
-
-### Server Not Starting
-
-1. Check that smpe_ls is in PATH or ~/.local/bin:
-
-   ```bash
-   which smpe_ls
-   ```
-
-2. Check log file:
-
-   ```bash
-   tail -f ~/.local/share/smpe_ls/log
-   ```
-
-3. Verify data file exists:
-
-   ```bash
-   ls -la data/smpe.json
-   ```
-
-### VSCode Extension Not Working
-
-1. Ensure server is installed:
-
-   ```bash
-   make install
-   ```
-
-2. Check VSCode Output panel:
-   - View � Output
-   - Select "SMP/E Language Server" from dropdown
-
-3. Reload VSCode window:
-   - Cmd+Shift+P � "Developer: Reload Window"
-
-## Future Enhancements
-
-- Additional MCS statements (++VER, ++MOD, ++MAC, etc.)
-- Go to Definition
-- Find References
-- Document Symbols
-- Code Actions
-- Formatting
-- Neovim plugin
-
-## Acknowledgments
-
-Statement and operand descriptions, hover information, and documentation content are derived from:
-
-**IBM z/OS 3.1 SMP/E Reference**
-© Copyright IBM Corporation
-<https://www.ibm.com/docs/en/zos/3.1.0?topic=smpe-zos-reference>
-
-SMP/E is a registered trademark of International Business Machines Corporation.
-
-## License
-
-See LICENSE file for details.
-
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please follow these guidelines:
 
-1. Maintain backward compatibility
-2. Make minimal, targeted changes
-3. Test thoroughly before submitting
-4. Update documentation
+1. **Backward Compatibility** - Don't break existing functionality
+2. **Minimal Changes** - Keep changes focused and targeted
+3. **Test Coverage** - Add tests for new features
+4. **Documentation** - Update README and inline docs
+
+### Development Workflow
+
+```bash
+# Install development dependencies
+make install
+
+# Run tests
+make test-all
+
+# Build for all platforms
+make build-all
+
+# Create release packages
+make release
+
+# Clean build artifacts
+make clean-all
+```
+
+## 📚 Resources
+
+- **IBM z/OS SMP/E Documentation:** https://www.ibm.com/docs/en/zos/3.1.0?topic=smpe-zos-reference
+- **Language Server Protocol:** https://microsoft.github.io/language-server-protocol/
+- **VSCode Extension API:** https://code.visualstudio.com/api
+
+## 🙏 Acknowledgments
+
+Statement and operand descriptions are derived from:
+
+**IBM z/OS 3.1 SMP/E Reference**
+© Copyright IBM Corporation
+https://www.ibm.com/docs/en/zos/3.1.0?topic=smpe-zos-reference
+
+SMP/E is a registered trademark of International Business Machines Corporation.
+
+## 📄 License
+
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
+
+Copyright (C) 2025 Ronald Funk
+
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+
+**Commercial Licensing:** This software is also available under a commercial license for organizations that wish to use it without the restrictions of the AGPL-3.0 license. For commercial licensing inquiries, please contact Ronald Funk.
+
+See [LICENSE](LICENSE) file for the full license text.
+
+## 🐛 Troubleshooting
+
+### Server Not Starting
+
+1. Verify installation:
+   ```bash
+   which smpe_ls
+   smpe_ls --version
+   ```
+
+2. Check log file:
+   ```bash
+   tail -f ~/.local/share/smpe_ls/smpe_ls.log
+   ```
+
+3. Verify data file:
+   ```bash
+   ls -la ~/.local/share/smpe_ls/smpe.json
+   ```
+
+### VSCode Extension Issues
+
+1. Reload window: `Cmd+Shift+P` → "Developer: Reload Window"
+
+2. Check Output panel: View → Output → "SMP/E Language Server"
+
+3. Reinstall server:
+   ```bash
+   make clean install
+   ```
+
+### Build Issues
+
+1. Verify Go version:
+   ```bash
+   go version  # Should be 1.21+
+   ```
+
+2. Clean and rebuild:
+   ```bash
+   make clean-all
+   make build
+   ```
+
+## 🗺️ Roadmap
+
+- [ ] Neovim plugin
+- [ ] Go to Definition
+- [ ] Find References
+- [ ] Document Symbols
+- [ ] Code Actions
+- [ ] Formatting
+- [ ] Additional MCS statements
+- [ ] SMPE Command language support
+
+---
+
+**Made with ❤️ by cybersorcerer**

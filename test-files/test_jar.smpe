@@ -1,0 +1,95 @@
+/* Test file for ++JAR MCS statement */
+
+/* ========================================== */
+/* Valid ++JAR statements (ADD mode)          */
+/* ========================================== */
+
+/* Valid: ADD to DISTLIB */
+++JAR(MYJAR01.JAR)
+          DISTLIB(ADIST).
+
+/* Valid: ADD to SYSLIB */
+++JAR(MYJAR02.JAR)
+          SYSLIB(ASYSLIB).
+
+/* Valid: ADD with JAVACLASS */
+++JAR(MYJAR03.JAR)
+          DISTLIB(BDIST)
+          JAVACLASS(com/example/MyClass).
+
+/* Valid: ADD with multiple JAVACLASS */
+++JAR(MYJAR04.JAR)
+          DISTLIB(CDIST)
+          JAVACLASS(com/example/Class1)
+          JAVACLASS(com/example/Class2).
+
+/* Valid: ADD with FROMDS */
+++JAR(MYJAR05.JAR)
+          DISTLIB(DDIST)
+          FROMDS(DSN(MY.JAR.LIB) NUMBER(1)).
+
+/* Valid: ADD with RELFILE */
+++JAR(MYJAR06.JAR)
+          DISTLIB(EDIST)
+          RELFILE(1).
+
+
+/* ========================================== */
+/* Valid ++JAR statements (DELETE mode)       */
+/* ========================================== */
+
+/* Valid: DELETE from DISTLIB */
+++JAR(DELJAR01.JAR) DELETE
+          DISTLIB(FDIST).
+
+/* Valid: DELETE from SYSLIB */
+++JAR(DELJAR02.JAR) DELETE
+          SYSLIB(BSYSLIB).
+
+/* Valid: DELETE with JAVACLASS */
+++JAR(DELJAR03.JAR) DELETE
+          DISTLIB(GDIST)
+          JAVACLASS(com/example/OldClass).
+
+
+/* ========================================== */
+/* INVALID ++JAR statements                   */
+/* ========================================== */
+
+/* INVALID: Neither DISTLIB nor SYSLIB */
+++JAR(BADJAR01.JAR)
+          JAVACLASS(com/example/Test).
+
+/* INVALID: Both DISTLIB and SYSLIB */
+++JAR(BADJAR02.JAR)
+          DISTLIB(HDIST)
+          SYSLIB(CSYSLIB).
+
+/* INVALID: DELETE with FROMDS (mutually exclusive) */
+++JAR(BADJAR03.JAR) DELETE
+          DISTLIB(IDIST)
+          FROMDS(DSN(JAR.LIB) NUMBER(1)).
+
+/* INVALID: DELETE with RELFILE (mutually exclusive) */
+++JAR(BADJAR04.JAR) DELETE
+          DISTLIB(JDIST)
+          RELFILE(2).
+
+/* INVALID: Unknown operand */
+++JAR(BADJAR05.JAR)
+          DISTLIB(KDIST)
+          BADOPER(VALUE).
+
+/* INVALID: Duplicate DISTLIB */
+++JAR(BADJAR06.JAR)
+          DISTLIB(LDIST)
+          DISTLIB(MDIST).
+
+/* INVALID: Empty JAVACLASS parameter */
+++JAR(BADJAR07.JAR)
+          DISTLIB(NDIST)
+          JAVACLASS().
+
+/* INVALID: Missing terminator */
+++JAR(BADJAR08.JAR)
+          DISTLIB(ODIST)

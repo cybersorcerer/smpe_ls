@@ -48,7 +48,7 @@ func IsValidLanguageID(id string) bool {
 }
 
 // LanguageVariantStatements contains all MCS statement base names that require
-// a national language identifier suffix (e.g., ++BOOK becomes ++BOOKENU)
+// a national language identifier suffix (e.g., ++BOOK becomes ++BOOKENU, ++HFS becomes ++HFSENU)
 var LanguageVariantStatements = []string{
 	"++BOOK",
 	"++BSIND",
@@ -56,6 +56,7 @@ var LanguageVariantStatements = []string{
 	"++DATA6",
 	"++FONT",
 	"++GDF",
+	"++HFS",   // HFS can also be coded as ++HFSxxx where xxx is one of 23 national language identifiers
 	"++HELP",
 	"++IMG",
 	"++MSG",

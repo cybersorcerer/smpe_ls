@@ -2,7 +2,7 @@
   "name": "vscode-smpe",
   "displayName": "SMP/E Language Support",
   "description": "Language support for SMP/E MCS statements",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "publisher": "cybersorcerer",
   "engines": {
     "vscode": "^1.75.0"

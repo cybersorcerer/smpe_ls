@@ -1,0 +1,53 @@
+/* Test file for ++DELETE MCS statement */
+
+/* ========================================== */
+/* Valid ++DELETE statements                  */
+/* ========================================== */
+
+/* Valid: Basic DELETE with SYSLIB */
+++DELETE
+          SYSLIB(ASYSLIB).
+
+/* Valid: DELETE with multiple operands */
+++DELETE
+          SYSLIB(BSYSLIB)
+          DISTLIB(BDIST).
+
+/* Valid: DELETE with VERSION */
+++DELETE
+          SYSLIB(CSYSLIB)
+          VERSION(HBB7780).
+
+
+/* ========================================== */
+/* INVALID ++DELETE statements                */
+/* ========================================== */
+
+/* INVALID: Missing SYSLIB (required operand) */
+++DELETE.
+
+/* INVALID: Missing SYSLIB, only DISTLIB */
+++DELETE
+          DISTLIB(DDIST).
+
+/* INVALID: Missing SYSLIB, only VERSION */
+++DELETE
+          VERSION(HBB7781).
+
+/* INVALID: Unknown operand */
+++DELETE
+          SYSLIB(ESYSLIB)
+          BADOPER(VALUE).
+
+/* INVALID: Duplicate SYSLIB */
+++DELETE
+          SYSLIB(FSYSLIB)
+          SYSLIB(GSYSLIB).
+
+/* INVALID: Empty SYSLIB parameter */
+++DELETE
+          SYSLIB().
+
+/* INVALID: Missing terminator */
+++DELETE
+          SYSLIB(HSYSLIB)

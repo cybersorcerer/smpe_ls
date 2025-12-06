@@ -1,0 +1,131 @@
+/* Test file for ++JCLIN MCS statement */
+
+/* ========================================== */
+/* Valid ++JCLIN statements                   */
+/* ========================================== */
+
+/* Valid: Minimal JCLIN with inline JCL */
+++JCLIN.
+//MYJOB JOB (ACCT),'TEST JOB'
+//STEP1 EXEC PGM=IEBCOPY
+//SYSPRINT DD SYSOUT=*
+//SYSUT1   DD DSN=SOURCE.LIB,DISP=SHR
+//SYSUT2   DD DSN=TARGET.LIB,DISP=SHR
+//SYSIN    DD *
+  COPY OUTDD=SYSUT2,INDD=SYSUT1
+/*
+++JCLIN.
+
+/* Valid: JCLIN with ASM operand */
+++JCLIN
+          ASM(PGM=ASMA90).
+//ASMJOB  JOB (ACCT),'ASSEMBLY'
+//ASM     EXEC PGM=ASMA90
+//SYSPRINT DD SYSOUT=*
+//SYSLIB   DD DSN=SYS1.MACLIB,DISP=SHR
+//SYSUT1   DD UNIT=SYSDA,SPACE=(CYL,10)
+//SYSIN    DD DSN=SOURCE.ASM,DISP=SHR
+++JCLIN.
+
+/* Valid: JCLIN with CALLLIBS */
+++JCLIN
+          CALLLIBS.
+//CALLJOB JOB (ACCT),'CALL TEST'
+//STEP1   EXEC PGM=MYPROG
+//STEPLIB DD DSN=MY.LOAD.LIB,DISP=SHR
+//SYSPRINT DD SYSOUT=*
+++JCLIN.
+
+/* Valid: JCLIN with COPY */
+++JCLIN
+          COPY(PGM=IEBCOPY).
+//COPYJOB JOB (ACCT),'COPY'
+//COPY    EXEC PGM=IEBCOPY
+//SYSUT1  DD DSN=INPUT.LIB,DISP=SHR
+//SYSUT2  DD DSN=OUTPUT.LIB,DISP=SHR
+//SYSIN   DD DUMMY
+++JCLIN.
+
+/* Valid: JCLIN with LKED */
+++JCLIN
+          LKED(PGM=IEWL).
+//LKEDJOB JOB (ACCT),'LINK EDIT'
+//LKED    EXEC PGM=IEWL
+//SYSLIN  DD DSN=OBJ.LIB,DISP=SHR
+//SYSLMOD DD DSN=LOAD.LIB,DISP=SHR
+//SYSPRINT DD SYSOUT=*
+++JCLIN.
+
+/* Valid: JCLIN with OPCODE */
+++JCLIN
+          OPCODE(MEMBER1).
+//OPJOB   JOB (ACCT),'OPCODE'
+//STEP1   EXEC PGM=PROG1
+++JCLIN.
+
+/* Valid: JCLIN with RELFILE */
+++JCLIN
+          RELFILE(1).
+//RELJOB  JOB (ACCT),'RELFILE'
+//STEP1   EXEC PGM=PROG2
+++JCLIN.
+
+/* Valid: JCLIN with TXLIB */
+++JCLIN
+          TXLIB(MYTXLIB).
+//TXJOB   JOB (ACCT),'TXLIB'
+//STEP1   EXEC PGM=PROG3
+++JCLIN.
+
+/* Valid: JCLIN with FROMDS */
+++JCLIN
+          FROMDS(DSN(JCL.LIB) NUMBER(1)).
+
+/* Valid: JCLIN with UPDATE */
+++JCLIN
+          UPDATE(PGM=IEBUPDTE).
+//UPDJOB  JOB (ACCT),'UPDATE'
+//UPDATE  EXEC PGM=IEBUPDTE
+//SYSUT1  DD DSN=OLD.LIB,DISP=SHR
+//SYSUT2  DD DSN=NEW.LIB,DISP=SHR
+//SYSIN   DD DSN=UPDATE.CNTL,DISP=SHR
+++JCLIN.
+
+/* Valid: JCLIN with multiple operands */
+++JCLIN
+          ASM(PGM=ASMA90)
+          LKED(PGM=IEWL)
+          CALLLIBS.
+//MULTIJOB JOB (ACCT),'MULTI'
+//ASM     EXEC PGM=ASMA90
+//LKED    EXEC PGM=IEWL
+++JCLIN.
+
+
+/* ========================================== */
+/* INVALID ++JCLIN statements                 */
+/* ========================================== */
+
+/* INVALID: Unknown operand */
+++JCLIN
+          BADOPER(VALUE).
+//BADJOB  JOB (ACCT),'BAD'
+++JCLIN.
+
+/* INVALID: Duplicate ASM */
+++JCLIN
+          ASM(PGM=ASMA90)
+          ASM(PGM=IEV90).
+//DUPJOB  JOB (ACCT),'DUP'
+++JCLIN.
+
+/* INVALID: Empty ASM parameter */
+++JCLIN
+          ASM().
+//EMPTYJOB JOB (ACCT),'EMPTY'
+++JCLIN.
+
+/* INVALID: Missing terminator on first ++JCLIN */
+++JCLIN
+//NOTERMJOB JOB (ACCT),'NO TERM'
+++JCLIN.

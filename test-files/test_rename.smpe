@@ -1,0 +1,43 @@
+/* Test file for ++RENAME MCS statement */
+
+/* ========================================== */
+/* Valid ++RENAME statements                  */
+/* ========================================== */
+
+/* Valid: Basic rename */
+++RENAME(OLDMOD01)
+          TONAME(NEWMOD01).
+
+/* Valid: Rename with different name */
+++RENAME(LEGACY)
+          TONAME(CURRENT).
+
+
+/* ========================================== */
+/* INVALID ++RENAME statements                */
+/* ========================================== */
+
+/* INVALID: Missing TONAME (required operand) */
+++RENAME(BADREN01).
+
+/* INVALID: Missing old_name parameter */
+++RENAME
+          TONAME(NEWNAME).
+
+/* INVALID: Unknown operand */
+++RENAME(BADREN02)
+          TONAME(NEWNAME)
+          BADOPER(VALUE).
+
+/* INVALID: Duplicate TONAME */
+++RENAME(BADREN03)
+          TONAME(FIRST)
+          TONAME(SECOND).
+
+/* INVALID: Empty TONAME parameter */
+++RENAME(BADREN04)
+          TONAME().
+
+/* INVALID: Missing terminator */
+++RENAME(BADREN05)
+          TONAME(NEWNAME)
