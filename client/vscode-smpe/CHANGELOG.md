@@ -1,62 +1,71 @@
 # Changelog
 
-Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumentiert.
+All notable changes to this project are documented in this file.
 
 ## [0.7.0] - 2025
 
-### Neu
-- HFS MCS Statements hinzugefügt
-- `++SHELLSCR` Statement Support
-- Verbessertes Inline Data Parsing und Diagnostics
-- Diverse Korrekturen in smpe.json
+### Added
+
+- HFS MCS statements
+- `++SHELLSCR` statement support
+- Improved inline data parsing and diagnostics
+- Various fixes in smpe.json
 
 ## [0.6.0] - 2025
 
-### Geändert
-- Completion und Diagnostics vollständig AST-basiert
+### Changed
+
+- Completion and diagnostics fully AST-based
 
 ## [0.5.1] - 2025
 
-### Neu
-- `++MOVE` Statement Support
-- `++MOD` Statement Support
+### Added
+
+- `++MOVE` statement support
+- `++MOD` statement support
 
 ## [0.4.0] - 2025
 
-### Neu
-- `++MAC`, `++MACUPD`, `++SRC`, `++SRCUPD` Statement Support
-- Inline Data Architektur mit dynamischer Behandlung via smpe.json
-- Verbessertes Syntax Highlighting für Inline Data
-- Visuelle Diagnostic Severity mit Unicode Symbolen
+### Added
 
-### Behoben
-- Dataset-Namen mit Punkten werden korrekt behandelt
-- Boolean Operand Parsing korrigiert
-- Completion und Hover zeigen korrekte Statement-Namen
+- `++MAC`, `++MACUPD`, `++SRC`, `++SRCUPD` statement support
+- Inline data architecture with dynamic handling via smpe.json
+- Improved syntax highlighting for inline data
+- Visual diagnostic severity with Unicode symbols
+
+### Fixed
+
+- Dataset names with dots are handled correctly
+- Boolean operand parsing fixed
+- Completion and hover show correct statement names
 
 ## [0.3.0] - 2025
 
-### Neu
-- Multiline Parameter Support
-- Erkennung von fehlenden schließenden Klammern
-- Flexible Whitespace Behandlung
-- `++JCLIN`, `++JAR`, `++JARUPD`, `++VER`, `++ZAP` Statements
-- `++JCLIN` Inline JCL Support
+### Added
 
-### Behoben
-- Multiline Parameter werden korrekt erkannt
-- Unbalancierte Klammern werden diagnostiziert
+- Multiline parameter support
+- Detection of missing closing parentheses
+- Flexible whitespace handling
+- `++JCLIN`, `++JAR`, `++JARUPD`, `++VER`, `++ZAP` statements
+- `++JCLIN` inline JCL support
+
+### Fixed
+
+- Multiline parameters are correctly recognized
+- Unbalanced parentheses are diagnosed
 
 ## [0.2.0] - 2025
 
-### Neu
-- Grundlegende Diagnostics
-- Hover Information aus JSON-Datei
-- Kontextsensitive Code Completion
+### Added
+
+- Basic diagnostics
+- Hover information from JSON file
+- Context-sensitive code completion
 
 ## [0.1.0] - 2025
 
-### Neu
-- Initiales Release
-- Syntax Highlighting für SMP/E MCS Statements
-- VS Code Extension Grundgerüst
+### Added
+
+- Initial release
+- Syntax highlighting for SMP/E MCS statements
+- VS Code extension framework

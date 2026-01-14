@@ -1,32 +1,32 @@
 # SMP/E Language Support for VS Code
 
-Language Server Extension für IBM SMP/E MCS (Modification Control Statements).
+Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
 ## Features
 
-- **Syntax Highlighting** - Farbliche Hervorhebung von SMP/E Statements
-- **Code Completion** - Kontextsensitive Vervollständigung für MCS Statements und Operanden
-- **Diagnostics** - Echtzeit-Validierung mit Fehler- und Warnmeldungen
-- **Hover Information** - Dokumentation beim Überfahren von Statements und Operanden
+- **Syntax Highlighting** - Color highlighting for SMP/E statements
+- **Code Completion** - Context-sensitive completion for MCS statements and operands
+- **Diagnostics** - Real-time validation with error and warning messages
+- **Hover Information** - Documentation when hovering over statements and operands
 
-## Unterstützte Statements
+## Supported Statements
 
-Die Extension unterstützt alle gängigen SMP/E MCS Statements, darunter:
+The extension supports all common SMP/E MCS statements, including:
 
 - `++APAR`, `++PTF`, `++USERMOD`, `++FUNCTION`
 - `++MAC`, `++MACUPD`, `++MOD`, `++SRC`, `++SRCUPD`
 - `++JCLIN`, `++JAR`, `++JARUPD`
 - `++VER`, `++ZAP`, `++DELETE`
-- und viele mehr...
+- and many more...
 
 ## Installation
 
 ### Download
 
-Lade die passende `.vsix`-Datei für deine Plattform aus dem [Release](https://github.com/cybersorcerer/smpe_ls/releases) herunter:
+Download the appropriate `.vsix` file for your platform from the [Release](https://github.com/cybersorcerer/smpe_ls/releases) page:
 
-| Plattform | Datei |
-|-----------|-------|
+| Platform | File |
+|----------|------|
 | Windows x64 | `vscode-smpe-win32-x64-0.7.0.vsix` |
 | Windows ARM64 | `vscode-smpe-win32-arm64-0.7.0.vsix` |
 | macOS Apple Silicon | `vscode-smpe-darwin-arm64-0.7.0.vsix` |
@@ -36,28 +36,28 @@ Lade die passende `.vsix`-Datei für deine Plattform aus dem [Release](https://g
 
 ### Installation in VS Code
 
-1. Öffne VS Code
-2. `Cmd+Shift+P` (macOS) oder `Ctrl+Shift+P` (Windows/Linux)
-3. Wähle "Extensions: Install from VSIX..."
-4. Wähle die heruntergeladene `.vsix`-Datei
+1. Open VS Code
+2. `Cmd+Shift+P` (macOS) or `Ctrl+Shift+P` (Windows/Linux)
+3. Select "Extensions: Install from VSIX..."
+4. Choose the downloaded `.vsix` file
 
-Alternativ via Terminal:
+Alternatively via terminal:
 
 ```bash
 code --install-extension vscode-smpe-darwin-arm64-0.7.0.vsix
 ```
 
-Der Language Server ist bereits in der Extension enthalten - keine weitere Installation notwendig.
+The Language Server is already included in the extension - no additional installation required.
 
-## Konfiguration
+## Configuration
 
-| Einstellung | Standard | Beschreibung |
-|-------------|----------|--------------|
-| `smpe.debug` | `false` | Debug-Logging aktivieren |
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `smpe.debug` | `false` | Enable debug logging |
 
-## Dateiendungen
+## File Extensions
 
-Die Extension aktiviert sich automatisch für Dateien mit folgenden Endungen:
+The extension activates automatically for files with the following extensions:
 
 - `.smpe`
 - `.mcs`
@@ -67,19 +67,19 @@ Die Extension aktiviert sich automatisch für Dateien mit folgenden Endungen:
 
 **Coming soon**
 
-## Bekannte Einschränkungen
+## Known Limitations
 
-- Dies ist eine Alpha-Version
-- Nicht alle SMP/E Statements sind vollständig implementiert
+- This is an alpha version
+- Not all SMP/E statements are fully implemented
 
-## Lizenz
+## License
 
-AGPL-3.0 - Siehe [LICENSE](LICENSE) für Details.
+AGPL-3.0 - See [LICENSE](LICENSE) for details.
 
-## Autor
+## Author
 
 Ronald Funk
 
 ---
 
-**Hinweis:** SMP/E ist ein eingetragenes Warenzeichen von IBM Corporation.
+**Note:** SMP/E is a registered trademark of IBM Corporation.
