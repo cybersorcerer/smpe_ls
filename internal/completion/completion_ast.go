@@ -43,12 +43,6 @@ func (p *Provider) GetCompletionsAST(doc *parser.Document, text string, line, ch
 		return nil
 	}
 
-	// Calculate absolute cursor position
-	cursorPos := 0
-	for i := 0; i < line; i++ {
-		cursorPos += len(lines[i]) + 1 // +1 for newline
-	}
-	cursorPos += character
 
 	// Check if we're at line start or typing ++
 	textBefore := currentLine[:character]

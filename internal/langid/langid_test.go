@@ -35,7 +35,7 @@ func TestHFSLanguageID(t *testing.T) {
 	}
 
 	// Test that ++HFS alone does not have a language ID
-	base, langID, hasLang = ExtractLanguageID("++HFS")
+	_, _, hasLang = ExtractLanguageID("++HFS")
 	if hasLang {
 		t.Error("++HFS should not have a language ID")
 	}

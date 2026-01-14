@@ -87,8 +87,3 @@ func (p *Provider) encodeTokens(tokens []Token) []int {
 
 	return data
 }
-
-// isOperandChar checks if a character is valid in an operand name
-func isOperandChar(ch byte) bool {
-	return (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')
-}

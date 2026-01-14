@@ -31,12 +31,6 @@ func (p *Parser) Parse(text string) *Document {
 			inStatement = true
 		}
 
-		// Check if this line ends a statement (has terminator)
-		if inStatement && hasTerminatorOutsideParens(trimmed) {
-			// Statement ends on this line, but keep inStatement=true for this line
-			// It will be reset after processing
-		}
-
 		hasCommentStart := strings.Contains(line, "/*")
 		hasCommentEnd := strings.Contains(line, "*/")
 

@@ -11,7 +11,7 @@ import (
 
 func main() {
 	// Initialize logger to stdout
-	logger.Init(true) // Enable debug mode
+	_ = logger.Init(true) // Enable debug mode
 
 	// Load smpe.json
 	dataPath := os.Getenv("HOME") + "/.local/share/smpe_ls/smpe.json"
