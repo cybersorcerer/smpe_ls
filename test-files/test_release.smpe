@@ -23,6 +23,7 @@
 /* Valid: ++RELEASE with SYSTEM category */
 ++RELEASE (UZ12348)
           FMID(FXY1043)
+		  REASON(EXIT)
           SYSTEM.
 
 /* Valid: ++RELEASE with REASON */
@@ -55,4 +56,5 @@
 /* INVALID: Missing terminator */
 ++RELEASE (BADREL04)
           FMID(FXY1049)
+		  REASON(ACTION)
           USER

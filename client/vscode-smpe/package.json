@@ -4,6 +4,15 @@
   "description": "Language support for SMP/E MCS statements",
   "version": "0.7.0",
   "publisher": "cybersorcerer",
+  "license": "AGPL-3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cybersorcerer/smpe_ls.git"
+  },
+  "homepage": "https://github.com/cybersorcerer/smpe_ls",
+  "bugs": {
+    "url": "https://github.com/cybersorcerer/smpe_ls/issues"
+  },
   "engines": {
     "vscode": "^1.75.0"
   },

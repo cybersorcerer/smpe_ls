@@ -188,14 +188,92 @@ vscode: build vscode-compile
 	@echo "3. Open a .smpe file to activate the extension"
 
 package-windows: vscode-deps
-	@echo "Building Windows binary..."
-	GOOS=windows GOARCH=amd64 go build -o client/vscode-smpe/smpe_ls.exe ./cmd/smpe_ls
+	@echo "Building Windows AMD64 binary..."
+	GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o client/vscode-smpe/smpe_ls.exe ./cmd/smpe_ls
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
-	@echo "Creating VSIX package..."
-	cd client/vscode-smpe && npx --yes @vscode/vsce package
+	@echo "Creating VSIX package for Windows..."
+	cd client/vscode-smpe && npx --yes @vscode/vsce package --target win32-x64
 	@echo ""
 	@echo "VSIX package created in client/vscode-smpe/"
-	@echo "Install on Windows with: code --install-extension vscode-smpe-*.vsix"
+	@rm -f client/vscode-smpe/smpe_ls.exe
 
-.PHONY: vscode-deps vscode-compile vscode package-windows
+package-windows-arm64: vscode-deps
+	@echo "Building Windows ARM64 binary..."
+	GOOS=windows GOARCH=arm64 go build -ldflags="-s -w" -o client/vscode-smpe/smpe_ls.exe ./cmd/smpe_ls
+	@echo "Copying data files..."
+	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
+	@echo "Creating VSIX package for Windows ARM64..."
+	cd client/vscode-smpe && npx --yes @vscode/vsce package --target win32-arm64
+	@echo ""
+	@echo "VSIX package created in client/vscode-smpe/"
+	@rm -f client/vscode-smpe/smpe_ls.exe
+
+package-linux: vscode-deps
+	@echo "Building Linux AMD64 binary..."
+	GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
+	@echo "Copying data files..."
+	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
+	@echo "Creating VSIX package for Linux..."
+	cd client/vscode-smpe && npx --yes @vscode/vsce package --target linux-x64
+	@echo ""
+	@echo "VSIX package created in client/vscode-smpe/"
+	@rm -f client/vscode-smpe/smpe_ls
+
+package-linux-arm64: vscode-deps
+	@echo "Building Linux ARM64 binary..."
+	GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
+	@echo "Copying data files..."
+	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
+	@echo "Creating VSIX package for Linux ARM64..."
+	cd client/vscode-smpe && npx --yes @vscode/vsce package --target linux-arm64
+	@echo ""
+	@echo "VSIX package created in client/vscode-smpe/"
+	@rm -f client/vscode-smpe/smpe_ls
+
+package-macos: vscode-deps
+	@echo "Building macOS ARM64 (Apple Silicon) binary..."
+	GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
+	@echo "Copying data files..."
+	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
+	@echo "Creating VSIX package for macOS ARM64..."
+	cd client/vscode-smpe && npx --yes @vscode/vsce package --target darwin-arm64
+	@echo ""
+	@echo "VSIX package created in client/vscode-smpe/"
+	@rm -f client/vscode-smpe/smpe_ls
+
+package-macos-x64: vscode-deps
+	@echo "Building macOS AMD64 (Intel) binary..."
+	GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
+	@echo "Copying data files..."
+	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
+	@echo "Creating VSIX package for macOS Intel..."
+	cd client/vscode-smpe && npx --yes @vscode/vsce package --target darwin-x64
+	@echo ""
+	@echo "VSIX package created in client/vscode-smpe/"
+	@rm -f client/vscode-smpe/smpe_ls
+
+package-all: vscode-deps
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "          Building VSIX packages for all platforms             "
+	@echo "═══════════════════════════════════════════════════════════════"
+	@mkdir -p release/vsix
+	@$(MAKE) package-windows
+	@mv client/vscode-smpe/*.vsix release/vsix/
+	@$(MAKE) package-windows-arm64
+	@mv client/vscode-smpe/*.vsix release/vsix/
+	@$(MAKE) package-linux
+	@mv client/vscode-smpe/*.vsix release/vsix/
+	@$(MAKE) package-linux-arm64
+	@mv client/vscode-smpe/*.vsix release/vsix/
+	@$(MAKE) package-macos
+	@mv client/vscode-smpe/*.vsix release/vsix/
+	@$(MAKE) package-macos-x64
+	@mv client/vscode-smpe/*.vsix release/vsix/
+	@echo ""
+	@echo "═══════════════════════════════════════════════════════════════"
+	@echo "          All VSIX packages created in release/vsix/           "
+	@echo "═══════════════════════════════════════════════════════════════"
+	@ls -lh release/vsix/
+
+.PHONY: vscode-deps vscode-compile vscode package-windows package-windows-arm64 package-linux package-linux-arm64 package-macos package-macos-x64 package-all

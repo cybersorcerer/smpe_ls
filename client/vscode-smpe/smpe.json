@@ -4592,7 +4592,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -4654,6 +4654,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -4693,7 +4709,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -4755,6 +4771,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -4794,7 +4826,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -4856,6 +4888,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -4895,7 +4943,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -4957,6 +5005,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -4996,7 +5060,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -5058,6 +5122,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -5097,7 +5177,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -5159,6 +5239,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -5198,7 +5294,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -5260,6 +5356,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -5299,7 +5411,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -5361,6 +5473,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -5400,7 +5528,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -5462,6 +5590,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -5501,7 +5645,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -5565,6 +5709,22 @@
                 "description": "Symbolic links."
             },
             {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
+            },
+            {
                 "name": "SYSLIB",
                 "parameter": "DDNAME",
                 "type": "string",
@@ -5602,7 +5762,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|RELFILE|SYMLINK|SYSLIB|TEXT|TXLIB",
                 "description": "Specifies that the hierarchical file system element and all of its link names and symbolic link names are to be removed from the target library (UNIX file system) and the distribution library."
             },
             {
@@ -5659,6 +5819,14 @@
                 "description": "Specifies a character string that is to be passed to the HFS copy utility as an execution-time parameter. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum."
             },
             {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
@@ -5678,6 +5846,14 @@
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
                 "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "VERSION",
@@ -5703,7 +5879,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Specifies that the shell script element and all of its link names and symbolic link names are to be removed from the target library (UNIX file system) and the distribution library."
             },
             {
@@ -5767,6 +5943,22 @@
                 "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted."
             },
             {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
+            },
+            {
                 "name": "SYSLIB",
                 "parameter": "DDNAME",
                 "type": "string",
@@ -5774,7 +5966,7 @@
                 "mutually_exclusive": "DELETE",
                 "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the shell script element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the shell script element from the distribution library member into a UNIX file system. Required when the element is first installed."
             },
-			{
+            {
                 "name": "SHSCRIPT",
                 "parameter": "SCRIPTNAME,PRE|POST",
                 "type": "string",
@@ -5811,7 +6003,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Specifies that the element and all of its link names and symbolic link names are to be removed from the target library and the distribution library."
             },
             {
@@ -5875,6 +6067,22 @@
                 "description": "Specifies a list of one or more symbolic links for this element."
             },
             {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
+            },
+            {
                 "name": "SYSLIB",
                 "parameter": "DDNAME",
                 "type": "string",
@@ -5912,7 +6120,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Specifies element deletion."
             },
             {
@@ -5976,6 +6184,22 @@
                 "description": "Symbolic links."
             },
             {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
+            },
+            {
                 "name": "SYSLIB",
                 "parameter": "DDNAME",
                 "type": "string",
@@ -6013,7 +6237,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -6077,6 +6301,22 @@
                 "description": "Symbolic links."
             },
             {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
+            },
+            {
                 "name": "SYSLIB",
                 "parameter": "DDNAME",
                 "type": "string",
@@ -6114,7 +6354,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -6176,6 +6416,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -6215,7 +6471,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -6277,6 +6533,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -6316,7 +6588,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -6378,6 +6650,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -6417,7 +6705,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -6479,6 +6767,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -6518,7 +6822,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -6580,6 +6884,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -6619,7 +6939,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -6681,6 +7001,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -6720,7 +7056,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -6782,6 +7118,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -6821,7 +7173,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -6883,6 +7235,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -6922,7 +7290,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -6984,6 +7352,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -7023,7 +7407,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -7085,6 +7469,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -7124,7 +7524,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -7186,6 +7586,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
@@ -7225,7 +7641,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Element deletion."
             },
             {
@@ -7287,6 +7703,22 @@
                 "type": "string",
                 "length": 1023,
                 "description": "Symbolic links."
+            },
+            {
+                "name": "RELFILE",
+                "mutually_exclusive": "DELETE|FROMDS|TXLIB",
+                "parameter": "NUMBER",
+                "type": "integer",
+                "length": 4,
+                "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
+            },
+            {
+                "name": "TXLIB",
+                "mutually_exclusive": "DELETE|FROMDS|RELFILE",
+                "parameter": "DDNAME",
+                "type": "string",
+                "length": 8,
+                "description": "Is the ddname of the partitioned data set containing the HFS element. This operand is required if the HFS element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with DELETE, FROMDS, and RELFILE."
             },
             {
                 "name": "SYSLIB",
