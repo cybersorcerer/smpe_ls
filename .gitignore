@@ -1,5 +1,5 @@
 # Binaries
-smpe_ls
+/smpe_ls
 *.exe
 *.dll
 *.so
