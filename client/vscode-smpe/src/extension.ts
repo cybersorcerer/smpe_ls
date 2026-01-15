@@ -29,56 +29,84 @@ export function activate(context: vscode.ExtensionContext) {
 	// Get configuration
 	const config = vscode.workspace.getConfiguration('smpe');
 	const configuredServerPath = config.get<string>('serverPath') || '';
-	const debug = config.get<boolean>('debug') || true;
+	const configuredDataPath = config.get<string>('dataPath') || '';
+	const debug = config.get<boolean>('debug') || false;
 
 	log(`Configured serverPath: "${configuredServerPath}"`);
+	log(`Configured dataPath: "${configuredDataPath}"`);
 	log(`Debug mode: ${debug}`);
+
+	// Bundled paths
+	const bundledBinaryName = process.platform === 'win32' ? 'smpe_ls.exe' : 'smpe_ls';
+	const bundledBinaryPath = path.join(context.extensionPath, bundledBinaryName);
+	const bundledDataPath = path.join(context.extensionPath, 'smpe.json');
 
 	// Determine the full path to the server
 	let executable = '';
-	let dataPathArgs: string[] = [];
+	let dataPath = '';
 
-	// Check if user configured a custom path
-	if (configuredServerPath && fs.existsSync(configuredServerPath)) {
-		log(`Using configured server path: ${configuredServerPath}`);
-		executable = configuredServerPath;
-	} else {
-		// Check if we have a bundled binary in the extension folder
-		const bundledBinaryName = process.platform === 'win32' ? 'smpe_ls.exe' : 'smpe_ls';
-		const bundledBinaryPath = path.join(context.extensionPath, bundledBinaryName);
-		const bundledDataPath = path.join(context.extensionPath, 'smpe.json');
+	// Priority 1: User configured server path (takes precedence over bundled)
+	if (configuredServerPath) {
+		log(`Checking configured server path: ${configuredServerPath}`);
+		if (fs.existsSync(configuredServerPath)) {
+			log(`Using configured server path`);
+			executable = configuredServerPath;
+		} else {
+			log(`WARNING: Configured serverPath does not exist`);
+		}
+	}
 
+	// Priority 2: Bundled binary
+	if (!executable) {
 		log(`Looking for bundled binary at: ${bundledBinaryPath}`);
-
 		if (fs.existsSync(bundledBinaryPath)) {
 			log(`Found bundled binary`);
 			executable = bundledBinaryPath;
-
-			// Check for bundled data too
-			log(`Looking for bundled data at: ${bundledDataPath}`);
-			if (fs.existsSync(bundledDataPath)) {
-				log(`Found bundled data`);
-				dataPathArgs = ['--data', bundledDataPath];
-			} else {
-				log(`WARNING: Bundled data file not found`);
-			}
 		} else {
 			log(`Bundled binary NOT found`);
+		}
+	}
 
-			// Try ~/.local/bin as fallback (Linux/macOS)
-			const homeDir = process.env.HOME || process.env.USERPROFILE;
-			if (homeDir) {
-				const localBinPath = path.join(homeDir, '.local', 'bin', 'smpe_ls');
-				log(`Trying fallback path: ${localBinPath}`);
-				if (fs.existsSync(localBinPath)) {
-					log(`Found server at fallback path`);
-					executable = localBinPath;
-				} else {
-					log(`Server NOT found at fallback path`);
-				}
+	// Priority 3: Fallback to ~/.local/bin
+	if (!executable) {
+		const homeDir = process.env.HOME || process.env.USERPROFILE;
+		if (homeDir) {
+			const localBinPath = path.join(homeDir, '.local', 'bin', 'smpe_ls');
+			log(`Trying fallback path: ${localBinPath}`);
+			if (fs.existsSync(localBinPath)) {
+				log(`Found server at fallback path`);
+				executable = localBinPath;
+			} else {
+				log(`Server NOT found at fallback path`);
 			}
 		}
 	}
+
+	// Determine data path
+	// Priority 1: User configured data path
+	if (configuredDataPath) {
+		log(`Checking configured data path: ${configuredDataPath}`);
+		if (fs.existsSync(configuredDataPath)) {
+			log(`Using configured data path`);
+			dataPath = configuredDataPath;
+		} else {
+			log(`WARNING: Configured dataPath does not exist`);
+		}
+	}
+
+	// Priority 2: Bundled data file
+	if (!dataPath) {
+		log(`Looking for bundled data at: ${bundledDataPath}`);
+		if (fs.existsSync(bundledDataPath)) {
+			log(`Found bundled data`);
+			dataPath = bundledDataPath;
+		} else {
+			log(`Bundled data NOT found`);
+		}
+	}
+
+	// Build data path arguments
+	const dataPathArgs = dataPath ? ['--data', dataPath] : [];
 
 	// Final check
 	if (!executable) {

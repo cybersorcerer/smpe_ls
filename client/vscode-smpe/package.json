@@ -2,7 +2,7 @@
   "name": "vscode-smpe",
   "displayName": "SMP/E Language Support",
   "description": "Language support for SMP/E MCS statements",
-  "version": "0.7.0",
+  "version": "0.7.2",
   "publisher": "cybersorcerer",
   "license": "AGPL-3.0",
   "repository": {
@@ -45,8 +45,13 @@
       "properties": {
         "smpe.serverPath": {
           "type": "string",
-          "default": "smpe_ls",
-          "description": "Path to the smpe_ls executable"
+          "default": "",
+          "description": "Path to the smpe_ls executable. If empty, uses the bundled server."
+        },
+        "smpe.dataPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the smpe.json data file. If empty, uses the bundled data file."
         },
         "smpe.debug": {
           "type": "boolean",

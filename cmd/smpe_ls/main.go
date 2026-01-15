@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	version  = "0.7.0"
+	version  = "0.7.2"
 	debug    = flag.Bool("debug", false, "Enable debug logging")
 	showVer  = flag.Bool("version", false, "Show version")
 	dataPath = flag.String("data", "", "Path to smpe.json data file (default: ~/.local/share/smpe_ls/smpe.json)")
