@@ -143,6 +143,27 @@ export function activate(context: vscode.ExtensionContext) {
 		debug: serverExecutable
 	};
 
+	// Build initialization options with diagnostic settings
+	const diagnosticsConfig = {
+		unknownStatement: config.get<boolean>('diagnostics.unknownStatement', true),
+		invalidLanguageId: config.get<boolean>('diagnostics.invalidLanguageId', true),
+		unbalancedParentheses: config.get<boolean>('diagnostics.unbalancedParentheses', true),
+		missingTerminator: config.get<boolean>('diagnostics.missingTerminator', true),
+		missingParameter: config.get<boolean>('diagnostics.missingParameter', true),
+		unknownOperand: config.get<boolean>('diagnostics.unknownOperand', true),
+		duplicateOperand: config.get<boolean>('diagnostics.duplicateOperand', true),
+		emptyOperandParameter: config.get<boolean>('diagnostics.emptyOperandParameter', true),
+		missingRequiredOperand: config.get<boolean>('diagnostics.missingRequiredOperand', true),
+		dependencyViolation: config.get<boolean>('diagnostics.dependencyViolation', true),
+		mutuallyExclusive: config.get<boolean>('diagnostics.mutuallyExclusive', true),
+		requiredGroup: config.get<boolean>('diagnostics.requiredGroup', true),
+		missingInlineData: config.get<boolean>('diagnostics.missingInlineData', true),
+		unknownSubOperand: config.get<boolean>('diagnostics.unknownSubOperand', true),
+		subOperandValidation: config.get<boolean>('diagnostics.subOperandValidation', true)
+	};
+
+	log(`Diagnostics config: ${JSON.stringify(diagnosticsConfig)}`);
+
 	// Client options
 	const clientOptions: LanguageClientOptions = {
 		documentSelector: [
@@ -151,7 +172,10 @@ export function activate(context: vscode.ExtensionContext) {
 		synchronize: {
 			fileEvents: vscode.workspace.createFileSystemWatcher('**/*.{smpe,mcs,smp}')
 		},
-		outputChannel: outputChannel
+		outputChannel: outputChannel,
+		initializationOptions: {
+			diagnostics: diagnosticsConfig
+		}
 	};
 
 	// Create the language client
@@ -169,6 +193,44 @@ export function activate(context: vscode.ExtensionContext) {
 		log(`ERROR starting client: ${error}`);
 		vscode.window.showErrorMessage(`Failed to start SMP/E Language Server: ${error}`);
 	});
+
+	// Listen for configuration changes and notify the server
+	context.subscriptions.push(
+		vscode.workspace.onDidChangeConfiguration(e => {
+			if (e.affectsConfiguration('smpe.diagnostics')) {
+				// Get updated configuration
+				const updatedConfig = vscode.workspace.getConfiguration('smpe');
+				const updatedDiagnosticsConfig = {
+					unknownStatement: updatedConfig.get<boolean>('diagnostics.unknownStatement', true),
+					invalidLanguageId: updatedConfig.get<boolean>('diagnostics.invalidLanguageId', true),
+					unbalancedParentheses: updatedConfig.get<boolean>('diagnostics.unbalancedParentheses', true),
+					missingTerminator: updatedConfig.get<boolean>('diagnostics.missingTerminator', true),
+					missingParameter: updatedConfig.get<boolean>('diagnostics.missingParameter', true),
+					unknownOperand: updatedConfig.get<boolean>('diagnostics.unknownOperand', true),
+					duplicateOperand: updatedConfig.get<boolean>('diagnostics.duplicateOperand', true),
+					emptyOperandParameter: updatedConfig.get<boolean>('diagnostics.emptyOperandParameter', true),
+					missingRequiredOperand: updatedConfig.get<boolean>('diagnostics.missingRequiredOperand', true),
+					dependencyViolation: updatedConfig.get<boolean>('diagnostics.dependencyViolation', true),
+					mutuallyExclusive: updatedConfig.get<boolean>('diagnostics.mutuallyExclusive', true),
+					requiredGroup: updatedConfig.get<boolean>('diagnostics.requiredGroup', true),
+					missingInlineData: updatedConfig.get<boolean>('diagnostics.missingInlineData', true),
+					unknownSubOperand: updatedConfig.get<boolean>('diagnostics.unknownSubOperand', true),
+					subOperandValidation: updatedConfig.get<boolean>('diagnostics.subOperandValidation', true)
+				};
+
+				// Send notification to server
+				client.sendNotification('workspace/didChangeConfiguration', {
+					settings: {
+						smpe: {
+							diagnostics: updatedDiagnosticsConfig
+						}
+					}
+				});
+
+				log('Sent updated diagnostics configuration to server');
+			}
+		})
+	);
 }
 
 export function deactivate(): Thenable<void> | undefined {

@@ -27,6 +27,7 @@ type Handler interface {
 	TextDocumentCompletion(params CompletionParams) ([]CompletionItem, error)
 	TextDocumentHover(params HoverParams) (*Hover, error)
 	TextDocumentSemanticTokensFull(params SemanticTokensParams) (*SemanticTokens, error)
+	WorkspaceDidChangeConfiguration(params DidChangeConfigurationParams) error
 }
 
 // NewServer creates a new LSP server
@@ -131,6 +132,7 @@ func (s *Server) handleRequest(req *Request) error {
 
 	switch req.Method {
 	case "initialize":
+		logger.Debug("Initialize params raw: %s", string(req.Params))
 		var params InitializeParams
 		if err := json.Unmarshal(req.Params, &params); err != nil {
 			return s.sendErrorResponse(req.ID, InvalidParams, "Invalid params")
@@ -241,6 +243,13 @@ func (s *Server) handleNotification(notif *Notification) error {
 	case "initialized":
 		// Nothing to do
 		return nil
+
+	case "workspace/didChangeConfiguration":
+		var params DidChangeConfigurationParams
+		if err := json.Unmarshal(notif.Params, &params); err != nil {
+			return err
+		}
+		return s.handler.WorkspaceDidChangeConfiguration(params)
 
 	default:
 		logger.Debug("Unhandled notification: %s", notif.Method)

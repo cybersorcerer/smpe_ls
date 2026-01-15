@@ -717,14 +717,44 @@ func (p *Provider) getMCSCompletions(replaceRange *lsp.Range) []lsp.CompletionIt
 	}
 	order = append(order, dataElementOrder...)
 
+	logger.Debug("getMCSCompletions called, p.statements has %d entries", len(p.statements))
+
 	for _, name := range order {
 		stmt, ok := p.statements[name]
 		if !ok {
+			logger.Debug("getMCSCompletions: Statement %s NOT found in p.statements", name)
 			continue
 		}
 
-		// If this statement requires language variants, generate all variants
+		// If this statement supports language variants, add both the base statement AND the variants
+		logger.Debug("getMCSCompletions: Processing %s, LanguageVariants=%v", name, stmt.LanguageVariants)
 		if stmt.LanguageVariants {
+			// First, add the base statement without language ID (e.g., ++SAMP)
+			baseInsertText := name
+			if stmt.Parameter != "" {
+				baseInsertText += "($1)"
+			}
+
+			baseItem := lsp.CompletionItem{
+				Label:            name,
+				Kind:             lsp.CompletionItemKindKeyword,
+				Detail:           stmt.Type,
+				Documentation:    stmt.Description,
+				InsertTextFormat: lsp.InsertTextFormatSnippet,
+			}
+
+			if replaceRange != nil {
+				baseItem.TextEdit = &lsp.TextEdit{
+					Range:   *replaceRange,
+					NewText: baseInsertText,
+				}
+			} else {
+				baseItem.InsertText = baseInsertText
+			}
+
+			items = append(items, baseItem)
+
+			// Then add all language variants (e.g., ++SAMPENU, ++SAMPDEU, etc.)
 			for _, langID := range langid.NationalLanguageIdentifiers {
 				variantName := name + langID
 

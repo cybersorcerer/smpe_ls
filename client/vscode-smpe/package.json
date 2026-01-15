@@ -57,6 +57,81 @@
           "type": "boolean",
           "default": false,
           "description": "Enable debug logging"
+        },
+        "smpe.diagnostics.unknownStatement": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report unknown statement types"
+        },
+        "smpe.diagnostics.invalidLanguageId": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report invalid 3-character language identifiers"
+        },
+        "smpe.diagnostics.unbalancedParentheses": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report unbalanced parentheses"
+        },
+        "smpe.diagnostics.missingTerminator": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report missing statement terminators (.)"
+        },
+        "smpe.diagnostics.missingParameter": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report missing required statement parameters"
+        },
+        "smpe.diagnostics.unknownOperand": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report unknown operands"
+        },
+        "smpe.diagnostics.duplicateOperand": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report duplicate operands"
+        },
+        "smpe.diagnostics.emptyOperandParameter": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report empty operand parameters"
+        },
+        "smpe.diagnostics.missingRequiredOperand": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report missing required operands"
+        },
+        "smpe.diagnostics.dependencyViolation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report operand dependency violations (allowed_if)"
+        },
+        "smpe.diagnostics.mutuallyExclusive": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report mutually exclusive operand conflicts"
+        },
+        "smpe.diagnostics.requiredGroup": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report missing required group operands"
+        },
+        "smpe.diagnostics.missingInlineData": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report missing inline data for statements that expect it"
+        },
+        "smpe.diagnostics.unknownSubOperand": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report unknown sub-operands"
+        },
+        "smpe.diagnostics.subOperandValidation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report sub-operand validation errors (empty/too long)"
         }
       }
     }

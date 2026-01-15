@@ -13,6 +13,46 @@ import (
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
+// DiagnosticsConfig holds the configuration for which diagnostics to enable/disable
+type DiagnosticsConfig struct {
+	UnknownStatement      bool `json:"unknownStatement"`
+	InvalidLanguageId     bool `json:"invalidLanguageId"`
+	UnbalancedParentheses bool `json:"unbalancedParentheses"`
+	MissingTerminator     bool `json:"missingTerminator"`
+	MissingParameter      bool `json:"missingParameter"`
+	UnknownOperand        bool `json:"unknownOperand"`
+	DuplicateOperand      bool `json:"duplicateOperand"`
+	EmptyOperandParameter bool `json:"emptyOperandParameter"`
+	MissingRequiredOperand bool `json:"missingRequiredOperand"`
+	DependencyViolation   bool `json:"dependencyViolation"`
+	MutuallyExclusive     bool `json:"mutuallyExclusive"`
+	RequiredGroup         bool `json:"requiredGroup"`
+	MissingInlineData     bool `json:"missingInlineData"`
+	UnknownSubOperand     bool `json:"unknownSubOperand"`
+	SubOperandValidation  bool `json:"subOperandValidation"`
+}
+
+// DefaultDiagnosticsConfig returns a config with all diagnostics enabled
+func DefaultDiagnosticsConfig() *DiagnosticsConfig {
+	return &DiagnosticsConfig{
+		UnknownStatement:      true,
+		InvalidLanguageId:     true,
+		UnbalancedParentheses: true,
+		MissingTerminator:     true,
+		MissingParameter:      true,
+		UnknownOperand:        true,
+		DuplicateOperand:      true,
+		EmptyOperandParameter: true,
+		MissingRequiredOperand: true,
+		DependencyViolation:   true,
+		MutuallyExclusive:     true,
+		RequiredGroup:         true,
+		MissingInlineData:     true,
+		UnknownSubOperand:     true,
+		SubOperandValidation:  true,
+	}
+}
+
 // Handler implements the LSP handler interface
 type Handler struct {
 	version             string
@@ -25,6 +65,7 @@ type Handler struct {
 	diagnosticsProvider *diagnostics.Provider
 	semanticProvider    *semantic.Provider
 	server              *lsp.Server
+	diagnosticsConfig   *DiagnosticsConfig
 }
 
 // New creates a new handler
@@ -55,6 +96,7 @@ func New(version string, dataPath string) (*Handler, error) {
 		hoverProvider:       hoverProvider,
 		diagnosticsProvider: diagnosticsProvider,
 		semanticProvider:    semanticProvider,
+		diagnosticsConfig:   DefaultDiagnosticsConfig(),
 	}, nil
 }
 
@@ -66,6 +108,32 @@ func (h *Handler) SetServer(server *lsp.Server) {
 // Initialize handles the initialize request
 func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult, error) {
 	logger.Info("Initializing LSP server")
+
+	// Process initialization options for diagnostics configuration
+	if params.InitializationOptions != nil && params.InitializationOptions.Diagnostics != nil {
+		opts := params.InitializationOptions.Diagnostics
+		h.diagnosticsConfig = &DiagnosticsConfig{
+			UnknownStatement:       opts.UnknownStatement,
+			InvalidLanguageId:      opts.InvalidLanguageId,
+			UnbalancedParentheses:  opts.UnbalancedParentheses,
+			MissingTerminator:      opts.MissingTerminator,
+			MissingParameter:       opts.MissingParameter,
+			UnknownOperand:         opts.UnknownOperand,
+			DuplicateOperand:       opts.DuplicateOperand,
+			EmptyOperandParameter:  opts.EmptyOperandParameter,
+			MissingRequiredOperand: opts.MissingRequiredOperand,
+			DependencyViolation:    opts.DependencyViolation,
+			MutuallyExclusive:      opts.MutuallyExclusive,
+			RequiredGroup:          opts.RequiredGroup,
+			MissingInlineData:      opts.MissingInlineData,
+			UnknownSubOperand:      opts.UnknownSubOperand,
+			SubOperandValidation:   opts.SubOperandValidation,
+		}
+		logger.Info("Diagnostics config received from client: MissingRequiredOperand=%v, UnknownOperand=%v, MissingTerminator=%v",
+			opts.MissingRequiredOperand, opts.UnknownOperand, opts.MissingTerminator)
+	} else {
+		logger.Info("Using default diagnostics config (all enabled)")
+	}
 
 	// Add all uppercase letters as trigger characters so completion triggers automatically when typing operand names
 	triggerChars := []string{"+", "(", " "}
@@ -260,15 +328,83 @@ func (h *Handler) publishDiagnostics(uri string) {
 		return
 	}
 
-	// Generate diagnostics from AST
-	diagnostics := h.diagnosticsProvider.AnalyzeAST(doc)
+	// Convert handler config to diagnostics config
+	diagConfig := &diagnostics.Config{
+		UnknownStatement:       h.diagnosticsConfig.UnknownStatement,
+		InvalidLanguageId:      h.diagnosticsConfig.InvalidLanguageId,
+		UnbalancedParentheses:  h.diagnosticsConfig.UnbalancedParentheses,
+		MissingTerminator:      h.diagnosticsConfig.MissingTerminator,
+		MissingParameter:       h.diagnosticsConfig.MissingParameter,
+		UnknownOperand:         h.diagnosticsConfig.UnknownOperand,
+		DuplicateOperand:       h.diagnosticsConfig.DuplicateOperand,
+		EmptyOperandParameter:  h.diagnosticsConfig.EmptyOperandParameter,
+		MissingRequiredOperand: h.diagnosticsConfig.MissingRequiredOperand,
+		DependencyViolation:    h.diagnosticsConfig.DependencyViolation,
+		MutuallyExclusive:      h.diagnosticsConfig.MutuallyExclusive,
+		RequiredGroup:          h.diagnosticsConfig.RequiredGroup,
+		MissingInlineData:      h.diagnosticsConfig.MissingInlineData,
+		UnknownSubOperand:      h.diagnosticsConfig.UnknownSubOperand,
+		SubOperandValidation:   h.diagnosticsConfig.SubOperandValidation,
+	}
+
+	// Generate diagnostics from AST with config
+	diags := h.diagnosticsProvider.AnalyzeASTWithConfig(doc, diagConfig)
 
 	params := map[string]interface{}{
 		"uri":         uri,
-		"diagnostics": diagnostics,
+		"diagnostics": diags,
 	}
 
 	if err := h.server.SendNotification("textDocument/publishDiagnostics", params); err != nil {
 		logger.Error("Failed to publish diagnostics: %v", err)
+	}
+}
+
+// WorkspaceDidChangeConfiguration handles configuration changes from the client
+func (h *Handler) WorkspaceDidChangeConfiguration(params lsp.DidChangeConfigurationParams) error {
+	logger.Info("Configuration changed")
+
+	// Update diagnostics config if provided
+	if params.Settings != nil && params.Settings.Smpe != nil && params.Settings.Smpe.Diagnostics != nil {
+		opts := params.Settings.Smpe.Diagnostics
+		h.diagnosticsConfig = &DiagnosticsConfig{
+			UnknownStatement:       opts.UnknownStatement,
+			InvalidLanguageId:      opts.InvalidLanguageId,
+			UnbalancedParentheses:  opts.UnbalancedParentheses,
+			MissingTerminator:      opts.MissingTerminator,
+			MissingParameter:       opts.MissingParameter,
+			UnknownOperand:         opts.UnknownOperand,
+			DuplicateOperand:       opts.DuplicateOperand,
+			EmptyOperandParameter:  opts.EmptyOperandParameter,
+			MissingRequiredOperand: opts.MissingRequiredOperand,
+			DependencyViolation:    opts.DependencyViolation,
+			MutuallyExclusive:      opts.MutuallyExclusive,
+			RequiredGroup:          opts.RequiredGroup,
+			MissingInlineData:      opts.MissingInlineData,
+			UnknownSubOperand:      opts.UnknownSubOperand,
+			SubOperandValidation:   opts.SubOperandValidation,
+		}
+		logger.Info("Updated diagnostics config: MissingRequiredOperand=%v, UnknownOperand=%v",
+			opts.MissingRequiredOperand, opts.UnknownOperand)
+
+		// Republish diagnostics for all open documents
+		h.republishAllDiagnostics()
+	}
+
+	return nil
+}
+
+// republishAllDiagnostics republishes diagnostics for all open documents
+func (h *Handler) republishAllDiagnostics() {
+	h.documentsMutex.RLock()
+	uris := make([]string, 0, len(h.documents))
+	for uri := range h.documents {
+		uris = append(uris, uri)
+	}
+	h.documentsMutex.RUnlock()
+
+	logger.Info("Republishing diagnostics for %d open documents", len(uris))
+	for _, uri := range uris {
+		h.publishDiagnostics(uri)
 	}
 }

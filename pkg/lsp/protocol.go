@@ -183,13 +183,36 @@ type SemanticTokens struct {
 	Data []int `json:"data"`
 }
 
+// InitializationOptions represents client-provided initialization options
+type InitializationOptions struct {
+	Diagnostics *DiagnosticsOptions `json:"diagnostics,omitempty"`
+}
+
+// DiagnosticsOptions configures which diagnostics are enabled
+type DiagnosticsOptions struct {
+	UnknownStatement       bool `json:"unknownStatement"`
+	InvalidLanguageId      bool `json:"invalidLanguageId"`
+	UnbalancedParentheses  bool `json:"unbalancedParentheses"`
+	MissingTerminator      bool `json:"missingTerminator"`
+	MissingParameter       bool `json:"missingParameter"`
+	UnknownOperand         bool `json:"unknownOperand"`
+	DuplicateOperand       bool `json:"duplicateOperand"`
+	EmptyOperandParameter  bool `json:"emptyOperandParameter"`
+	MissingRequiredOperand bool `json:"missingRequiredOperand"`
+	DependencyViolation    bool `json:"dependencyViolation"`
+	MutuallyExclusive      bool `json:"mutuallyExclusive"`
+	RequiredGroup          bool `json:"requiredGroup"`
+	MissingInlineData      bool `json:"missingInlineData"`
+	UnknownSubOperand      bool `json:"unknownSubOperand"`
+	SubOperandValidation   bool `json:"subOperandValidation"`
+}
+
 // InitializeParams represents the initialize request parameters
 type InitializeParams struct {
-	ProcessID int `json:"processId"`
-	RootURI   string `json:"rootUri,omitempty"`
-	Capabilities struct {
-		// Client capabilities
-	} `json:"capabilities"`
+	ProcessID             int                    `json:"processId"`
+	RootURI               string                 `json:"rootUri,omitempty"`
+	Capabilities          struct{}               `json:"capabilities"`
+	InitializationOptions *InitializationOptions `json:"initializationOptions,omitempty"`
 }
 
 // InitializeResult represents the initialize response
@@ -202,4 +225,19 @@ type InitializeResult struct {
 type ServerInfo struct {
 	Name    string `json:"name"`
 	Version string `json:"version,omitempty"`
+}
+
+// DidChangeConfigurationParams represents workspace/didChangeConfiguration params
+type DidChangeConfigurationParams struct {
+	Settings *SettingsPayload `json:"settings"`
+}
+
+// SettingsPayload represents the settings sent from the client
+type SettingsPayload struct {
+	Smpe *SmpeSettings `json:"smpe,omitempty"`
+}
+
+// SmpeSettings represents the smpe.* settings from VSCode
+type SmpeSettings struct {
+	Diagnostics *DiagnosticsOptions `json:"diagnostics,omitempty"`
 }
