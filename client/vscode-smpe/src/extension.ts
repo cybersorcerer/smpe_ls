@@ -1,4 +1,5 @@
 import * as path from 'path';
+import * as fs from 'fs';
 import * as vscode from 'vscode';
 import {
 	LanguageClient,
@@ -8,59 +9,104 @@ import {
 } from 'vscode-languageclient/node';
 
 let client: LanguageClient;
+let outputChannel: vscode.OutputChannel;
+
+function log(message: string) {
+	const timestamp = new Date().toISOString();
+	outputChannel.appendLine(`[${timestamp}] ${message}`);
+	console.log(message);
+}
 
 export function activate(context: vscode.ExtensionContext) {
-	console.log('SMP/E Language Server extension is now active');
+	// Create output channel for logging
+	outputChannel = vscode.window.createOutputChannel('SMP/E Language Server');
+	outputChannel.show(true);
+
+	log('SMP/E Language Server extension activating...');
+	log(`Platform: ${process.platform}`);
+	log(`Extension path: ${context.extensionPath}`);
 
 	// Get configuration
 	const config = vscode.workspace.getConfiguration('smpe');
-	const serverPath = config.get<string>('serverPath') || 'smpe_ls';
+	const configuredServerPath = config.get<string>('serverPath') || '';
+	const debug = config.get<boolean>('debug') || true;
 
-	// FORCE debug mode to true during development
-	const debug = true;
-
-	console.log(`DEBUG: debug config value = ${config.get<boolean>('debug')}, FORCED final debug = ${debug}`);
+	log(`Configured serverPath: "${configuredServerPath}"`);
+	log(`Debug mode: ${debug}`);
 
 	// Determine the full path to the server
-	let executable = serverPath;
+	let executable = '';
 	let dataPathArgs: string[] = [];
 
-	// Check if we have a bundled binary in the extension folder
-	// This is primarily for the Windows .vsix package
-	const bundledBinaryName = process.platform === 'win32' ? 'smpe_ls.exe' : 'smpe_ls';
-	const bundledBinaryPath = context.asAbsolutePath(bundledBinaryName);
-	const bundledDataPath = context.asAbsolutePath('smpe.json');
+	// Check if user configured a custom path
+	if (configuredServerPath && fs.existsSync(configuredServerPath)) {
+		log(`Using configured server path: ${configuredServerPath}`);
+		executable = configuredServerPath;
+	} else {
+		// Check if we have a bundled binary in the extension folder
+		const bundledBinaryName = process.platform === 'win32' ? 'smpe_ls.exe' : 'smpe_ls';
+		const bundledBinaryPath = path.join(context.extensionPath, bundledBinaryName);
+		const bundledDataPath = path.join(context.extensionPath, 'smpe.json');
 
-	// Check if bundled binary exists (using fs)
-	const fs = require('fs');
-	if (fs.existsSync(bundledBinaryPath)) {
-		console.log(`Found bundled binary at: ${bundledBinaryPath}`);
-		executable = bundledBinaryPath;
+		log(`Looking for bundled binary at: ${bundledBinaryPath}`);
 
-		// If we have a bundled binary, check for bundled data too
-		if (fs.existsSync(bundledDataPath)) {
-			console.log(`Found bundled data at: ${bundledDataPath}`);
-			dataPathArgs = ['--data', bundledDataPath];
-		}
-	} else if (!path.isAbsolute(serverPath)) {
-		// If it's not an absolute path and not bundled, try to find it in PATH or standard locations
-		// First try ~/.local/bin
-		const homeDir = process.env.HOME || process.env.USERPROFILE;
-		if (homeDir) {
-			const localBinPath = path.join(homeDir, '.local', 'bin', serverPath);
-			executable = localBinPath;
+		if (fs.existsSync(bundledBinaryPath)) {
+			log(`Found bundled binary`);
+			executable = bundledBinaryPath;
+
+			// Check for bundled data too
+			log(`Looking for bundled data at: ${bundledDataPath}`);
+			if (fs.existsSync(bundledDataPath)) {
+				log(`Found bundled data`);
+				dataPathArgs = ['--data', bundledDataPath];
+			} else {
+				log(`WARNING: Bundled data file not found`);
+			}
+		} else {
+			log(`Bundled binary NOT found`);
+
+			// Try ~/.local/bin as fallback (Linux/macOS)
+			const homeDir = process.env.HOME || process.env.USERPROFILE;
+			if (homeDir) {
+				const localBinPath = path.join(homeDir, '.local', 'bin', 'smpe_ls');
+				log(`Trying fallback path: ${localBinPath}`);
+				if (fs.existsSync(localBinPath)) {
+					log(`Found server at fallback path`);
+					executable = localBinPath;
+				} else {
+					log(`Server NOT found at fallback path`);
+				}
+			}
 		}
 	}
 
-	// Server options
-	// Server will use default data path: ~/.local/share/smpe_ls/smpe.json
+	// Final check
+	if (!executable) {
+		const errorMsg = 'SMP/E Language Server binary not found. Please install it or configure smpe.serverPath.';
+		log(`ERROR: ${errorMsg}`);
+		vscode.window.showErrorMessage(errorMsg);
+		return;
+	}
+
+	if (!fs.existsSync(executable)) {
+		const errorMsg = `SMP/E Language Server binary not found at: ${executable}`;
+		log(`ERROR: ${errorMsg}`);
+		vscode.window.showErrorMessage(errorMsg);
+		return;
+	}
+
+	// Build arguments
 	const args = (debug ? ['--debug'] : []).concat(dataPathArgs);
+
+	log(`Starting server: ${executable}`);
+	log(`Arguments: ${args.join(' ')}`);
 
 	const serverExecutable: Executable = {
 		command: executable,
 		args: args,
 		options: {
-			env: process.env
+			env: process.env,
+			shell: process.platform === 'win32'
 		}
 	};
 
@@ -76,7 +122,8 @@ export function activate(context: vscode.ExtensionContext) {
 		],
 		synchronize: {
 			fileEvents: vscode.workspace.createFileSystemWatcher('**/*.{smpe,mcs,smp}')
-		}
+		},
+		outputChannel: outputChannel
 	};
 
 	// Create the language client
@@ -88,9 +135,12 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	// Start the client (and server)
-	client.start();
-
-	console.log('SMP/E Language Server client started');
+	client.start().then(() => {
+		log('SMP/E Language Server client started successfully');
+	}).catch((error) => {
+		log(`ERROR starting client: ${error}`);
+		vscode.window.showErrorMessage(`Failed to start SMP/E Language Server: ${error}`);
+	});
 }
 
 export function deactivate(): Thenable<void> | undefined {
