@@ -2,11 +2,23 @@ package parser
 
 import (
 	"strings"
+	"unicode/utf8"
 
 	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/langid"
 	"github.com/cybersorcerer/smpe_ls/internal/logger"
 )
+
+// byteOffsetToRuneOffset converts a byte offset in a string to a rune (character) offset
+// This is needed because LSP uses UTF-16 code units for positions, not byte offsets
+func byteOffsetToRuneOffset(s string, byteOffset int) int {
+	return utf8.RuneCountInString(s[:byteOffset])
+}
+
+// runeCount returns the number of runes (characters) in a string
+func runeCount(s string) int {
+	return utf8.RuneCountInString(s)
+}
 
 // NodeType represents the type of AST node
 type NodeType int
@@ -211,13 +223,17 @@ func (p *Parser) parseStatement(line string, lineNum int, startIdx int) *Node {
 	baseName, langID, hasLangID := langid.ExtractLanguageID(stmtName)
 
 	// Create statement node
+	// Convert byte offsets to rune offsets for LSP compatibility
+	runeStart := byteOffsetToRuneOffset(line, startIdx)
+	runeLength := runeCount(stmtName)
+
 	stmtNode := &Node{
 		Type: NodeTypeStatement,
 		Name: stmtName,
 		Position: Position{
 			Line:      lineNum,
-			Character: startIdx,
-			Length:    stmtEnd - startIdx,
+			Character: runeStart,
+			Length:    runeLength,
 		},
 		Children:   []*Node{},
 		LanguageID: langID,
@@ -256,7 +272,9 @@ func (p *Parser) parseStatement(line string, lineNum int, startIdx int) *Node {
 
 	// Parse remaining operands on the same line
 	if i < len(line) {
-		operands := p.parseOperands(line[i:], lineNum, i, stmtNode)
+		// Convert byte offset to rune offset for LSP compatibility
+		runeOffset := byteOffsetToRuneOffset(line, i)
+		operands := p.parseOperands(line[i:], lineNum, runeOffset, stmtNode)
 		stmtNode.Children = append(stmtNode.Children, operands...)
 	}
 
@@ -297,14 +315,18 @@ func (p *Parser) parseParameter(line string, lineNum int, startIdx int, parent *
 
 	paramValue := line[paramStart:i]
 
+	// Convert byte offsets to rune offsets for LSP compatibility
+	runeStart := byteOffsetToRuneOffset(line, paramStart)
+	runeLength := runeCount(paramValue)
+
 	paramNode := &Node{
 		Type:   NodeTypeParameter,
 		Value:  paramValue,
 		Parent: parent,
 		Position: Position{
 			Line:      lineNum,
-			Character: paramStart,
-			Length:    i - paramStart,
+			Character: runeStart,
+			Length:    runeLength,
 		},
 	}
 
@@ -336,14 +358,21 @@ func (p *Parser) parseOperands(text string, lineNum int, offset int, parent *Nod
 			operandName := text[start:i]
 
 			// Create operand node
+			// Convert byte offsets to rune offsets for LSP compatibility
+			// Note: offset is already in bytes, text[:start] gives us the prefix
+			runeOffset := byteOffsetToRuneOffset(text, start)
+			runeLength := runeCount(operandName)
+			// Also convert offset from the parent context
+			parentRuneOffset := offset // This may need adjustment if offset is also byte-based
+
 			operandNode := &Node{
 				Type:   NodeTypeOperand,
 				Name:   operandName,
 				Parent: parent,
 				Position: Position{
 					Line:      lineNum,
-					Character: offset + start,
-					Length:    i - start,
+					Character: parentRuneOffset + runeOffset,
+					Length:    runeLength,
 				},
 			}
 
@@ -449,6 +478,10 @@ func (p *Parser) parseOperandParameter(text string, lineNum int, offset int, sta
 
 	paramValue := text[paramStart:i]
 
+	// Convert byte offsets to rune offsets for LSP compatibility
+	runeParamStart := byteOffsetToRuneOffset(text, paramStart)
+	runeParamLength := runeCount(paramValue)
+
 	// Create a wrapper node for the entire parameter section
 	wrapperNode := &Node{
 		Type:   NodeTypeParameter,
@@ -456,8 +489,8 @@ func (p *Parser) parseOperandParameter(text string, lineNum int, offset int, sta
 		Parent: parent,
 		Position: Position{
 			Line:      lineNum,
-			Character: offset + paramStart,
-			Length:    i - paramStart,
+			Character: offset + runeParamStart,
+			Length:    runeParamLength,
 		},
 		Children: []*Node{},
 	}
@@ -476,19 +509,23 @@ func (p *Parser) parseOperandParameter(text string, lineNum int, offset int, sta
 		}
 		actualStart := currentPos + paramIdx
 
+		// Convert byte offsets to rune offsets
+		runeActualStart := byteOffsetToRuneOffset(text, actualStart)
+		runeParamLen := runeCount(param)
+
 		paramNode := &Node{
 			Type:   NodeTypeParameter,
 			Value:  param,
 			Parent: wrapperNode,
 			Position: Position{
 				Line:      lineNum,
-				Character: offset + actualStart,
-				Length:    len(param),
+				Character: offset + runeActualStart,
+				Length:    runeParamLen,
 			},
 		}
 		wrapperNode.Children = append(wrapperNode.Children, paramNode)
 
-		// Move currentPos to after this parameter
+		// Move currentPos to after this parameter (in bytes for string indexing)
 		currentPos = actualStart + len(param)
 	}
 
