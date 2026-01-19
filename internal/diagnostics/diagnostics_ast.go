@@ -94,11 +94,6 @@ func (p *Provider) AnalyzeASTWithConfig(doc *parser.Document, config *Config) []
 	return diagnostics
 }
 
-// analyzeStatement analyzes a single statement node with default config
-func (p *Provider) analyzeStatement(stmt *parser.Node) []lsp.Diagnostic {
-	return p.analyzeStatementWithConfig(stmt, DefaultConfig())
-}
-
 // analyzeStatementWithConfig analyzes a single statement node with config
 func (p *Provider) analyzeStatementWithConfig(stmt *parser.Node, config *Config) []lsp.Diagnostic {
 	var diagnostics []lsp.Diagnostic
@@ -211,11 +206,6 @@ func (p *Provider) analyzeStatementWithConfig(stmt *parser.Node, config *Config)
 	diagnostics = append(diagnostics, p.validateOperandsASTWithConfig(stmt, operands, operandList, config)...)
 
 	return diagnostics
-}
-
-// validateOperandsAST validates operands for a statement using AST with default config
-func (p *Provider) validateOperandsAST(stmt *parser.Node, operands map[string]*parser.Node, operandList []*parser.Node) []lsp.Diagnostic {
-	return p.validateOperandsASTWithConfig(stmt, operands, operandList, DefaultConfig())
 }
 
 // validateOperandsASTWithConfig validates operands for a statement using AST with config
@@ -615,12 +605,8 @@ func (p *Provider) getMissingInlineDataMessage(stmt *parser.Node) string {
 	return baseMsg + " but none found"
 }
 
-// validateSubOperandsAST validates sub-operands within an operand's parameter using AST
+// validateSubOperandsASTWithConfig validates sub-operands within an operand's parameter using AST
 // For example, validates DSN, NUMBER, VOL, UNIT within FROMDS(...)
-func (p *Provider) validateSubOperandsAST(operandNode *parser.Node, subOperandDefs []data.AllowedValue) []lsp.Diagnostic {
-	return p.validateSubOperandsASTWithConfig(operandNode, subOperandDefs, DefaultConfig())
-}
-
 func (p *Provider) validateSubOperandsASTWithConfig(operandNode *parser.Node, subOperandDefs []data.AllowedValue, config *Config) []lsp.Diagnostic {
 	var diagnostics []lsp.Diagnostic
 

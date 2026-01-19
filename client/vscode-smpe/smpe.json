@@ -831,6 +831,7 @@
     {
         "name": "++BOOK",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "Online book member. Requires a 3-character national language identifier suffix (e.g., ++BOOKENU for English US, ++BOOKDEU for German).",
@@ -854,7 +855,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library for the data element."
+                "description": "Specifies the ddname of the distribution library for the data element.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -935,6 +937,7 @@
     {
         "name": "++BSIND",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "Index for an online publications library (bookshelf). Requires a 3-character national language identifier suffix.",
@@ -958,7 +961,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library for the data element."
+                "description": "Specifies the ddname of the distribution library for the data element.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -1010,6 +1014,7 @@
     {
         "name": "++CGM",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "Graphics source for an online book. Requires a 3-character national language identifier suffix.",
@@ -1033,7 +1038,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library for the data element."
+                "description": "Specifies the ddname of the distribution library for the data element.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -1603,6 +1609,7 @@
     {
         "name": "++DATA6",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "IBM generic data type 6 - For IBM use only. Requires a 3-character national language identifier suffix.",
@@ -1626,7 +1633,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library."
+                "description": "Specifies the ddname of the distribution library.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -1752,6 +1760,7 @@
     {
         "name": "++FONT",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "Printer Font Object Contents Architecture (FOCA) font. Requires a 3-character national language identifier suffix.",
@@ -1775,7 +1784,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library."
+                "description": "Specifies the ddname of the distribution library.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -1827,6 +1837,7 @@
     {
         "name": "++GDF",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "GDF graphics panel. Requires a 3-character national language identifier suffix.",
@@ -1850,7 +1861,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library."
+                "description": "Specifies the ddname of the distribution library.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -1902,6 +1914,7 @@
     {
         "name": "++HELP",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "Help information (e.g., member in SYS1.HELP or dialog help panel). Requires a 3-character national language identifier suffix.",
@@ -1925,7 +1938,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library."
+                "description": "Specifies the ddname of the distribution library.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -1977,6 +1991,7 @@
     {
         "name": "++IMG",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "Graphics image for an online book. Requires a 3-character national language identifier suffix.",
@@ -2000,7 +2015,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library."
+                "description": "Specifies the ddname of the distribution library.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -2052,6 +2068,7 @@
     {
         "name": "++MSG",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "Message member (e.g., for a dialog or message data set). Requires a 3-character national language identifier suffix.",
@@ -2075,7 +2092,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library."
+                "description": "Specifies the ddname of the distribution library.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -2201,6 +2219,7 @@
     {
         "name": "++PNL",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "Panel for a dialog (ISPF panel). Requires a 3-character national language identifier suffix.",
@@ -2224,7 +2243,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library."
+                "description": "Specifies the ddname of the distribution library.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -2276,6 +2296,7 @@
     {
         "name": "++PROBJ",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "Printer object element. Requires a 3-character national language identifier suffix.",
@@ -2299,7 +2320,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library."
+                "description": "Specifies the ddname of the distribution library.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -2499,6 +2521,7 @@
     {
         "name": "++PRSRC",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "Printer source element. Requires a 3-character national language identifier suffix.",
@@ -2522,7 +2545,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library."
+                "description": "Specifies the ddname of the distribution library.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -2574,6 +2598,7 @@
     {
         "name": "++PSEG",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "Graphics page segment for an online book. Requires a 3-character national language identifier suffix.",
@@ -2597,7 +2622,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library."
+                "description": "Specifies the ddname of the distribution library.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -2649,6 +2675,7 @@
     {
         "name": "++PUBLB",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "Online publications library (bookshelf). Requires a 3-character national language identifier suffix.",
@@ -2672,7 +2699,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library."
+                "description": "Specifies the ddname of the distribution library.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -2724,6 +2752,7 @@
     {
         "name": "++SAMP",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "Sample data, program, or JCL in a data set for sample code. Requires a 3-character national language identifier suffix.",
@@ -2747,7 +2776,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library."
+                "description": "Specifies the ddname of the distribution library.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -2799,6 +2829,7 @@
     {
         "name": "++SKL",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "File skeleton for a dialog (ISPF skeleton). Requires a 3-character national language identifier suffix.",
@@ -2822,7 +2853,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library."
+                "description": "Specifies the ddname of the distribution library.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -2874,6 +2906,7 @@
     {
         "name": "++TBL",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "Table for a dialog (ISPF table). Requires a 3-character national language identifier suffix.",
@@ -2897,7 +2930,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library."
+                "description": "Specifies the ddname of the distribution library.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -2949,6 +2983,7 @@
     {
         "name": "++TEXT",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "Text element. Requires a 3-character national language identifier suffix.",
@@ -2972,7 +3007,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library."
+                "description": "Specifies the ddname of the distribution library.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -3394,6 +3430,7 @@
     {
         "name": "++UTIN",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "General utility input. Requires a 3-character national language identifier suffix.",
@@ -3417,7 +3454,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library."
+                "description": "Specifies the ddname of the distribution library.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -3469,6 +3507,7 @@
     {
         "name": "++UTOUT",
         "language_variants": true,
+        "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
         "description": "General utility output. Requires a 3-character national language identifier suffix.",
@@ -3492,7 +3531,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library."
+                "description": "Specifies the ddname of the distribution library.",
+                "required": true
             },
             {
                 "name": "FROMDS",
@@ -3704,7 +3744,6 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "required": true,
                 "description": "Specifies the ddname of the distribution library for the specified macro."
             },
             {
@@ -3775,7 +3814,6 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "required": true,
                 "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
@@ -4015,7 +4053,8 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Specifies the ddname of the distribution library in which the member resides. Required for distribution library moves."
+                "description": "Specifies the ddname of the distribution library in which the member resides. Required for distribution library moves.",
+                "required": true
             },
             {
                 "name": "FMID",
@@ -4447,7 +4486,6 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "required": true,
                 "description": "Specifies the ddname of the distribution library for the specified source."
             },
             {
@@ -4557,7 +4595,6 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "required": true,
                 "description": "Specifies the ddname of the distribution library for the specified source."
             },
             {

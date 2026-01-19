@@ -37,13 +37,6 @@ func (p *Provider) GetCompletionsAST(doc *parser.Document, text string, line, ch
 
 	logger.Debug("GetCompletionsAST - line: %d, character: %d", line, character)
 
-	// Check if we're inside inline data - if so, don't provide SMP/E completions
-	if p.isInsideInlineDataAST(doc, line) {
-		logger.Debug("Cursor is inside inline data - no completions")
-		return nil
-	}
-
-
 	// Check if we're at line start or typing ++
 	textBefore := currentLine[:character]
 	trimmedBefore := strings.TrimSpace(textBefore)
@@ -61,6 +54,7 @@ func (p *Provider) GetCompletionsAST(doc *parser.Document, text string, line, ch
 	}
 
 	// If we're typing + or ++, offer MCS completions (but NOT on continuation lines)
+	// This check comes BEFORE inline data check because ++ at line start is a new statement
 	if !isContinuationLine && (trimmedBefore == "" || (strings.HasPrefix(trimmedBefore, "+") && len(trimmedBefore) <= 2)) {
 		// Calculate how many + characters were typed
 		plusCount := 0
@@ -76,6 +70,13 @@ func (p *Provider) GetCompletionsAST(doc *parser.Document, text string, line, ch
 		}
 
 		return p.getMCSCompletions(&replaceRange)
+	}
+
+	// Check if we're inside inline data - if so, don't provide SMP/E completions
+	// This check comes AFTER the ++ check because typing ++ starts a new statement
+	if p.isInsideInlineDataAST(doc, line) {
+		logger.Debug("Cursor is inside inline data - no completions")
+		return nil
 	}
 
 	// Find the node at cursor position
@@ -427,7 +428,9 @@ func (p *Provider) getLastLine(node *parser.Node, currentMax int) int {
 
 // getOperandCompletionsAST returns operand completions for a statement using AST
 func (p *Provider) getOperandCompletionsAST(stmt *parser.Node, text string, line, character int) []lsp.CompletionItem {
+	logger.Debug("getOperandCompletionsAST called for statement: %s, StatementDef=%v", stmt.Name, stmt.StatementDef != nil)
 	if stmt.StatementDef == nil {
+		logger.Debug("ERROR: Statement %s has no StatementDef - parser did not link it!", stmt.Name)
 		return nil
 	}
 
@@ -468,6 +471,7 @@ func (p *Provider) getOperandCompletionsAST(stmt *parser.Node, text string, line
 			skip := false
 			for _, exOp := range exclusiveOps {
 				if presentOperands[exOp] {
+					logger.Debug("Skipping %s because mutually_exclusive with present operand %s", primaryName, exOp)
 					skip = true
 					break
 				}

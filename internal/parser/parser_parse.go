@@ -41,14 +41,19 @@ func (p *Parser) Parse(text string) *Document {
 			if hasCommentStart && hasCommentEnd {
 				commentStart := strings.Index(line, "/*")
 				commentEnd := strings.Index(line, "*/")
+				commentValue := line[commentStart : commentEnd+2]
+
+				// Convert byte offsets to rune offsets for LSP compatibility
+				runeCommentStart := byteOffsetToRuneOffset(line, commentStart)
+				runeCommentLength := runeCount(commentValue)
 
 				commentNode := &Node{
 					Type:  NodeTypeComment,
-					Value: line[commentStart : commentEnd+2],
+					Value: commentValue,
 					Position: Position{
 						Line:      lineNum,
-						Character: commentStart,
-						Length:    commentEnd + 2 - commentStart,
+						Character: runeCommentStart,
+						Length:    runeCommentLength,
 					},
 				}
 				doc.Comments = append(doc.Comments, commentNode)
@@ -72,11 +77,12 @@ func (p *Parser) Parse(text string) *Document {
 			if hasCommentStart && !inBlockComment {
 				inBlockComment = true
 				commentStartLine = lineNum
-				commentStartChar = strings.Index(line, "/*")
+				commentStartChar = byteOffsetToRuneOffset(line, strings.Index(line, "/*"))
 				// Preserve content before the comment start
+				byteStart := strings.Index(line, "/*")
 				before := ""
-				if commentStartChar > 0 {
-					before = line[:commentStartChar]
+				if byteStart > 0 {
+					before = line[:byteStart]
 				}
 				cleanLines[lineNum] = before
 				continue
@@ -87,12 +93,15 @@ func (p *Parser) Parse(text string) *Document {
 				inBlockComment = false
 				commentEnd := strings.Index(line, "*/")
 
+				// Convert byte offset to rune offset for LSP compatibility
+				runeCommentEnd := byteOffsetToRuneOffset(line, commentEnd+2)
+
 				commentNode := &Node{
 					Type: NodeTypeComment,
 					Position: Position{
 						Line:      commentStartLine,
 						Character: commentStartChar,
-						Length:    commentEnd + 2,
+						Length:    runeCommentEnd,
 					},
 				}
 				doc.Comments = append(doc.Comments, commentNode)
