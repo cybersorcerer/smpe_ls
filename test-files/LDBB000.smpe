@@ -1,0 +1,53 @@
+++USERMOD(LDBB000) REWORK(0)
+   DESC(IBM Developer for z/OS DBB, environment variables)
+  /*
+  +--------------------------------------------------------------------+
+  | GIT_REPOSITORY_ID     : <<<CI_PROJECT_ID>>>
+  | GIT_REPOSITORY_NAME   : <<<CI_PROJECT_NAME>>>
+  | GIT_REPOSITORY_COMMIT : <<<CI_COMMIT_SHORT_SHA>>>
+  |    <<<CI_COMMIT_SHA>>>
+  | CI_PROJECT_NAMESPACE  : <<<CI_PROJECT_NAMESPACE>>>
+  | GIT_COMMIT_TAG        : <<<CI_COMMIT_TAG>>>
+  +--------------------------------------------------------------------+
+  */ .
+++VER(Z038)       FMID(HBGZ300)
+                  /*PRE(UI94457)*/
+                  .
+++HFS(DBBENVSH)  SYSLIB(SBGZA001) DISTLIB(A$RVDUMY)
+  TEXT
+  LINK('../conf/dbbenv.sh')
+  PARM(PATHMODE(0,7,5,5))
+  .
+++HFS(BGZPX009) SYSLIB(SBGZA001) DISTLIB(ABGZHFS)
+  TEXT
+  SHSCRIPT(LDBB010,PRE,POST)
+  .
+++SHELLSCR(LDBB010) SYSLIB(SBGZA001) DISTLIB(A$BSDMMY)
+  TEXT
+  PARM(PATHMODE(1,7,5,5))
+  .
+++HFS(SIMPLOGR)  SYSLIB(SBGZA001) DISTLIB(A$RVDUMY)
+  TEXT
+  LINK('../conf/logging/simplelogger.properties')
+  PARM(PATHMODE(0,7,5,5))
+  .
+++HFS(DBBISPF)  SYSLIB(SBGZA001) DISTLIB(A$RVDUMY)
+  TEXT
+  LINK('../conf/runIspf.sh')
+  PARM(PATHMODE(0,7,5,5))
+  .
+++HFS(GITENVSH)  SYSLIB(SBGZA001) DISTLIB(A$RVDUMY)
+  TEXT
+  LINK('../conf/gitenv.sh')
+  PARM(PATHMODE(0,7,5,5))
+  .
+++HFS(BGZPX002)
+  TEXT
+  SHSCRIPT(LDBB019,PRE,POST)
+  .
+++SHELLSCR(LDBB019) SYSLIB(SBGZA001) DISTLIB(A$BSDMMY)
+  TEXT
+  PARM(PATHMODE(1,7,5,5))
+  .
+++PROC(BGZDBBP)    SYSLIB(S$APPROC) DISTLIB(A$APPROC) .
+++PROC(DBBSHRD)    SYSLIB(S$APPROC) DISTLIB(A$APPROC) .

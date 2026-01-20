@@ -6,6 +6,7 @@ import (
 	"github.com/cybersorcerer/smpe_ls/internal/completion"
 	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/diagnostics"
+	"github.com/cybersorcerer/smpe_ls/internal/formatting"
 	"github.com/cybersorcerer/smpe_ls/internal/hover"
 	"github.com/cybersorcerer/smpe_ls/internal/logger"
 	"github.com/cybersorcerer/smpe_ls/internal/parser"
@@ -64,6 +65,7 @@ type Handler struct {
 	hoverProvider       *hover.Provider
 	diagnosticsProvider *diagnostics.Provider
 	semanticProvider    *semantic.Provider
+	formattingProvider  *formatting.Provider
 	server              *lsp.Server
 	diagnosticsConfig   *DiagnosticsConfig
 }
@@ -86,6 +88,7 @@ func New(version string, dataPath string) (*Handler, error) {
 	completionProvider := completion.NewProvider(store)
 	diagnosticsProvider := diagnostics.NewProvider(store)
 	semanticProvider := semantic.NewProvider(store.Statements)
+	formattingProvider := formatting.NewProvider()
 
 	return &Handler{
 		version:             version,
@@ -96,6 +99,7 @@ func New(version string, dataPath string) (*Handler, error) {
 		hoverProvider:       hoverProvider,
 		diagnosticsProvider: diagnosticsProvider,
 		semanticProvider:    semanticProvider,
+		formattingProvider:  formattingProvider,
 		diagnosticsConfig:   DefaultDiagnosticsConfig(),
 	}, nil
 }
@@ -135,6 +139,20 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 		logger.Info("Using default diagnostics config (all enabled)")
 	}
 
+	// Process initialization options for formatting configuration
+	if params.InitializationOptions != nil && params.InitializationOptions.Formatting != nil {
+		opts := params.InitializationOptions.Formatting
+		h.formattingProvider.SetConfig(&formatting.Config{
+			Enabled:            opts.Enabled,
+			IndentContinuation: opts.IndentContinuation,
+			OneOperandPerLine:  opts.OneOperandPerLine,
+		})
+		logger.Info("Formatting config received from client: Enabled=%v, IndentContinuation=%d, OneOperandPerLine=%v",
+			opts.Enabled, opts.IndentContinuation, opts.OneOperandPerLine)
+	} else {
+		logger.Info("Using default formatting config")
+	}
+
 	// Add all uppercase letters as trigger characters so completion triggers automatically when typing operand names
 	triggerChars := []string{"+", "(", " "}
 	for ch := 'A'; ch <= 'Z'; ch++ {
@@ -147,7 +165,9 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 			CompletionProvider: &lsp.CompletionOptions{
 				TriggerCharacters: triggerChars,
 			},
-			HoverProvider: true,
+			HoverProvider:                   true,
+			DocumentFormattingProvider:      true,
+			DocumentRangeFormattingProvider: true,
 			SemanticTokensProvider: &lsp.SemanticTokensOptions{
 				Legend: lsp.SemanticTokensLegend{
 					TokenTypes: []string{
@@ -391,6 +411,18 @@ func (h *Handler) WorkspaceDidChangeConfiguration(params lsp.DidChangeConfigurat
 		h.republishAllDiagnostics()
 	}
 
+	// Update formatting config if provided
+	if params.Settings != nil && params.Settings.Smpe != nil && params.Settings.Smpe.Formatting != nil {
+		opts := params.Settings.Smpe.Formatting
+		h.formattingProvider.SetConfig(&formatting.Config{
+			Enabled:            opts.Enabled,
+			IndentContinuation: opts.IndentContinuation,
+			OneOperandPerLine:  opts.OneOperandPerLine,
+		})
+		logger.Info("Updated formatting config: Enabled=%v, IndentContinuation=%d, OneOperandPerLine=%v",
+			opts.Enabled, opts.IndentContinuation, opts.OneOperandPerLine)
+	}
+
 	return nil
 }
 
@@ -407,4 +439,80 @@ func (h *Handler) republishAllDiagnostics() {
 	for _, uri := range uris {
 		h.publishDiagnostics(uri)
 	}
+}
+
+// TextDocumentFormatting handles document formatting request
+func (h *Handler) TextDocumentFormatting(params lsp.DocumentFormattingParams) ([]lsp.TextEdit, error) {
+	logger.Debug("Formatting requested for: %s", params.TextDocument.URI)
+
+	// Check if formatting is enabled
+	if !h.formattingProvider.GetConfig().Enabled {
+		logger.Debug("Formatting is disabled")
+		return nil, nil
+	}
+
+	h.documentsMutex.RLock()
+	text, textExists := h.documents[params.TextDocument.URI]
+	doc, hasDoc := h.parsedDocuments[params.TextDocument.URI]
+	h.documentsMutex.RUnlock()
+
+	if !textExists {
+		logger.Debug("Document not found: %s", params.TextDocument.URI)
+		return nil, nil
+	}
+
+	// Ensure we have a parsed document
+	if !hasDoc {
+		logger.Debug("No parsed document found for formatting, parsing now: %s", params.TextDocument.URI)
+		h.documentsMutex.Lock()
+		doc = h.parser.Parse(text)
+		h.parsedDocuments[params.TextDocument.URI] = doc
+		h.documentsMutex.Unlock()
+	}
+
+	edits := h.formattingProvider.FormatDocument(doc, text)
+	logger.Debug("Formatting returned %d edits", len(edits))
+
+	return edits, nil
+}
+
+// TextDocumentRangeFormatting handles range formatting request
+func (h *Handler) TextDocumentRangeFormatting(params lsp.DocumentRangeFormattingParams) ([]lsp.TextEdit, error) {
+	logger.Debug("Range formatting requested for: %s (lines %d-%d)",
+		params.TextDocument.URI, params.Range.Start.Line, params.Range.End.Line)
+
+	// Check if formatting is enabled
+	if !h.formattingProvider.GetConfig().Enabled {
+		logger.Debug("Formatting is disabled")
+		return nil, nil
+	}
+
+	h.documentsMutex.RLock()
+	text, textExists := h.documents[params.TextDocument.URI]
+	doc, hasDoc := h.parsedDocuments[params.TextDocument.URI]
+	h.documentsMutex.RUnlock()
+
+	if !textExists {
+		logger.Debug("Document not found: %s", params.TextDocument.URI)
+		return nil, nil
+	}
+
+	// Ensure we have a parsed document
+	if !hasDoc {
+		logger.Debug("No parsed document found for range formatting, parsing now: %s", params.TextDocument.URI)
+		h.documentsMutex.Lock()
+		doc = h.parser.Parse(text)
+		h.parsedDocuments[params.TextDocument.URI] = doc
+		h.documentsMutex.Unlock()
+	}
+
+	edits := h.formattingProvider.FormatRange(doc, text, params.Range.Start.Line, params.Range.End.Line)
+	logger.Debug("Range formatting returned %d edits", len(edits))
+
+	return edits, nil
+}
+
+// UpdateFormattingConfig updates the formatting configuration
+func (h *Handler) UpdateFormattingConfig(config *formatting.Config) {
+	h.formattingProvider.SetConfig(config)
 }

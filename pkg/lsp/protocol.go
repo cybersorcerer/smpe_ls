@@ -126,11 +126,13 @@ const (
 
 // ServerCapabilities describes the capabilities of the server
 type ServerCapabilities struct {
-	TextDocumentSync          int                        `json:"textDocumentSync,omitempty"`
-	CompletionProvider        *CompletionOptions         `json:"completionProvider,omitempty"`
-	HoverProvider             bool                       `json:"hoverProvider,omitempty"`
-	DiagnosticProvider        *DiagnosticOptions         `json:"diagnosticProvider,omitempty"`
-	SemanticTokensProvider    *SemanticTokensOptions     `json:"semanticTokensProvider,omitempty"`
+	TextDocumentSync             int                    `json:"textDocumentSync,omitempty"`
+	CompletionProvider           *CompletionOptions     `json:"completionProvider,omitempty"`
+	HoverProvider                bool                   `json:"hoverProvider,omitempty"`
+	DiagnosticProvider           *DiagnosticOptions     `json:"diagnosticProvider,omitempty"`
+	SemanticTokensProvider       *SemanticTokensOptions `json:"semanticTokensProvider,omitempty"`
+	DocumentFormattingProvider   bool                   `json:"documentFormattingProvider,omitempty"`
+	DocumentRangeFormattingProvider bool                `json:"documentRangeFormattingProvider,omitempty"`
 }
 
 // TextDocumentSyncKind values
@@ -186,6 +188,7 @@ type SemanticTokens struct {
 // InitializationOptions represents client-provided initialization options
 type InitializationOptions struct {
 	Diagnostics *DiagnosticsOptions `json:"diagnostics,omitempty"`
+	Formatting  *FormattingOptions  `json:"formatting,omitempty"`
 }
 
 // DiagnosticsOptions configures which diagnostics are enabled
@@ -240,4 +243,31 @@ type SettingsPayload struct {
 // SmpeSettings represents the smpe.* settings from VSCode
 type SmpeSettings struct {
 	Diagnostics *DiagnosticsOptions `json:"diagnostics,omitempty"`
+	Formatting  *FormattingOptions  `json:"formatting,omitempty"`
+}
+
+// FormattingOptions configures document formatting behavior
+type FormattingOptions struct {
+	Enabled            bool `json:"enabled"`
+	IndentContinuation int  `json:"indentContinuation"`
+	OneOperandPerLine  bool `json:"oneOperandPerLine"`
+}
+
+// DocumentFormattingParams represents textDocument/formatting request params
+type DocumentFormattingParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+	Options      FormattingRequestOptions `json:"options"`
+}
+
+// FormattingRequestOptions contains formatting options from the client
+type FormattingRequestOptions struct {
+	TabSize      int  `json:"tabSize"`
+	InsertSpaces bool `json:"insertSpaces"`
+}
+
+// DocumentRangeFormattingParams represents textDocument/rangeFormatting request params
+type DocumentRangeFormattingParams struct {
+	TextDocument TextDocumentIdentifier   `json:"textDocument"`
+	Range        Range                    `json:"range"`
+	Options      FormattingRequestOptions `json:"options"`
 }

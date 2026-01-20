@@ -20,7 +20,8 @@ function log(message: string) {
 export function activate(context: vscode.ExtensionContext) {
 	// Create output channel for logging
 	outputChannel = vscode.window.createOutputChannel('SMP/E Language Server');
-	outputChannel.show(true);
+	// Note: outputChannel.show() removed to avoid opening terminal on startup
+	// Users can manually open "Output" panel and select "SMP/E Language Server" if needed
 
 	log('SMP/E Language Server extension activating...');
 	log(`Platform: ${process.platform}`);
@@ -162,7 +163,15 @@ export function activate(context: vscode.ExtensionContext) {
 		subOperandValidation: config.get<boolean>('diagnostics.subOperandValidation', true)
 	};
 
+	// Build formatting configuration
+	const formattingConfig = {
+		enabled: config.get<boolean>('formatting.enabled', true),
+		indentContinuation: config.get<number>('formatting.indentContinuation', 3),
+		oneOperandPerLine: config.get<boolean>('formatting.oneOperandPerLine', true)
+	};
+
 	log(`Diagnostics config: ${JSON.stringify(diagnosticsConfig)}`);
+	log(`Formatting config: ${JSON.stringify(formattingConfig)}`);
 
 	// Client options
 	const clientOptions: LanguageClientOptions = {
@@ -174,7 +183,8 @@ export function activate(context: vscode.ExtensionContext) {
 		},
 		outputChannel: outputChannel,
 		initializationOptions: {
-			diagnostics: diagnosticsConfig
+			diagnostics: diagnosticsConfig,
+			formatting: formattingConfig
 		}
 	};
 
@@ -194,10 +204,36 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showErrorMessage(`Failed to start SMP/E Language Server: ${error}`);
 	});
 
+	// Register format on save handler
+	context.subscriptions.push(
+		vscode.workspace.onWillSaveTextDocument(async (e) => {
+			if (e.document.languageId !== 'smpe') {
+				return;
+			}
+
+			const currentConfig = vscode.workspace.getConfiguration('smpe');
+			const formatOnSave = currentConfig.get<boolean>('formatting.formatOnSave', false);
+			const formattingEnabled = currentConfig.get<boolean>('formatting.enabled', true);
+
+			if (formatOnSave && formattingEnabled) {
+				log('Format on save triggered');
+				const edits = await vscode.commands.executeCommand<vscode.TextEdit[]>(
+					'vscode.executeFormatDocumentProvider',
+					e.document.uri
+				);
+				if (edits && edits.length > 0) {
+					const workspaceEdit = new vscode.WorkspaceEdit();
+					workspaceEdit.set(e.document.uri, edits);
+					e.waitUntil(vscode.workspace.applyEdit(workspaceEdit).then(() => {}));
+				}
+			}
+		})
+	);
+
 	// Listen for configuration changes and notify the server
 	context.subscriptions.push(
 		vscode.workspace.onDidChangeConfiguration(e => {
-			if (e.affectsConfiguration('smpe.diagnostics')) {
+			if (e.affectsConfiguration('smpe.diagnostics') || e.affectsConfiguration('smpe.formatting')) {
 				// Get updated configuration
 				const updatedConfig = vscode.workspace.getConfiguration('smpe');
 				const updatedDiagnosticsConfig = {
@@ -218,16 +254,23 @@ export function activate(context: vscode.ExtensionContext) {
 					subOperandValidation: updatedConfig.get<boolean>('diagnostics.subOperandValidation', true)
 				};
 
+				const updatedFormattingConfig = {
+					enabled: updatedConfig.get<boolean>('formatting.enabled', true),
+					indentContinuation: updatedConfig.get<number>('formatting.indentContinuation', 3),
+					oneOperandPerLine: updatedConfig.get<boolean>('formatting.oneOperandPerLine', true)
+				};
+
 				// Send notification to server
 				client.sendNotification('workspace/didChangeConfiguration', {
 					settings: {
 						smpe: {
-							diagnostics: updatedDiagnosticsConfig
+							diagnostics: updatedDiagnosticsConfig,
+							formatting: updatedFormattingConfig
 						}
 					}
 				});
 
-				log('Sent updated diagnostics configuration to server');
+				log('Sent updated configuration to server');
 			}
 		})
 	);

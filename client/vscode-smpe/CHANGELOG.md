@@ -2,6 +2,35 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.7.5] - 2025
+
+### Added
+
+- **Document Formatting** - Format SMP/E documents with `Shift+Alt+F` (Windows/Linux) or `Shift+Option+F` (macOS)
+  - Each operand on its own line (configurable)
+  - Configurable continuation line indentation
+  - Can be enabled/disabled via settings
+- New formatting settings:
+  - `smpe.formatting.enabled` - Enable/disable formatting (default: true)
+  - `smpe.formatting.indentContinuation` - Spaces for continuation lines (default: 3)
+  - `smpe.formatting.oneOperandPerLine` - Place each operand on its own line (default: true)
+  - `smpe.formatting.formatOnSave` - Automatically format on save (default: false)
+- **Column Rulers** - Visual guides at columns 72 and 80 for mainframe card boundaries
+- Improved hover information formatting with separated required/optional operands
+- `inline_data` support for all Data Element MCS statements with language variants
+
+### Fixed
+
+- UTF-8/UTF-16 character position calculation for non-ASCII characters (e.g., umlauts)
+- Operand completion now works for all MCS statements
+- Completion after inline data now correctly offers MCS statements when typing `++`
+- DISTLIB operand correctly marked as required only for Data Element MCS, ++PROGRAM, and ++MOVE
+- Output panel no longer opens automatically on extension startup
+
+### Changed
+
+- Diagnostics settings are now dynamically applied without restart
+
 ## [0.7.0] - 2025
 
 ### Added

@@ -834,7 +834,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "Online book member. Requires a 3-character national language identifier suffix (e.g., ++BOOKENU for English US, ++BOOKDEU for German).",
+        "description": "Online book member. Allows a 3-character national language identifier suffix (e.g., ++BOOKENU for English US, ++BOOKDEU for German).",
         "operands": [
             {
                 "name": "ALIAS",
@@ -940,7 +940,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "Index for an online publications library (bookshelf). Requires a 3-character national language identifier suffix.",
+        "description": "Index for an online publications library (bookshelf). Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -1017,7 +1017,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "Graphics source for an online book. Requires a 3-character national language identifier suffix.",
+        "description": "Graphics source for an online book. Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -1612,7 +1612,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "IBM generic data type 6 - For IBM use only. Requires a 3-character national language identifier suffix.",
+        "description": "IBM generic data type 6 - For IBM use only. Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -1686,6 +1686,7 @@
     {
         "name": "++EXEC",
         "parameter": "name",
+        "inline_data": true,
         "type": "Data Element MCS",
         "description": "EXEC - Executable REXX procedure.",
         "operands": [
@@ -1763,7 +1764,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "Printer Font Object Contents Architecture (FOCA) font. Requires a 3-character national language identifier suffix.",
+        "description": "Printer Font Object Contents Architecture (FOCA) font. Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -1840,7 +1841,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "GDF graphics panel. Requires a 3-character national language identifier suffix.",
+        "description": "GDF graphics panel. Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -1917,7 +1918,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "Help information (e.g., member in SYS1.HELP or dialog help panel). Requires a 3-character national language identifier suffix.",
+        "description": "Help information (e.g., member in SYS1.HELP or dialog help panel). Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -1994,7 +1995,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "Graphics image for an online book. Requires a 3-character national language identifier suffix.",
+        "description": "Graphics image for an online book. Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -2071,7 +2072,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "Message member (e.g., for a dialog or message data set). Requires a 3-character national language identifier suffix.",
+        "description": "Message member (e.g., for a dialog or message data set). Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -2145,6 +2146,7 @@
     {
         "name": "++PARM",
         "parameter": "name",
+        "inline_data": true,
         "type": "Data Element MCS",
         "description": "PARMLIB member - System parameter library member.",
         "operands": [
@@ -2222,7 +2224,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "Panel for a dialog (ISPF panel). Requires a 3-character national language identifier suffix.",
+        "description": "Panel for a dialog (ISPF panel). Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -2299,7 +2301,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "Printer object element. Requires a 3-character national language identifier suffix.",
+        "description": "Printer object element. Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -2373,6 +2375,7 @@
     {
         "name": "++PROC",
         "parameter": "name",
+        "inline_data": true,
         "type": "Data Element MCS",
         "description": "Procedure in PROCLIB - JCL procedure member.",
         "operands": [
@@ -2447,6 +2450,7 @@
     {
         "name": "++PRODXML",
         "parameter": "name",
+        "inline_data": true,
         "type": "Data Element MCS",
         "description": "Product XML document - Software product metadata in XML format.",
         "operands": [
@@ -2524,7 +2528,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "Printer source element. Requires a 3-character national language identifier suffix.",
+        "description": "Printer source element. Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -2601,7 +2605,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "Graphics page segment for an online book. Requires a 3-character national language identifier suffix.",
+        "description": "Graphics page segment for an online book. Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -2678,7 +2682,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "Online publications library (bookshelf). Requires a 3-character national language identifier suffix.",
+        "description": "Online publications library (bookshelf). Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -2755,7 +2759,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "Sample data, program, or JCL in a data set for sample code. Requires a 3-character national language identifier suffix.",
+        "description": "Sample data, program, or JCL in a data set for sample code. Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -2832,7 +2836,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "File skeleton for a dialog (ISPF skeleton). Requires a 3-character national language identifier suffix.",
+        "description": "File skeleton for a dialog (ISPF skeleton). Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -2909,7 +2913,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "Table for a dialog (ISPF table). Requires a 3-character national language identifier suffix.",
+        "description": "Table for a dialog (ISPF table). Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -2986,7 +2990,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "Text element. Requires a 3-character national language identifier suffix.",
+        "description": "Text element. Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -3060,6 +3064,7 @@
     {
         "name": "++USER1",
         "parameter": "name",
+        "inline_data": true,
         "type": "Data Element MCS",
         "description": "User-defined data type 1 - For user-defined elements not covered by existing data types.",
         "operands": [
@@ -3134,6 +3139,7 @@
     {
         "name": "++USER2",
         "parameter": "name",
+        "inline_data": true,
         "type": "Data Element MCS",
         "description": "User-defined data type 2 - For user-defined elements.",
         "operands": [
@@ -3209,6 +3215,7 @@
         "name": "++USER3",
         "parameter": "name",
         "type": "Data Element MCS",
+        "inline_data": true,
         "description": "User-defined data type 3 - For user-defined elements.",
         "operands": [
             {
@@ -3283,6 +3290,7 @@
         "name": "++USER4",
         "parameter": "name",
         "type": "Data Element MCS",
+        "inline_data": true,
         "description": "User-defined data type 4 - For user-defined elements.",
         "operands": [
             {
@@ -3357,6 +3365,7 @@
         "name": "++USER5",
         "parameter": "name",
         "type": "Data Element MCS",
+        "inline_data": true,
         "description": "User-defined data type 5 - For user-defined elements.",
         "operands": [
             {
@@ -3433,7 +3442,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "General utility input. Requires a 3-character national language identifier suffix.",
+        "description": "General utility input. Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -3510,7 +3519,7 @@
         "inline_data": true,
         "parameter": "name",
         "type": "Data Element MCS",
-        "description": "General utility output. Requires a 3-character national language identifier suffix.",
+        "description": "General utility output. Allows a 3-character national language identifier suffix.",
         "operands": [
             {
                 "name": "ALIAS",
@@ -5799,7 +5808,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|RELFILE|SYMLINK|SYSLIB|TEXT|TXLIB",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|RELFILE|SHSCRIPT|SYMLINK|SYSLIB|TEXT|TXLIB",
                 "description": "Specifies that the hierarchical file system element and all of its link names and symbolic link names are to be removed from the target library (UNIX file system) and the distribution library."
             },
             {
@@ -5863,6 +5872,13 @@
                 "length": 4,
                 "description": "Identifies which relative file associated with the SYSMOD contains this element. This operand is required if you provide the element in RELFILE format, rather than inline or in a TXLIB data set. The RELFILE value must be a decimal number from 1 to 9999. RELFILE is mutually exclusive with DELETE, FROMDS, and TXLIB."
             },
+			{
+                "name": "SHSCRIPT",
+                "parameter": "SCRIPTNAME,PRE|POST",
+                "type": "string",
+                "length": 8,
+                "description": "Specifies a UNIX shell script, scriptname, to be invoked when the element is installed in (or deleted from) a directory of a UNIX file system. scriptname can contain any uppercase alphabetic, numeric, or national ($, #, @) character and can be 1 to 8 characters long. A shell script is commonly used to complete the installation of an element. For example, if the JAR element requires an external link, you can provide a shell script that performs the necessary steps to create the external link for the JAR element. You can follow scriptname with either of two optional values, PRE and POST, to specify the point in SMP/E processing when the shell script is to be invoked. You cannot specify the SHSCRIPT operand with the DELETE operand."
+            },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
@@ -5916,7 +5932,7 @@
             {
                 "name": "DELETE",
                 "type": "boolean",
-                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
+                "mutually_exclusive": "BINARY|FROMDS|LINK|PARM|SHSCRIPT|SYMLINK|SYSLIB|TEXT|RELFILE|TXLIB",
                 "description": "Specifies that the shell script element and all of its link names and symbolic link names are to be removed from the target library (UNIX file system) and the distribution library."
             },
             {

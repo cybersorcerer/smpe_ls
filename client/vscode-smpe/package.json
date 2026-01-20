@@ -2,7 +2,7 @@
   "name": "vscode-smpe",
   "displayName": "SMP/E Language Support",
   "description": "Language support for SMP/E MCS statements",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "publisher": "cybersorcerer",
   "license": "AGPL-3.0",
   "repository": {
@@ -132,7 +132,49 @@
           "type": "boolean",
           "default": true,
           "description": "Report sub-operand validation errors (empty/too long)"
+        },
+        "smpe.formatting.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable document formatting"
+        },
+        "smpe.formatting.indentContinuation": {
+          "type": "integer",
+          "default": 3,
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Number of spaces to indent continuation lines"
+        },
+        "smpe.formatting.oneOperandPerLine": {
+          "type": "boolean",
+          "default": true,
+          "description": "Place each operand on its own line"
+        },
+        "smpe.formatting.formatOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically format document when saving"
+        },
+        "smpe.editor.showColumnRulers": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show column rulers at positions 72 and 80 for SMP/E files"
         }
+      }
+    },
+    "configurationDefaults": {
+      "[smpe]": {
+        "editor.rulers": [
+          {
+            "column": 72,
+            "color": "#5a5a5a"
+          },
+          {
+            "column": 80,
+            "color": "#3a3a3a"
+          }
+        ],
+        "editor.wordWrap": "off"
       }
     }
   },
