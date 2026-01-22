@@ -2,7 +2,26 @@
 
 All notable changes to this project are documented in this file.
 
-## [0.7.5] - 2025
+## [0.7.6] - 2026
+
+### Added
+
+- **Document Symbols / Outline View** - Navigate SMP/E files using the Outline panel or `Cmd+Shift+O`
+  - Hierarchical view of all statements with their operands
+  - Quick navigation to any statement in the document
+  - Symbol icons based on statement type (SYSMOD, VER, MAC, etc.)
+- **Whitespace Tolerance** - Parser now accepts spaces between `++` and statement name (e.g., `++ VER`)
+  - Formatting automatically corrects this to proper `++VER` format
+
+### Changed
+
+- **Formatting** - Statement terminator (`.`) is now always placed on its own line at the beginning
+
+### Fixed
+
+- Highlighting for statements with spaces after `++` now covers the complete statement
+
+## [0.7.5] - 2026
 
 ### Added
 

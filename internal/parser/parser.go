@@ -208,16 +208,23 @@ func (p *Parser) parseLine(line string, lineNum int, doc *Document, currentState
 // parseStatement parses a statement starting at the given position
 func (p *Parser) parseStatement(line string, lineNum int, startIdx int) *Node {
 	// Find statement name (++STATEMENT)
-	stmtEnd := startIdx + 2
+	// Skip optional whitespace after ++ (SMP/E tolerates "++ VER" but it's bad style)
+	nameStart := startIdx + 2
+	for nameStart < len(line) && (line[nameStart] == ' ' || line[nameStart] == '\t') {
+		nameStart++
+	}
+
+	stmtEnd := nameStart
 	for stmtEnd < len(line) && isOperandChar(line[stmtEnd]) {
 		stmtEnd++
 	}
 
-	if stmtEnd <= startIdx+2 {
+	if stmtEnd <= nameStart {
 		return nil
 	}
 
-	stmtName := line[startIdx:stmtEnd]
+	// Normalize statement name: always use ++NAME format without spaces
+	stmtName := "++" + line[nameStart:stmtEnd]
 
 	// Check if this statement has a language ID suffix
 	baseName, langID, hasLangID := langid.ExtractLanguageID(stmtName)
@@ -225,7 +232,10 @@ func (p *Parser) parseStatement(line string, lineNum int, startIdx int) *Node {
 	// Create statement node
 	// Convert byte offsets to rune offsets for LSP compatibility
 	runeStart := byteOffsetToRuneOffset(line, startIdx)
-	runeLength := runeCount(stmtName)
+	// Use actual length in source text (from ++ to end of name) for correct highlighting
+	// This handles "++ VER" correctly - highlighting the full original text
+	actualText := line[startIdx:stmtEnd]
+	runeLength := runeCount(actualText)
 
 	stmtNode := &Node{
 		Type: NodeTypeStatement,

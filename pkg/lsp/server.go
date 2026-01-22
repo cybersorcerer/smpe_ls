@@ -29,6 +29,7 @@ type Handler interface {
 	TextDocumentSemanticTokensFull(params SemanticTokensParams) (*SemanticTokens, error)
 	TextDocumentFormatting(params DocumentFormattingParams) ([]TextEdit, error)
 	TextDocumentRangeFormatting(params DocumentRangeFormattingParams) ([]TextEdit, error)
+	TextDocumentDocumentSymbol(params DocumentSymbolParams) ([]DocumentSymbol, error)
 	WorkspaceDidChangeConfiguration(params DidChangeConfigurationParams) error
 }
 
@@ -215,9 +216,21 @@ func (s *Server) handleRequest(req *Request) error {
 
 		return s.sendResponse(req.ID, result)
 
+	case "textDocument/documentSymbol":
+		var params DocumentSymbolParams
+		if err := json.Unmarshal(req.Params, &params); err != nil {
+			return s.sendErrorResponse(req.ID, InvalidParams, "Invalid params")
+		}
+
+		result, err := s.handler.TextDocumentDocumentSymbol(params)
+		if err != nil {
+			return s.sendErrorResponse(req.ID, InternalError, err.Error())
+		}
+
+		return s.sendResponse(req.ID, result)
+
 	// Optional capabilities - respond with null to indicate not supported
-	case "textDocument/documentSymbol",
-		"textDocument/definition",
+	case "textDocument/definition",
 		"textDocument/references",
 		"textDocument/onTypeFormatting",
 		"textDocument/codeAction",

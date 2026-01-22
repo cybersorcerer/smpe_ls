@@ -1,8 +1,8 @@
 # SMP/E Language Server
 
-A modern Language Server Protocol (LSP) implementation for SMP/E (System Modification Program/Extended) written in Go.
+A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-0.7.0-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-0.7.6-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -12,6 +12,8 @@ A modern Language Server Protocol (LSP) implementation for SMP/E (System Modific
 - **💡 Intelligent Code Completion** - Context-aware completion for statements and operands
 - **🔍 Real-time Diagnostics** - Instant validation of SMP/E syntax and semantics
 - **📖 Hover Documentation** - Inline documentation from IBM SMP/E Reference
+- **📄 Document Symbols** - Outline view and quick navigation
+- **📝 Document Formatting** - Auto-format SMP/E statements
 - **🌍 Multi-platform** - Native binaries for Linux, macOS, and Windows (AMD64 & ARM64)
 - **⚡ Fast & Lightweight** - Written in Go with zero external dependencies
 
@@ -102,7 +104,7 @@ smpe_ls --data /path/to/smpe.json
 
 ## 🎯 Supported MCS Statements
 
-### Version 0.7.0 (Current)
+### Version 0.7.6 (Current)
 
 **Control MCS (25 statements with full diagnostics):**
 
@@ -194,7 +196,22 @@ make release
 
 ## 📋 What's New
 
-### Version 0.7.0 (Latest)
+### Version 0.7.6 (Latest)
+
+**New Features:**
+
+- 📄 **Document Symbols** - Outline view and quick navigation (`Cmd+Shift+O`)
+- 📝 **Document Formatting** - Auto-format SMP/E statements with configurable options
+- 🔧 **Whitespace Tolerance** - Parser accepts `++ VER` syntax (formatting corrects it)
+- 📏 **Column Rulers** - Visual guides at columns 72 and 80 for mainframe card boundaries
+- ⚙️ **Format on Save** - Optionally auto-format when saving
+
+**Improvements:**
+
+- Statement terminator (`.`) now placed on its own line during formatting
+- Highlighting correctly covers statements with spaces after `++`
+
+### Version 0.7.0
 
 **New Features:**
 - ✨ **HFS Statement Support** - Added 10 missing HFS-type statements (++AIX1-5, ++CLIENT1-5)
@@ -446,11 +463,11 @@ See [LICENSE](LICENSE) file for the full license text.
 - [ ] Neovim plugin
 - [ ] Go to Definition
 - [ ] Find References
-- [ ] Document Symbols
+- [x] Document Symbols
 - [ ] Code Actions
-- [ ] Formatting
-- [ ] Additional MCS statements
-- [ ] SMPE Command language support
+- [x] Formatting
+- [x] All MCS statements
+- [ ] SMP/E Command language support
 
 ---
 

@@ -220,9 +220,9 @@ func (p *Provider) buildFormattedStatement(stmt *parser.Node) string {
 		}
 	}
 
-	// Add terminator if the original had one
+	// Add terminator on its own line at the beginning
 	if stmt.HasTerminator {
-		sb.WriteString(".")
+		sb.WriteString("\n.")
 	}
 
 	return sb.String()

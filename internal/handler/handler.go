@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"strings"
 	"sync"
 
 	"github.com/cybersorcerer/smpe_ls/internal/completion"
@@ -11,6 +12,7 @@ import (
 	"github.com/cybersorcerer/smpe_ls/internal/logger"
 	"github.com/cybersorcerer/smpe_ls/internal/parser"
 	"github.com/cybersorcerer/smpe_ls/internal/semantic"
+	"github.com/cybersorcerer/smpe_ls/internal/symbols"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
@@ -66,6 +68,7 @@ type Handler struct {
 	diagnosticsProvider *diagnostics.Provider
 	semanticProvider    *semantic.Provider
 	formattingProvider  *formatting.Provider
+	symbolProvider      *symbols.Provider
 	server              *lsp.Server
 	diagnosticsConfig   *DiagnosticsConfig
 }
@@ -89,6 +92,7 @@ func New(version string, dataPath string) (*Handler, error) {
 	diagnosticsProvider := diagnostics.NewProvider(store)
 	semanticProvider := semantic.NewProvider(store.Statements)
 	formattingProvider := formatting.NewProvider()
+	symbolProvider := symbols.NewProvider()
 
 	return &Handler{
 		version:             version,
@@ -100,6 +104,7 @@ func New(version string, dataPath string) (*Handler, error) {
 		diagnosticsProvider: diagnosticsProvider,
 		semanticProvider:    semanticProvider,
 		formattingProvider:  formattingProvider,
+		symbolProvider:      symbolProvider,
 		diagnosticsConfig:   DefaultDiagnosticsConfig(),
 	}, nil
 }
@@ -168,6 +173,7 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 			HoverProvider:                   true,
 			DocumentFormattingProvider:      true,
 			DocumentRangeFormattingProvider: true,
+			DocumentSymbolProvider:          true,
 			SemanticTokensProvider: &lsp.SemanticTokensOptions{
 				Legend: lsp.SemanticTokensLegend{
 					TokenTypes: []string{
@@ -515,4 +521,34 @@ func (h *Handler) TextDocumentRangeFormatting(params lsp.DocumentRangeFormatting
 // UpdateFormattingConfig updates the formatting configuration
 func (h *Handler) UpdateFormattingConfig(config *formatting.Config) {
 	h.formattingProvider.SetConfig(config)
+}
+
+// TextDocumentDocumentSymbol handles document symbol request
+func (h *Handler) TextDocumentDocumentSymbol(params lsp.DocumentSymbolParams) ([]lsp.DocumentSymbol, error) {
+	logger.Debug("Document symbols requested for: %s", params.TextDocument.URI)
+
+	h.documentsMutex.RLock()
+	text, textExists := h.documents[params.TextDocument.URI]
+	doc, hasDoc := h.parsedDocuments[params.TextDocument.URI]
+	h.documentsMutex.RUnlock()
+
+	if !textExists {
+		logger.Debug("Document not found: %s", params.TextDocument.URI)
+		return nil, nil
+	}
+
+	// Ensure we have a parsed document
+	if !hasDoc {
+		logger.Debug("No parsed document found for symbols, parsing now: %s", params.TextDocument.URI)
+		h.documentsMutex.Lock()
+		doc = h.parser.Parse(text)
+		h.parsedDocuments[params.TextDocument.URI] = doc
+		h.documentsMutex.Unlock()
+	}
+
+	lines := strings.Split(text, "\n")
+	symbols := h.symbolProvider.GetDocumentSymbols(doc, lines)
+	logger.Debug("Document symbols returned %d symbols", len(symbols))
+
+	return symbols, nil
 }

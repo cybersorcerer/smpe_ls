@@ -2,14 +2,11 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
-## What's New in 0.7.5
+## What's New in 0.7.6
 
-- **Document Formatting** - Format your SMP/E documents with `Shift+Alt+F` (Windows/Linux) or `Shift+Option+F` (macOS)
-- **Column Rulers** - Visual guides at columns 72 and 80 for mainframe card boundaries
-- **Improved Hover Information** - Required and optional operands are now displayed separately
-- **UTF-8 Support** - Fixed character position calculation for non-ASCII characters
-- **Dynamic Settings** - Diagnostic settings now apply immediately without restart
-- **Bug Fixes** - Operand completion, inline data handling, and DISTLIB validation improvements
+- **Document Symbols / Outline View** - Navigate your SMP/E files using the Outline panel (`Cmd+Shift+O`)
+- **Whitespace Tolerance** - Parser now accepts `++ VER` syntax (formatting corrects to `++VER`)
+- **Improved Formatting** - Statement terminator (`.`) now always on its own line
 
 See the [CHANGELOG](CHANGELOG.md) for full details.
 
@@ -19,6 +16,7 @@ See the [CHANGELOG](CHANGELOG.md) for full details.
 - **Code Completion** - Context-sensitive completion for MCS statements and operands
 - **Diagnostics** - Real-time validation with error and warning messages
 - **Hover Information** - Documentation when hovering over statements and operands
+- **Document Symbols** - Outline view and quick navigation (`Cmd+Shift+O`)
 - **Column Rulers** - Visual guides at columns 72 and 80 (mainframe card boundaries)
 - **Document Formatting** - Auto-format SMP/E statements
 
@@ -40,12 +38,12 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 
 | Platform | File |
 |----------|------|
-| Windows x64 | `vscode-smpe-win32-x64-0.7.5.vsix` |
-| Windows ARM64 | `vscode-smpe-win32-arm64-0.7.5.vsix` |
-| macOS Apple Silicon | `vscode-smpe-darwin-arm64-0.7.5.vsix` |
-| macOS Intel | `vscode-smpe-darwin-x64-0.7.5.vsix` |
-| Linux x64 | `vscode-smpe-linux-x64-0.7.5.vsix` |
-| Linux ARM64 | `vscode-smpe-linux-arm64-0.7.5.vsix` |
+| Windows x64 | `vscode-smpe-win32-x64-0.7.6.vsix` |
+| Windows ARM64 | `vscode-smpe-win32-arm64-0.7.6.vsix` |
+| macOS Apple Silicon | `vscode-smpe-darwin-arm64-0.7.6.vsix` |
+| macOS Intel | `vscode-smpe-darwin-x64-0.7.6.vsix` |
+| Linux x64 | `vscode-smpe-linux-x64-0.7.6.vsix` |
+| Linux ARM64 | `vscode-smpe-linux-arm64-0.7.6.vsix` |
 
 ### Installation in VS Code
 
@@ -57,7 +55,7 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 Alternatively via terminal:
 
 ```bash
-code --install-extension vscode-smpe-darwin-arm64-0.7.5.vsix
+code --install-extension vscode-smpe-darwin-arm64-0.7.6.vsix
 ```
 
 The Language Server is already included in the extension - no additional installation required.
@@ -118,7 +116,7 @@ The extension activates automatically for files with the following extensions:
 ## Known Limitations
 
 - This is an alpha version
-- Not all SMP/E statements are fully implemented
+- There might be bugs
 
 ## License
 
