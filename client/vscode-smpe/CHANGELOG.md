@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.7.7-alpha] - 2026
+
+### Added
+
+- **Go to Definition** - Navigate to SYSMOD/FMID definitions within the same file (`F12` or `Cmd+Click`)
+- **Find All References** - Find all references to a SYSMOD or FMID (`Shift+F12`)
+- **Git Commit Hash** - Build includes commit hash for traceability (`smpe_ls --version`)
+
 ## [0.7.6] - 2026
 
 ### Added

@@ -9,3 +9,6 @@ tsconfig.json
 !smpe_ls
 !smpe_ls.exe
 !smpe.json
+!CHANGELOG.md
+!README.md
+!LICENSE

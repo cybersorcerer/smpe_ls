@@ -11,6 +11,7 @@ import (
 	"github.com/cybersorcerer/smpe_ls/internal/hover"
 	"github.com/cybersorcerer/smpe_ls/internal/logger"
 	"github.com/cybersorcerer/smpe_ls/internal/parser"
+	"github.com/cybersorcerer/smpe_ls/internal/references"
 	"github.com/cybersorcerer/smpe_ls/internal/semantic"
 	"github.com/cybersorcerer/smpe_ls/internal/symbols"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
@@ -69,6 +70,7 @@ type Handler struct {
 	semanticProvider    *semantic.Provider
 	formattingProvider  *formatting.Provider
 	symbolProvider      *symbols.Provider
+	referencesProvider  *references.Provider
 	server              *lsp.Server
 	diagnosticsConfig   *DiagnosticsConfig
 }
@@ -93,6 +95,7 @@ func New(version string, dataPath string) (*Handler, error) {
 	semanticProvider := semantic.NewProvider(store.Statements)
 	formattingProvider := formatting.NewProvider()
 	symbolProvider := symbols.NewProvider()
+	referencesProvider := references.NewProvider()
 
 	return &Handler{
 		version:             version,
@@ -105,6 +108,7 @@ func New(version string, dataPath string) (*Handler, error) {
 		semanticProvider:    semanticProvider,
 		formattingProvider:  formattingProvider,
 		symbolProvider:      symbolProvider,
+		referencesProvider:  referencesProvider,
 		diagnosticsConfig:   DefaultDiagnosticsConfig(),
 	}, nil
 }
@@ -174,6 +178,8 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 			DocumentFormattingProvider:      true,
 			DocumentRangeFormattingProvider: true,
 			DocumentSymbolProvider:          true,
+			DefinitionProvider:              true,
+			ReferencesProvider:              true,
 			SemanticTokensProvider: &lsp.SemanticTokensOptions{
 				Legend: lsp.SemanticTokensLegend{
 					TokenTypes: []string{
@@ -551,4 +557,75 @@ func (h *Handler) TextDocumentDocumentSymbol(params lsp.DocumentSymbolParams) ([
 	logger.Debug("Document symbols returned %d symbols", len(symbols))
 
 	return symbols, nil
+}
+
+// TextDocumentDefinition handles go-to-definition request
+func (h *Handler) TextDocumentDefinition(params lsp.DefinitionParams) (*lsp.Location, error) {
+	logger.Debug("Definition requested at %s:%d:%d",
+		params.TextDocument.URI, params.Position.Line, params.Position.Character)
+
+	h.documentsMutex.RLock()
+	text, textExists := h.documents[params.TextDocument.URI]
+	doc, hasDoc := h.parsedDocuments[params.TextDocument.URI]
+	h.documentsMutex.RUnlock()
+
+	if !textExists {
+		logger.Debug("Document not found: %s", params.TextDocument.URI)
+		return nil, nil
+	}
+
+	// Ensure we have a parsed document
+	if !hasDoc {
+		logger.Debug("No parsed document found for definition, parsing now: %s", params.TextDocument.URI)
+		h.documentsMutex.Lock()
+		doc = h.parser.Parse(text)
+		h.parsedDocuments[params.TextDocument.URI] = doc
+		h.documentsMutex.Unlock()
+	}
+
+	location := h.referencesProvider.GetDefinition(doc, text, params.Position.Line, params.Position.Character)
+	if location != nil {
+		location.URI = params.TextDocument.URI
+		logger.Debug("Definition found at line %d", location.Range.Start.Line)
+	} else {
+		logger.Debug("No definition found")
+	}
+
+	return location, nil
+}
+
+// TextDocumentReferences handles find-references request
+func (h *Handler) TextDocumentReferences(params lsp.ReferenceParams) ([]lsp.Location, error) {
+	logger.Debug("References requested at %s:%d:%d (includeDeclaration=%v)",
+		params.TextDocument.URI, params.Position.Line, params.Position.Character, params.Context.IncludeDeclaration)
+
+	h.documentsMutex.RLock()
+	text, textExists := h.documents[params.TextDocument.URI]
+	doc, hasDoc := h.parsedDocuments[params.TextDocument.URI]
+	h.documentsMutex.RUnlock()
+
+	if !textExists {
+		logger.Debug("Document not found: %s", params.TextDocument.URI)
+		return nil, nil
+	}
+
+	// Ensure we have a parsed document
+	if !hasDoc {
+		logger.Debug("No parsed document found for references, parsing now: %s", params.TextDocument.URI)
+		h.documentsMutex.Lock()
+		doc = h.parser.Parse(text)
+		h.parsedDocuments[params.TextDocument.URI] = doc
+		h.documentsMutex.Unlock()
+	}
+
+	locations := h.referencesProvider.GetReferences(doc, text, params.Position.Line, params.Position.Character, params.Context.IncludeDeclaration)
+
+	// Set URI for all locations
+	for i := range locations {
+		locations[i].URI = params.TextDocument.URI
+	}
+
+	logger.Debug("Found %d references", len(locations))
+
+	return locations, nil
 }

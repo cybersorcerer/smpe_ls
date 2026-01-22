@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-0.7.6-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-0.7.7-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -12,6 +12,8 @@ A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Mod
 - **💡 Intelligent Code Completion** - Context-aware completion for statements and operands
 - **🔍 Real-time Diagnostics** - Instant validation of SMP/E syntax and semantics
 - **📖 Hover Documentation** - Inline documentation from IBM SMP/E Reference
+- **🔗 Go to Definition** - Navigate to SYSMOD/FMID definitions
+- **🔎 Find References** - Find all references to a SYSMOD or FMID
 - **📄 Document Symbols** - Outline view and quick navigation
 - **📝 Document Formatting** - Auto-format SMP/E statements
 - **🌍 Multi-platform** - Native binaries for Linux, macOS, and Windows (AMD64 & ARM64)
@@ -104,7 +106,7 @@ smpe_ls --data /path/to/smpe.json
 
 ## 🎯 Supported MCS Statements
 
-### Version 0.7.6 (Current)
+### Version 0.7.7 (Current)
 
 **Control MCS (25 statements with full diagnostics):**
 
@@ -196,7 +198,15 @@ make release
 
 ## 📋 What's New
 
-### Version 0.7.6 (Latest)
+### Version 0.7.7 (Latest)
+
+**New Features:**
+
+- 🔗 **Go to Definition** - Navigate to SYSMOD/FMID definitions (`F12` or `Cmd+Click`)
+- 🔎 **Find All References** - Find all references to a SYSMOD or FMID (`Shift+F12`)
+- 🏷️ **Git Commit Hash** - Build includes commit hash for traceability (`smpe_ls --version`)
+
+### Version 0.7.6
 
 **New Features:**
 
@@ -460,15 +470,8 @@ See [LICENSE](LICENSE) file for the full license text.
 
 ## 🗺️ Roadmap
 
-- [ ] Neovim plugin
-- [ ] Go to Definition
-- [ ] Find References
-- [x] Document Symbols
 - [ ] Code Actions
-- [x] Formatting
-- [x] All MCS statements
-- [ ] SMP/E Command language support
 
 ---
 
-**Made with ❤️ by cybersorcerer**
+**Made with ❤️ by Sir Tobi aka Cybersorcerer**

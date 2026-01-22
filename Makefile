@@ -6,6 +6,8 @@ BUILD_DIR=.
 INSTALL_DIR=$(HOME)/.local/bin
 DATA_INSTALL_DIR=$(HOME)/.local/share/smpe_ls
 DATA_DIR=data
+COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+LDFLAGS=-s -w -X main.commit=$(COMMIT)
 
 all: build
 
@@ -35,8 +37,8 @@ help:
 	@echo "════════════════════════════════════════════════════════════════"
 
 build:
-	@echo "Building $(BINARY_NAME)..."
-	go build -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/smpe_ls
+	@echo "Building $(BINARY_NAME) (commit: $(COMMIT))..."
+	go build -ldflags="-X main.commit=$(COMMIT)" -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/smpe_ls
 	@echo "Build complete: $(BUILD_DIR)/$(BINARY_NAME)"
 
 install: build
@@ -70,22 +72,23 @@ clean-all:
 
 build-all:
 	@echo "Building binaries for all platforms..."
+	@echo "Commit: $(COMMIT)"
 	@mkdir -p dist
 	@echo ""
 	@echo "Building Linux AMD64..."
-	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/smpe_ls-linux-amd64 ./cmd/smpe_ls
+	@GOOS=linux GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_ls-linux-amd64 ./cmd/smpe_ls
 	@echo "Building Linux ARM64..."
-	@GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/smpe_ls-linux-arm64 ./cmd/smpe_ls
+	@GOOS=linux GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_ls-linux-arm64 ./cmd/smpe_ls
 	@echo ""
 	@echo "Building macOS Apple Silicon (ARM64)..."
-	@GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/smpe_ls-macos-arm64 ./cmd/smpe_ls
+	@GOOS=darwin GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_ls-macos-arm64 ./cmd/smpe_ls
 	@echo "Building macOS Intel (AMD64)..."
-	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/smpe_ls-macos-amd64 ./cmd/smpe_ls
+	@GOOS=darwin GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_ls-macos-amd64 ./cmd/smpe_ls
 	@echo ""
 	@echo "Building Windows AMD64..."
-	@GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/smpe_ls-windows-amd64.exe ./cmd/smpe_ls
+	@GOOS=windows GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_ls-windows-amd64.exe ./cmd/smpe_ls
 	@echo "Building Windows ARM64..."
-	@GOOS=windows GOARCH=arm64 go build -ldflags="-s -w" -o dist/smpe_ls-windows-arm64.exe ./cmd/smpe_ls
+	@GOOS=windows GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_ls-windows-arm64.exe ./cmd/smpe_ls
 	@echo ""
 	@echo "All binaries built successfully in dist/"
 	@ls -lh dist/
@@ -188,8 +191,8 @@ vscode: build vscode-compile
 	@echo "3. Open a .smpe file to activate the extension"
 
 package-windows: vscode-deps
-	@echo "Building Windows AMD64 binary..."
-	GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o client/vscode-smpe/smpe_ls.exe ./cmd/smpe_ls
+	@echo "Building Windows AMD64 binary (commit: $(COMMIT))..."
+	GOOS=windows GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_ls.exe ./cmd/smpe_ls
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
 	@echo "Creating VSIX package for Windows..."
@@ -199,8 +202,8 @@ package-windows: vscode-deps
 	@rm -f client/vscode-smpe/smpe_ls.exe
 
 package-windows-arm64: vscode-deps
-	@echo "Building Windows ARM64 binary..."
-	GOOS=windows GOARCH=arm64 go build -ldflags="-s -w" -o client/vscode-smpe/smpe_ls.exe ./cmd/smpe_ls
+	@echo "Building Windows ARM64 binary (commit: $(COMMIT))..."
+	GOOS=windows GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_ls.exe ./cmd/smpe_ls
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
 	@echo "Creating VSIX package for Windows ARM64..."
@@ -210,8 +213,8 @@ package-windows-arm64: vscode-deps
 	@rm -f client/vscode-smpe/smpe_ls.exe
 
 package-linux: vscode-deps
-	@echo "Building Linux AMD64 binary..."
-	GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
+	@echo "Building Linux AMD64 binary (commit: $(COMMIT))..."
+	GOOS=linux GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
 	@echo "Creating VSIX package for Linux..."
@@ -221,8 +224,8 @@ package-linux: vscode-deps
 	@rm -f client/vscode-smpe/smpe_ls
 
 package-linux-arm64: vscode-deps
-	@echo "Building Linux ARM64 binary..."
-	GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
+	@echo "Building Linux ARM64 binary (commit: $(COMMIT))..."
+	GOOS=linux GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
 	@echo "Creating VSIX package for Linux ARM64..."
@@ -232,8 +235,8 @@ package-linux-arm64: vscode-deps
 	@rm -f client/vscode-smpe/smpe_ls
 
 package-macos: vscode-deps
-	@echo "Building macOS ARM64 (Apple Silicon) binary..."
-	GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
+	@echo "Building macOS ARM64 (Apple Silicon) binary (commit: $(COMMIT))..."
+	GOOS=darwin GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
 	@echo "Creating VSIX package for macOS ARM64..."
@@ -243,8 +246,8 @@ package-macos: vscode-deps
 	@rm -f client/vscode-smpe/smpe_ls
 
 package-macos-x64: vscode-deps
-	@echo "Building macOS AMD64 (Intel) binary..."
-	GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
+	@echo "Building macOS AMD64 (Intel) binary (commit: $(COMMIT))..."
+	GOOS=darwin GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
 	@echo "Creating VSIX package for macOS Intel..."

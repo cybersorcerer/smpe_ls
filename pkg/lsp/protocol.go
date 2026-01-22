@@ -134,6 +134,8 @@ type ServerCapabilities struct {
 	DocumentFormattingProvider      bool                   `json:"documentFormattingProvider,omitempty"`
 	DocumentRangeFormattingProvider bool                   `json:"documentRangeFormattingProvider,omitempty"`
 	DocumentSymbolProvider          bool                   `json:"documentSymbolProvider,omitempty"`
+	DefinitionProvider              bool                   `json:"definitionProvider,omitempty"`
+	ReferencesProvider              bool                   `json:"referencesProvider,omitempty"`
 }
 
 // TextDocumentSyncKind values
@@ -276,6 +278,24 @@ type DocumentRangeFormattingParams struct {
 // DocumentSymbolParams represents textDocument/documentSymbol request params
 type DocumentSymbolParams struct {
 	TextDocument TextDocumentIdentifier `json:"textDocument"`
+}
+
+// DefinitionParams represents textDocument/definition request params
+type DefinitionParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+	Position     Position               `json:"position"`
+}
+
+// ReferenceParams represents textDocument/references request params
+type ReferenceParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+	Position     Position               `json:"position"`
+	Context      ReferenceContext       `json:"context"`
+}
+
+// ReferenceContext contains additional context for reference requests
+type ReferenceContext struct {
+	IncludeDeclaration bool `json:"includeDeclaration"`
 }
 
 // DocumentSymbol represents a symbol in a document (hierarchical)

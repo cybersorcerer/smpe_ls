@@ -30,6 +30,8 @@ type Handler interface {
 	TextDocumentFormatting(params DocumentFormattingParams) ([]TextEdit, error)
 	TextDocumentRangeFormatting(params DocumentRangeFormattingParams) ([]TextEdit, error)
 	TextDocumentDocumentSymbol(params DocumentSymbolParams) ([]DocumentSymbol, error)
+	TextDocumentDefinition(params DefinitionParams) (*Location, error)
+	TextDocumentReferences(params ReferenceParams) ([]Location, error)
 	WorkspaceDidChangeConfiguration(params DidChangeConfigurationParams) error
 }
 
@@ -229,10 +231,34 @@ func (s *Server) handleRequest(req *Request) error {
 
 		return s.sendResponse(req.ID, result)
 
+	case "textDocument/definition":
+		var params DefinitionParams
+		if err := json.Unmarshal(req.Params, &params); err != nil {
+			return s.sendErrorResponse(req.ID, InvalidParams, "Invalid params")
+		}
+
+		result, err := s.handler.TextDocumentDefinition(params)
+		if err != nil {
+			return s.sendErrorResponse(req.ID, InternalError, err.Error())
+		}
+
+		return s.sendResponse(req.ID, result)
+
+	case "textDocument/references":
+		var params ReferenceParams
+		if err := json.Unmarshal(req.Params, &params); err != nil {
+			return s.sendErrorResponse(req.ID, InvalidParams, "Invalid params")
+		}
+
+		result, err := s.handler.TextDocumentReferences(params)
+		if err != nil {
+			return s.sendErrorResponse(req.ID, InternalError, err.Error())
+		}
+
+		return s.sendResponse(req.ID, result)
+
 	// Optional capabilities - respond with null to indicate not supported
-	case "textDocument/definition",
-		"textDocument/references",
-		"textDocument/onTypeFormatting",
+	case "textDocument/onTypeFormatting",
 		"textDocument/codeAction",
 		"textDocument/codeLens",
 		"textDocument/rename",

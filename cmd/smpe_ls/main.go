@@ -13,7 +13,8 @@ import (
 )
 
 var (
-	version  = "0.7.6-alpha"
+	version  = "0.7.7-alpha"
+	commit   = "unknown" // Set via ldflags: -X main.commit=...
 	debug    = flag.Bool("debug", false, "Enable debug logging")
 	showVer  = flag.Bool("version", false, "Show version")
 	dataPath = flag.String("data", "", "Path to smpe.json data file (default: ~/.local/share/smpe_ls/smpe.json)")
@@ -55,7 +56,7 @@ func main() {
 	flag.Parse()
 
 	if *showVer {
-		fmt.Printf("smpe_ls version %s\n", version)
+		fmt.Printf("smpe_ls version %s (commit: %s)\n", version, commit)
 		os.Exit(0)
 	}
 
@@ -66,7 +67,7 @@ func main() {
 	}
 	defer logger.Close()
 
-	logger.Info("smpe_ls version %s starting", version)
+	logger.Info("smpe_ls version %s (commit: %s) starting", version, commit)
 
 	// Determine data path
 	finalDataPath := *dataPath
