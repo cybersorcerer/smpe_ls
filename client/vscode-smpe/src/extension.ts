@@ -160,14 +160,17 @@ export function activate(context: vscode.ExtensionContext) {
 		requiredGroup: config.get<boolean>('diagnostics.requiredGroup', true),
 		missingInlineData: config.get<boolean>('diagnostics.missingInlineData', true),
 		unknownSubOperand: config.get<boolean>('diagnostics.unknownSubOperand', true),
-		subOperandValidation: config.get<boolean>('diagnostics.subOperandValidation', true)
+		subOperandValidation: config.get<boolean>('diagnostics.subOperandValidation', true),
+		contentBeyondColumn72: config.get<boolean>('diagnostics.contentBeyondColumn72', true),
+		standaloneCommentBetweenMCS: config.get<boolean>('diagnostics.standaloneCommentBetweenMCS', true)
 	};
 
 	// Build formatting configuration
 	const formattingConfig = {
 		enabled: config.get<boolean>('formatting.enabled', true),
 		indentContinuation: config.get<number>('formatting.indentContinuation', 3),
-		oneOperandPerLine: config.get<boolean>('formatting.oneOperandPerLine', true)
+		oneOperandPerLine: config.get<boolean>('formatting.oneOperandPerLine', true),
+		moveLeadingComments: config.get<boolean>('formatting.moveLeadingComments', false)
 	};
 
 	log(`Diagnostics config: ${JSON.stringify(diagnosticsConfig)}`);
@@ -251,13 +254,16 @@ export function activate(context: vscode.ExtensionContext) {
 					requiredGroup: updatedConfig.get<boolean>('diagnostics.requiredGroup', true),
 					missingInlineData: updatedConfig.get<boolean>('diagnostics.missingInlineData', true),
 					unknownSubOperand: updatedConfig.get<boolean>('diagnostics.unknownSubOperand', true),
-					subOperandValidation: updatedConfig.get<boolean>('diagnostics.subOperandValidation', true)
+					subOperandValidation: updatedConfig.get<boolean>('diagnostics.subOperandValidation', true),
+					contentBeyondColumn72: updatedConfig.get<boolean>('diagnostics.contentBeyondColumn72', true),
+					standaloneCommentBetweenMCS: updatedConfig.get<boolean>('diagnostics.standaloneCommentBetweenMCS', true)
 				};
 
 				const updatedFormattingConfig = {
 					enabled: updatedConfig.get<boolean>('formatting.enabled', true),
 					indentContinuation: updatedConfig.get<number>('formatting.indentContinuation', 3),
-					oneOperandPerLine: updatedConfig.get<boolean>('formatting.oneOperandPerLine', true)
+					oneOperandPerLine: updatedConfig.get<boolean>('formatting.oneOperandPerLine', true),
+					moveLeadingComments: updatedConfig.get<boolean>('formatting.moveLeadingComments', false)
 				};
 
 				// Send notification to server

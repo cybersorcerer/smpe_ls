@@ -19,41 +19,45 @@ import (
 
 // DiagnosticsConfig holds the configuration for which diagnostics to enable/disable
 type DiagnosticsConfig struct {
-	UnknownStatement      bool `json:"unknownStatement"`
-	InvalidLanguageId     bool `json:"invalidLanguageId"`
-	UnbalancedParentheses bool `json:"unbalancedParentheses"`
-	MissingTerminator     bool `json:"missingTerminator"`
-	MissingParameter      bool `json:"missingParameter"`
-	UnknownOperand        bool `json:"unknownOperand"`
-	DuplicateOperand      bool `json:"duplicateOperand"`
-	EmptyOperandParameter bool `json:"emptyOperandParameter"`
-	MissingRequiredOperand bool `json:"missingRequiredOperand"`
-	DependencyViolation   bool `json:"dependencyViolation"`
-	MutuallyExclusive     bool `json:"mutuallyExclusive"`
-	RequiredGroup         bool `json:"requiredGroup"`
-	MissingInlineData     bool `json:"missingInlineData"`
-	UnknownSubOperand     bool `json:"unknownSubOperand"`
-	SubOperandValidation  bool `json:"subOperandValidation"`
+	UnknownStatement            bool `json:"unknownStatement"`
+	InvalidLanguageId           bool `json:"invalidLanguageId"`
+	UnbalancedParentheses       bool `json:"unbalancedParentheses"`
+	MissingTerminator           bool `json:"missingTerminator"`
+	MissingParameter            bool `json:"missingParameter"`
+	UnknownOperand              bool `json:"unknownOperand"`
+	DuplicateOperand            bool `json:"duplicateOperand"`
+	EmptyOperandParameter       bool `json:"emptyOperandParameter"`
+	MissingRequiredOperand      bool `json:"missingRequiredOperand"`
+	DependencyViolation         bool `json:"dependencyViolation"`
+	MutuallyExclusive           bool `json:"mutuallyExclusive"`
+	RequiredGroup               bool `json:"requiredGroup"`
+	MissingInlineData           bool `json:"missingInlineData"`
+	UnknownSubOperand           bool `json:"unknownSubOperand"`
+	SubOperandValidation        bool `json:"subOperandValidation"`
+	ContentBeyondColumn72       bool `json:"contentBeyondColumn72"`
+	StandaloneCommentBetweenMCS bool `json:"standaloneCommentBetweenMCS"`
 }
 
 // DefaultDiagnosticsConfig returns a config with all diagnostics enabled
 func DefaultDiagnosticsConfig() *DiagnosticsConfig {
 	return &DiagnosticsConfig{
-		UnknownStatement:      true,
-		InvalidLanguageId:     true,
-		UnbalancedParentheses: true,
-		MissingTerminator:     true,
-		MissingParameter:      true,
-		UnknownOperand:        true,
-		DuplicateOperand:      true,
-		EmptyOperandParameter: true,
-		MissingRequiredOperand: true,
-		DependencyViolation:   true,
-		MutuallyExclusive:     true,
-		RequiredGroup:         true,
-		MissingInlineData:     true,
-		UnknownSubOperand:     true,
-		SubOperandValidation:  true,
+		UnknownStatement:            true,
+		InvalidLanguageId:           true,
+		UnbalancedParentheses:       true,
+		MissingTerminator:           true,
+		MissingParameter:            true,
+		UnknownOperand:              true,
+		DuplicateOperand:            true,
+		EmptyOperandParameter:       true,
+		MissingRequiredOperand:      true,
+		DependencyViolation:         true,
+		MutuallyExclusive:           true,
+		RequiredGroup:               true,
+		MissingInlineData:           true,
+		UnknownSubOperand:           true,
+		SubOperandValidation:        true,
+		ContentBeyondColumn72:       true,
+		StandaloneCommentBetweenMCS: true,
 	}
 }
 
@@ -140,10 +144,12 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 			RequiredGroup:          opts.RequiredGroup,
 			MissingInlineData:      opts.MissingInlineData,
 			UnknownSubOperand:      opts.UnknownSubOperand,
-			SubOperandValidation:   opts.SubOperandValidation,
+			SubOperandValidation:        opts.SubOperandValidation,
+			ContentBeyondColumn72:       opts.ContentBeyondColumn72,
+			StandaloneCommentBetweenMCS: opts.StandaloneCommentBetweenMCS,
 		}
-		logger.Info("Diagnostics config received from client: MissingRequiredOperand=%v, UnknownOperand=%v, MissingTerminator=%v",
-			opts.MissingRequiredOperand, opts.UnknownOperand, opts.MissingTerminator)
+		logger.Info("Diagnostics config received from client: MissingRequiredOperand=%v, UnknownOperand=%v, ContentBeyondColumn72=%v",
+			opts.MissingRequiredOperand, opts.UnknownOperand, opts.ContentBeyondColumn72)
 	} else {
 		logger.Info("Using default diagnostics config (all enabled)")
 	}
@@ -152,12 +158,13 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 	if params.InitializationOptions != nil && params.InitializationOptions.Formatting != nil {
 		opts := params.InitializationOptions.Formatting
 		h.formattingProvider.SetConfig(&formatting.Config{
-			Enabled:            opts.Enabled,
-			IndentContinuation: opts.IndentContinuation,
-			OneOperandPerLine:  opts.OneOperandPerLine,
+			Enabled:             opts.Enabled,
+			IndentContinuation:  opts.IndentContinuation,
+			OneOperandPerLine:   opts.OneOperandPerLine,
+			MoveLeadingComments: opts.MoveLeadingComments,
 		})
-		logger.Info("Formatting config received from client: Enabled=%v, IndentContinuation=%d, OneOperandPerLine=%v",
-			opts.Enabled, opts.IndentContinuation, opts.OneOperandPerLine)
+		logger.Info("Formatting config received from client: Enabled=%v, IndentContinuation=%d, OneOperandPerLine=%v, MoveLeadingComments=%v",
+			opts.Enabled, opts.IndentContinuation, opts.OneOperandPerLine, opts.MoveLeadingComments)
 	} else {
 		logger.Info("Using default formatting config")
 	}
@@ -350,9 +357,10 @@ func (h *Handler) publishDiagnostics(uri string) {
 		return
 	}
 
-	// Get parsed document from cache
+	// Get parsed document and text from cache
 	h.documentsMutex.RLock()
 	doc, exists := h.parsedDocuments[uri]
+	text, textExists := h.documents[uri]
 	h.documentsMutex.RUnlock()
 
 	if !exists {
@@ -360,27 +368,34 @@ func (h *Handler) publishDiagnostics(uri string) {
 		return
 	}
 
-	// Convert handler config to diagnostics config
-	diagConfig := &diagnostics.Config{
-		UnknownStatement:       h.diagnosticsConfig.UnknownStatement,
-		InvalidLanguageId:      h.diagnosticsConfig.InvalidLanguageId,
-		UnbalancedParentheses:  h.diagnosticsConfig.UnbalancedParentheses,
-		MissingTerminator:      h.diagnosticsConfig.MissingTerminator,
-		MissingParameter:       h.diagnosticsConfig.MissingParameter,
-		UnknownOperand:         h.diagnosticsConfig.UnknownOperand,
-		DuplicateOperand:       h.diagnosticsConfig.DuplicateOperand,
-		EmptyOperandParameter:  h.diagnosticsConfig.EmptyOperandParameter,
-		MissingRequiredOperand: h.diagnosticsConfig.MissingRequiredOperand,
-		DependencyViolation:    h.diagnosticsConfig.DependencyViolation,
-		MutuallyExclusive:      h.diagnosticsConfig.MutuallyExclusive,
-		RequiredGroup:          h.diagnosticsConfig.RequiredGroup,
-		MissingInlineData:      h.diagnosticsConfig.MissingInlineData,
-		UnknownSubOperand:      h.diagnosticsConfig.UnknownSubOperand,
-		SubOperandValidation:   h.diagnosticsConfig.SubOperandValidation,
+	if !textExists {
+		logger.Debug("No document text found for diagnostics: %s", uri)
+		return
 	}
 
-	// Generate diagnostics from AST with config
-	diags := h.diagnosticsProvider.AnalyzeASTWithConfig(doc, diagConfig)
+	// Convert handler config to diagnostics config
+	diagConfig := &diagnostics.Config{
+		UnknownStatement:            h.diagnosticsConfig.UnknownStatement,
+		InvalidLanguageId:           h.diagnosticsConfig.InvalidLanguageId,
+		UnbalancedParentheses:       h.diagnosticsConfig.UnbalancedParentheses,
+		MissingTerminator:           h.diagnosticsConfig.MissingTerminator,
+		MissingParameter:            h.diagnosticsConfig.MissingParameter,
+		UnknownOperand:              h.diagnosticsConfig.UnknownOperand,
+		DuplicateOperand:            h.diagnosticsConfig.DuplicateOperand,
+		EmptyOperandParameter:       h.diagnosticsConfig.EmptyOperandParameter,
+		MissingRequiredOperand:      h.diagnosticsConfig.MissingRequiredOperand,
+		DependencyViolation:         h.diagnosticsConfig.DependencyViolation,
+		MutuallyExclusive:           h.diagnosticsConfig.MutuallyExclusive,
+		RequiredGroup:               h.diagnosticsConfig.RequiredGroup,
+		MissingInlineData:           h.diagnosticsConfig.MissingInlineData,
+		UnknownSubOperand:           h.diagnosticsConfig.UnknownSubOperand,
+		SubOperandValidation:        h.diagnosticsConfig.SubOperandValidation,
+		ContentBeyondColumn72:       h.diagnosticsConfig.ContentBeyondColumn72,
+		StandaloneCommentBetweenMCS: h.diagnosticsConfig.StandaloneCommentBetweenMCS,
+	}
+
+	// Generate diagnostics from AST with config and text (for column 72 checking)
+	diags := h.diagnosticsProvider.AnalyzeASTWithConfigAndText(doc, diagConfig, text)
 
 	params := map[string]interface{}{
 		"uri":         uri,
@@ -414,10 +429,12 @@ func (h *Handler) WorkspaceDidChangeConfiguration(params lsp.DidChangeConfigurat
 			RequiredGroup:          opts.RequiredGroup,
 			MissingInlineData:      opts.MissingInlineData,
 			UnknownSubOperand:      opts.UnknownSubOperand,
-			SubOperandValidation:   opts.SubOperandValidation,
+			SubOperandValidation:        opts.SubOperandValidation,
+			ContentBeyondColumn72:       opts.ContentBeyondColumn72,
+			StandaloneCommentBetweenMCS: opts.StandaloneCommentBetweenMCS,
 		}
-		logger.Info("Updated diagnostics config: MissingRequiredOperand=%v, UnknownOperand=%v",
-			opts.MissingRequiredOperand, opts.UnknownOperand)
+		logger.Info("Updated diagnostics config: MissingRequiredOperand=%v, ContentBeyondColumn72=%v",
+			opts.MissingRequiredOperand, opts.ContentBeyondColumn72)
 
 		// Republish diagnostics for all open documents
 		h.republishAllDiagnostics()
@@ -427,12 +444,13 @@ func (h *Handler) WorkspaceDidChangeConfiguration(params lsp.DidChangeConfigurat
 	if params.Settings != nil && params.Settings.Smpe != nil && params.Settings.Smpe.Formatting != nil {
 		opts := params.Settings.Smpe.Formatting
 		h.formattingProvider.SetConfig(&formatting.Config{
-			Enabled:            opts.Enabled,
-			IndentContinuation: opts.IndentContinuation,
-			OneOperandPerLine:  opts.OneOperandPerLine,
+			Enabled:             opts.Enabled,
+			IndentContinuation:  opts.IndentContinuation,
+			OneOperandPerLine:   opts.OneOperandPerLine,
+			MoveLeadingComments: opts.MoveLeadingComments,
 		})
-		logger.Info("Updated formatting config: Enabled=%v, IndentContinuation=%d, OneOperandPerLine=%v",
-			opts.Enabled, opts.IndentContinuation, opts.OneOperandPerLine)
+		logger.Info("Updated formatting config: Enabled=%v, IndentContinuation=%d, OneOperandPerLine=%v, MoveLeadingComments=%v",
+			opts.Enabled, opts.IndentContinuation, opts.OneOperandPerLine, opts.MoveLeadingComments)
 	}
 
 	return nil

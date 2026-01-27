@@ -543,13 +543,18 @@ func (p *Provider) getOperandCompletionsAST(stmt *parser.Node, text string, line
 // getOperandValueCompletionsAST returns value completions for operand parameters using AST
 func (p *Provider) getOperandValueCompletionsAST(operandNode *parser.Node, fullText string, line int, character int) []lsp.CompletionItem {
 	if operandNode.OperandDef == nil {
+		logger.Debug("getOperandValueCompletionsAST: operandNode.OperandDef is nil for %s", operandNode.Name)
 		return nil
 	}
+
+	logger.Debug("getOperandValueCompletionsAST: operand=%s, Parameter=%q, len(Values)=%d",
+		operandNode.Name, operandNode.OperandDef.Parameter, len(operandNode.OperandDef.Values))
 
 	// Check if this operand has sub-operands
 	// Sub-operands are identified by the parent operand having a Parameter field with parentheses
 	// e.g., "DSN(dsname) NUMBER(number)" indicates DSN and NUMBER are sub-operands
 	if len(operandNode.OperandDef.Values) > 0 && operandNode.OperandDef.Parameter != "" && strings.Contains(operandNode.OperandDef.Parameter, "(") {
+		logger.Debug("getOperandValueCompletionsAST: Using sub-operand path for %s", operandNode.Name)
 		// These are sub-operands (e.g., DSN, NUMBER for FROMDS)
 		var items []lsp.CompletionItem
 		for _, subOp := range operandNode.OperandDef.Values {
@@ -559,8 +564,10 @@ func (p *Provider) getOperandValueCompletionsAST(operandNode *parser.Node, fullT
 
 			// Determine if this sub-operand needs a parameter
 			insertText := primaryName
+			logger.Debug("getOperandValueCompletionsAST: subOp %s, Parameter=%q", primaryName, subOp.Parameter)
 			if subOp.Parameter != "" {
 				insertText = primaryName + "($0)"
+				logger.Debug("getOperandValueCompletionsAST: Adding () to %s -> %s", primaryName, insertText)
 			}
 
 			item := lsp.CompletionItem{
@@ -597,6 +604,7 @@ func (p *Provider) getOperandValueCompletionsAST(operandNode *parser.Node, fullT
 	}
 
 	// Otherwise, these are simple enumerated value completions (e.g., LEPARM attributes)
+	logger.Debug("getOperandValueCompletionsAST: Fallback to enumerated values for %s", operandNode.Name)
 	if len(operandNode.OperandDef.Values) > 0 {
 		var items []lsp.CompletionItem
 		for _, value := range operandNode.OperandDef.Values {

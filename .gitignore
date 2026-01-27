@@ -42,5 +42,6 @@ cmd/smpe_test/smpe_test
 # Others
 .claude/
 syntax_diagrams/
+TODO.md
 
 

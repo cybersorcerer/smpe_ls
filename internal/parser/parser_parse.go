@@ -185,10 +185,11 @@ func (p *Parser) Parse(text string) *Document {
 						}
 
 						// Count non-empty lines after this statement as inline data
-						// Skip comment lines (lines starting with /* after trimming)
+						// ALL non-empty lines count - including lines starting with /*
+						// (those are part of embedded code like REXX, not SMP/E comments)
 						for lineIdx := stmt.StartLine + len(stmt.Lines); lineIdx < endLine; lineIdx++ {
 							line := strings.TrimSpace(cleanLines[lineIdx])
-							if line != "" && !strings.HasPrefix(line, "/*") {
+							if line != "" {
 								currentStatement.HasInlineData = true
 								currentStatement.InlineDataLines++
 							}

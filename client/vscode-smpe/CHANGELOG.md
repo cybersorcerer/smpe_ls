@@ -2,6 +2,33 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.7.8-alpha] - 2026
+
+### Added
+
+- **Column 72 Diagnostic** - Error diagnostic when content extends beyond column 72 (configurable via `smpe.diagnostics.contentBeyondColumn72`)
+- **Standalone Comment Diagnostic** - Error diagnostic for comments outside MCS statements (configurable via `smpe.diagnostics.standaloneCommentBetweenMCS`)
+  - Comments before first MCS statement
+  - Comments between MCS statements (except for inline data)
+  - Comments after last MCS statement (except for inline data)
+- **Move Standalone Comments** - Optional formatting to automatically move standalone comments into the next MCS statement (configurable via `smpe.formatting.moveLeadingComments`)
+  - Comments before first MCS statement → moved into first statement
+  - Comments between MCS statements → moved into following statement
+  - Comments after last MCS statement → cannot be moved (diagnostic only)
+
+### Changed
+
+- **Formatting** - Now enforces IBM SMP/E column 72 limit, wraps long lines automatically
+- **Comment Preservation** - Formatting now preserves comments and places them correctly per IBM rules
+- **Inline Data Protection** - Formatting no longer modifies statements that expect inline data
+
+### Bug Fixes
+
+- Added missing SYMPATH to ++HFS
+- Add missing PRE/POST to SHSCRIPT
+- Fixed "Missing inline data required" diag if SHSCRIPT is defined
+- Fixed operand length Diagnostics
+
 ## [0.7.7-alpha] - 2026
 
 ### Added

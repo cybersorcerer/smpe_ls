@@ -1,0 +1,48 @@
+++PTF(UJ12345). /* Test 1: Simple PTF statement */
+
+++PTF(UJ12346) /* Test 2: PTF with operands */
+   REWORK(20250101)
+   DESCRIPTION('This is a test PTF for formatting validation').
+
+++APAR(AO12345) REWORK(20250101) DESCRIPTION('APAR fix'). /* Test 3 */
+
+++FUNCTION(HBB7790) /* Test 4: Comment preservation */
+   DESCRIPTION('Base function for testing').
+
+++VER(Z038) /* Test 5: VER statement with FMID */
+   FMID(HBB7790).
+
+++HOLD(UJ12345) /* Test 6: HOLD with required operands */
+   ERROR
+   FMID(HBB7790)
+   REASON(AO12345).
+
+++MAC(MYMACRO) /* Test 7: MAC with inline data */
+   DISTLIB(AMACLIB)
+   SYSLIB(SMACLIB).
+         MACRO
+         MYMACRO
+         MEND
+
+++SRC(MYSOURCE) /* Test 8: SRC statement */
+   DISTLIB(ASRCLIB)
+   SYSLIB(SSRCLIB).
+* Sample source code
+* This is inline data
+
+++PTF(UJ99999) DESCRIPTION('This line is intentionally very long to exceed column 72 boundary for testing'). /* Test 9 */
+
+++VER(Z038) FMID(HBB7790).                                              IGNORED
+
+++PRODUCT(PROD001,01.00.00) /* Test 11: PRODUCT */
+   SREL(Z038)
+   DESCRIPTION('Test Product').
+
+++APAR(AO99999) /* Test 12: Long DESCRIPTION */
+   DESCRIPTION('This is a very long description text that will need to be wrapped at column 72 according to IBM SMP/E formatting rules')
+   REWORK(20260101). /* This is valid
+                        according to IBM Dokumentation */
+
+++PTF(UJ11111). /* Test 13: Valid - comment on terminator line */
+/* This standalone comment causes SMP/E syntax error! */
+++PTF(UJ22222). /* Test 14: After invalid comment */

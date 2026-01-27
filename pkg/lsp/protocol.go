@@ -196,21 +196,23 @@ type InitializationOptions struct {
 
 // DiagnosticsOptions configures which diagnostics are enabled
 type DiagnosticsOptions struct {
-	UnknownStatement       bool `json:"unknownStatement"`
-	InvalidLanguageId      bool `json:"invalidLanguageId"`
-	UnbalancedParentheses  bool `json:"unbalancedParentheses"`
-	MissingTerminator      bool `json:"missingTerminator"`
-	MissingParameter       bool `json:"missingParameter"`
-	UnknownOperand         bool `json:"unknownOperand"`
-	DuplicateOperand       bool `json:"duplicateOperand"`
-	EmptyOperandParameter  bool `json:"emptyOperandParameter"`
-	MissingRequiredOperand bool `json:"missingRequiredOperand"`
-	DependencyViolation    bool `json:"dependencyViolation"`
-	MutuallyExclusive      bool `json:"mutuallyExclusive"`
-	RequiredGroup          bool `json:"requiredGroup"`
-	MissingInlineData      bool `json:"missingInlineData"`
-	UnknownSubOperand      bool `json:"unknownSubOperand"`
-	SubOperandValidation   bool `json:"subOperandValidation"`
+	UnknownStatement            bool `json:"unknownStatement"`
+	InvalidLanguageId           bool `json:"invalidLanguageId"`
+	UnbalancedParentheses       bool `json:"unbalancedParentheses"`
+	MissingTerminator           bool `json:"missingTerminator"`
+	MissingParameter            bool `json:"missingParameter"`
+	UnknownOperand              bool `json:"unknownOperand"`
+	DuplicateOperand            bool `json:"duplicateOperand"`
+	EmptyOperandParameter       bool `json:"emptyOperandParameter"`
+	MissingRequiredOperand      bool `json:"missingRequiredOperand"`
+	DependencyViolation         bool `json:"dependencyViolation"`
+	MutuallyExclusive           bool `json:"mutuallyExclusive"`
+	RequiredGroup               bool `json:"requiredGroup"`
+	MissingInlineData           bool `json:"missingInlineData"`
+	UnknownSubOperand           bool `json:"unknownSubOperand"`
+	SubOperandValidation        bool `json:"subOperandValidation"`
+	ContentBeyondColumn72       bool `json:"contentBeyondColumn72"`
+	StandaloneCommentBetweenMCS bool `json:"standaloneCommentBetweenMCS"`
 }
 
 // InitializeParams represents the initialize request parameters
@@ -251,9 +253,10 @@ type SmpeSettings struct {
 
 // FormattingOptions configures document formatting behavior
 type FormattingOptions struct {
-	Enabled            bool `json:"enabled"`
-	IndentContinuation int  `json:"indentContinuation"`
-	OneOperandPerLine  bool `json:"oneOperandPerLine"`
+	Enabled             bool `json:"enabled"`
+	IndentContinuation  int  `json:"indentContinuation"`
+	OneOperandPerLine   bool `json:"oneOperandPerLine"`
+	MoveLeadingComments bool `json:"moveLeadingComments"`
 }
 
 // DocumentFormattingParams represents textDocument/formatting request params

@@ -2,7 +2,7 @@
   "name": "vscode-smpe",
   "displayName": "SMP/E Language Support",
   "description": "Language support for SMP/E MCS statements",
-  "version": "0.7.7-alpha",
+  "version": "0.7.8-alpha",
   "publisher": "cybersorcerer",
   "license": "AGPL-3.0",
   "repository": {
@@ -55,7 +55,7 @@
         },
         "smpe.debug": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "description": "Enable debug logging"
         },
         "smpe.diagnostics.unknownStatement": {
@@ -133,6 +133,16 @@
           "default": true,
           "description": "Report sub-operand validation errors (empty/too long)"
         },
+        "smpe.diagnostics.contentBeyondColumn72": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report content that extends beyond column 72 (will be ignored by SMP/E)"
+        },
+        "smpe.diagnostics.standaloneCommentBetweenMCS": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report standalone comments between MCS statements (causes SMP/E syntax error)"
+        },
         "smpe.formatting.enabled": {
           "type": "boolean",
           "default": true,
@@ -140,7 +150,7 @@
         },
         "smpe.formatting.indentContinuation": {
           "type": "integer",
-          "default": 3,
+          "default": 4,
           "minimum": 1,
           "maximum": 10,
           "description": "Number of spaces to indent continuation lines"
@@ -154,6 +164,11 @@
           "type": "boolean",
           "default": false,
           "description": "Automatically format document when saving"
+        },
+        "smpe.formatting.moveLeadingComments": {
+          "type": "boolean",
+          "default": true,
+          "description": "Move comments from before first statement into the statement during formatting"
         },
         "smpe.editor.showColumnRulers": {
           "type": "boolean",

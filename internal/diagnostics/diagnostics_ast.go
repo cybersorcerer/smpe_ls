@@ -1,6 +1,7 @@
 package diagnostics
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -11,43 +12,51 @@ import (
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
+// MaxColumn is the maximum column for SMP/E content (columns 1-72)
+// Columns 73-80 are ignored by SMP/E
+const MaxColumn = 72
+
 // Config holds the configuration for which diagnostics to enable/disable
 type Config struct {
-	UnknownStatement       bool
-	InvalidLanguageId      bool
-	UnbalancedParentheses  bool
-	MissingTerminator      bool
-	MissingParameter       bool
-	UnknownOperand         bool
-	DuplicateOperand       bool
-	EmptyOperandParameter  bool
-	MissingRequiredOperand bool
-	DependencyViolation    bool
-	MutuallyExclusive      bool
-	RequiredGroup          bool
-	MissingInlineData      bool
-	UnknownSubOperand      bool
-	SubOperandValidation   bool
+	UnknownStatement            bool
+	InvalidLanguageId           bool
+	UnbalancedParentheses       bool
+	MissingTerminator           bool
+	MissingParameter            bool
+	UnknownOperand              bool
+	DuplicateOperand            bool
+	EmptyOperandParameter       bool
+	MissingRequiredOperand      bool
+	DependencyViolation         bool
+	MutuallyExclusive           bool
+	RequiredGroup               bool
+	MissingInlineData           bool
+	UnknownSubOperand           bool
+	SubOperandValidation        bool
+	ContentBeyondColumn72       bool
+	StandaloneCommentBetweenMCS bool
 }
 
 // DefaultConfig returns a config with all diagnostics enabled
 func DefaultConfig() *Config {
 	return &Config{
-		UnknownStatement:       true,
-		InvalidLanguageId:      true,
-		UnbalancedParentheses:  true,
-		MissingTerminator:      true,
-		MissingParameter:       true,
-		UnknownOperand:         true,
-		DuplicateOperand:       true,
-		EmptyOperandParameter:  true,
-		MissingRequiredOperand: true,
-		DependencyViolation:    true,
-		MutuallyExclusive:      true,
-		RequiredGroup:          true,
-		MissingInlineData:      true,
-		UnknownSubOperand:      true,
-		SubOperandValidation:   true,
+		UnknownStatement:            true,
+		InvalidLanguageId:           true,
+		UnbalancedParentheses:       true,
+		MissingTerminator:           true,
+		MissingParameter:            true,
+		UnknownOperand:              true,
+		DuplicateOperand:            true,
+		EmptyOperandParameter:       true,
+		MissingRequiredOperand:      true,
+		DependencyViolation:         true,
+		MutuallyExclusive:           true,
+		RequiredGroup:               true,
+		MissingInlineData:           true,
+		UnknownSubOperand:           true,
+		SubOperandValidation:        true,
+		ContentBeyondColumn72:       true,
+		StandaloneCommentBetweenMCS: true,
 	}
 }
 
@@ -71,6 +80,12 @@ func (p *Provider) AnalyzeAST(doc *parser.Document) []lsp.Diagnostic {
 
 // AnalyzeASTWithConfig analyzes an AST document and returns diagnostics based on config
 func (p *Provider) AnalyzeASTWithConfig(doc *parser.Document, config *Config) []lsp.Diagnostic {
+	return p.AnalyzeASTWithConfigAndText(doc, config, "")
+}
+
+// AnalyzeASTWithConfigAndText analyzes an AST document and returns diagnostics based on config
+// The text parameter is needed for column 72 checking
+func (p *Provider) AnalyzeASTWithConfigAndText(doc *parser.Document, config *Config, text string) []lsp.Diagnostic {
 	logger.Debug("Analyzing AST for diagnostics")
 
 	if config == nil {
@@ -80,6 +95,11 @@ func (p *Provider) AnalyzeASTWithConfig(doc *parser.Document, config *Config) []
 	// Initialize as empty array to ensure it serializes as [] not null in JSON
 	diagnostics := make([]lsp.Diagnostic, 0)
 
+	// Check for content beyond column 72 (needs original text)
+	if config.ContentBeyondColumn72 && text != "" {
+		diagnostics = append(diagnostics, p.checkContentBeyondColumn72(text)...)
+	}
+
 	// Analyze each statement in the AST
 	for _, stmt := range doc.Statements {
 		diagnostics = append(diagnostics, p.analyzeStatementWithConfig(stmt, config)...)
@@ -88,6 +108,11 @@ func (p *Provider) AnalyzeASTWithConfig(doc *parser.Document, config *Config) []
 	// Check for statements expecting inline data that might be missing it
 	if config.MissingInlineData {
 		diagnostics = append(diagnostics, p.checkMissingInlineData(doc)...)
+	}
+
+	// Check for standalone comments between MCS statements
+	if config.StandaloneCommentBetweenMCS {
+		diagnostics = append(diagnostics, p.checkStandaloneCommentsBetweenMCS(doc, text)...)
 	}
 
 	logger.Debug("Found %d diagnostics from AST", len(diagnostics))
@@ -291,6 +316,28 @@ func (p *Provider) validateOperandsASTWithConfig(stmt *parser.Node, operands map
 							lsp.SeverityError,
 							"Operand '"+name+"' requires a parameter: "+op.Parameter,
 						))
+					}
+				}
+
+				// Check length constraints for operand parameters
+				// Only check if operand has a length defined and has a parameter value
+				if op.Length > 0 {
+					for _, child := range opNode.Children {
+						if child.Type == parser.NodeTypeParameter {
+							paramValue := strings.TrimSpace(child.Value)
+							// Remove surrounding quotes if present (for string values)
+							if len(paramValue) >= 2 && paramValue[0] == '\'' && paramValue[len(paramValue)-1] == '\'' {
+								paramValue = paramValue[1 : len(paramValue)-1]
+							}
+							if paramValue != "" && len(paramValue) > op.Length {
+								diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+									child,
+									lsp.SeverityWarning,
+									fmt.Sprintf("⚠️ Operand '%s' parameter exceeds maximum length (%d > %d)", name, len(paramValue), op.Length),
+								))
+							}
+							break
+						}
 					}
 				}
 
@@ -519,6 +566,231 @@ func (p *Provider) validateOperandsASTWithConfig(stmt *parser.Node, operands map
 	return diagnostics
 }
 
+// checkContentBeyondColumn72 checks for content that extends beyond column 72
+// Per IBM documentation, columns 73-80 are ignored by SMP/E
+func (p *Provider) checkContentBeyondColumn72(text string) []lsp.Diagnostic {
+	var diagnostics []lsp.Diagnostic
+	lines := strings.Split(text, "\n")
+
+	for lineNum, line := range lines {
+		// Skip empty lines
+		if len(line) == 0 {
+			continue
+		}
+
+		// Check if line has content beyond column 72 (0-indexed: position 72+)
+		// We need to count runes, not bytes, for proper Unicode support
+		runes := []rune(line)
+		if len(runes) > MaxColumn {
+			// Check if the content beyond column 72 is just whitespace
+			beyondContent := strings.TrimSpace(string(runes[MaxColumn:]))
+			if beyondContent != "" {
+				// There's actual content beyond column 72
+				diagnostics = append(diagnostics, lsp.Diagnostic{
+					Range: lsp.Range{
+						Start: lsp.Position{
+							Line:      lineNum,
+							Character: MaxColumn,
+						},
+						End: lsp.Position{
+							Line:      lineNum,
+							Character: len(runes),
+						},
+					},
+					Severity: lsp.SeverityError,
+					Source:   "smpe_ls",
+					Message:  "🔴 Content beyond column 72 will be ignored by SMP/E",
+				})
+			}
+		}
+	}
+
+	return diagnostics
+}
+
+// checkStandaloneCommentsBetweenMCS checks for comments that stand alone between MCS statements
+// Per IBM rules: Comments are allowed on the same line as the terminator (.) and can span multiple lines,
+// but a comment that starts on a NEW line between statements causes a SMP/E syntax error.
+// This also applies to:
+// - Comments BEFORE the first statement in the file
+// - Comments AFTER the last statement in the file
+// Note: Statements with inline_data (++MAC, ++SRC, etc.) are excluded from this check
+// because comments after them are part of inline data.
+func (p *Provider) checkStandaloneCommentsBetweenMCS(doc *parser.Document, text string) []lsp.Diagnostic {
+	var diagnostics []lsp.Diagnostic
+
+	if text == "" {
+		return diagnostics
+	}
+
+	lines := strings.Split(text, "\n")
+
+	// Helper function to find the end line of a statement (including terminator)
+	findStmtEndLine := func(stmt *parser.Node) int {
+		endLine := stmt.Position.Line
+		for _, child := range stmt.Children {
+			if child.Position.Line > endLine {
+				endLine = child.Position.Line
+			}
+		}
+
+		// Also check for the terminator line - it might be on a later line
+		// Search from endLine forward until we find the terminator or next statement
+		for i := endLine; i < len(lines); i++ {
+			line := lines[i]
+			// Remove comments to find the actual terminator
+			cleanLine := line
+			for {
+				start := strings.Index(cleanLine, "/*")
+				if start == -1 {
+					break
+				}
+				end := strings.Index(cleanLine[start:], "*/")
+				if end == -1 {
+					cleanLine = cleanLine[:start]
+					break
+				}
+				cleanLine = cleanLine[:start] + cleanLine[start+end+2:]
+			}
+			cleanLine = strings.TrimSpace(cleanLine)
+
+			if strings.HasSuffix(cleanLine, ".") || cleanLine == "." {
+				endLine = i
+				break
+			}
+			// Stop if we hit another statement
+			if strings.HasPrefix(strings.TrimSpace(line), "++") && i > stmt.Position.Line {
+				break
+			}
+		}
+		return endLine
+	}
+
+	// Helper function to check if a statement expects inline data
+	// A statement expects inline data if:
+	// 1. inline_data is true in smpe.json AND
+	// 2. NO external data source operands (FROMDS, RELFILE, TXLIB) AND
+	// 3. NO DELETE operand (DELETE means deletion mode, no inline data needed)
+	stmtExpectsInlineData := func(stmt *parser.Node) bool {
+		// First check if statement definition indicates inline data
+		if stmt.StatementDef == nil || !stmt.StatementDef.InlineData {
+			return false
+		}
+
+		// Check if statement has operands that indicate data is NOT inline
+		// FROMDS, RELFILE, TXLIB mean data comes from elsewhere
+		// DELETE means the element is being deleted (no inline data needed)
+		for _, child := range stmt.Children {
+			if child.Type == parser.NodeTypeOperand {
+				opName := child.Name
+				if opName == "FROMDS" || opName == "RELFILE" || opName == "TXLIB" || opName == "DELETE" {
+					return false
+				}
+			}
+		}
+
+		return true
+	}
+
+	// Helper function to check for standalone comments in a line range
+	// Returns the number of comment lines found (for tracking multi-line comments)
+	checkLinesForStandaloneComments := func(startLine, endLine int, isBeforeFirstStmt bool) {
+		for lineNum := startLine; lineNum < endLine; lineNum++ {
+			if lineNum >= len(lines) {
+				break
+			}
+
+			line := lines[lineNum]
+			trimmed := strings.TrimSpace(line)
+
+			// Skip empty lines
+			if trimmed == "" {
+				continue
+			}
+
+			// Check if this line starts a comment (/* at the beginning or after whitespace only)
+			if strings.HasPrefix(trimmed, "/*") {
+				// This is a standalone comment - ERROR
+				var message string
+				if isBeforeFirstStmt {
+					message = "🔴 Comment not allowed before first MCS statement - SMP/E syntax error"
+				} else {
+					message = "🔴 Comment not allowed between MCS statements - SMP/E syntax error"
+				}
+				diagnostics = append(diagnostics, lsp.Diagnostic{
+					Range: lsp.Range{
+						Start: lsp.Position{
+							Line:      lineNum,
+							Character: strings.Index(line, "/*"),
+						},
+						End: lsp.Position{
+							Line:      lineNum,
+							Character: len(line),
+						},
+					},
+					Severity: lsp.SeverityError,
+					Source:   "smpe_ls",
+					Message:  message,
+				})
+				// Skip remaining lines of this multi-line comment
+				if !strings.Contains(trimmed, "*/") {
+					for lineNum++; lineNum < endLine && lineNum < len(lines); lineNum++ {
+						if strings.Contains(lines[lineNum], "*/") {
+							break
+						}
+					}
+				}
+			}
+			// Non-empty lines that are not comments and not statements are ignored
+			// (could be continuation of multi-line comment from terminator line)
+		}
+	}
+
+	// Check BEFORE the first statement (comments before any MCS statement are errors)
+	if len(doc.Statements) > 0 {
+		firstStmtStartLine := doc.Statements[0].Position.Line
+		if firstStmtStartLine > 0 {
+			checkLinesForStandaloneComments(0, firstStmtStartLine, true)
+		}
+	} else {
+		// No statements at all - check entire file for comments
+		checkLinesForStandaloneComments(0, len(lines), true)
+	}
+
+	// Check between consecutive statements
+	for i := 0; i < len(doc.Statements)-1; i++ {
+		currentStmt := doc.Statements[i]
+
+		// Skip check if current statement expects inline data
+		// (lines after it are inline data, not standalone comments)
+		if stmtExpectsInlineData(currentStmt) {
+			continue
+		}
+
+		currentStmtEndLine := findStmtEndLine(currentStmt)
+		nextStmtStartLine := doc.Statements[i+1].Position.Line
+
+		// Check lines between currentStmtEndLine and nextStmtStartLine
+		// Start from line AFTER the terminator line
+		checkLinesForStandaloneComments(currentStmtEndLine+1, nextStmtStartLine, false)
+	}
+
+	// Check after the last statement (comments after last statement are also errors)
+	if len(doc.Statements) > 0 {
+		lastStmt := doc.Statements[len(doc.Statements)-1]
+
+		// Skip if last statement expects inline data
+		if !stmtExpectsInlineData(lastStmt) {
+			lastStmtEndLine := findStmtEndLine(lastStmt)
+
+			// Check all lines after the last statement until end of file
+			checkLinesForStandaloneComments(lastStmtEndLine+1, len(lines), false)
+		}
+	}
+
+	return diagnostics
+}
+
 // checkMissingInlineData checks if statements expecting inline data actually have it
 func (p *Provider) checkMissingInlineData(doc *parser.Document) []lsp.Diagnostic {
 	var diagnostics []lsp.Diagnostic
@@ -527,13 +799,13 @@ func (p *Provider) checkMissingInlineData(doc *parser.Document) []lsp.Diagnostic
 	// it means the inline data is missing
 	for _, stmt := range doc.StatementsExpectingInline {
 		// Check if statement has operands that indicate data is NOT inline
-		// FROMDS, RELFILE, TXLIB, SHSCRIPT mean data comes from elsewhere
+		// FROMDS, RELFILE, TXLIB mean data comes from elsewhere
 		// DELETE is a special case for HFS that removes files (no inline data needed)
 		hasExternalDataSource := false
 		for _, child := range stmt.Children {
 			if child.Type == parser.NodeTypeOperand {
 				opName := child.Name
-				if opName == "FROMDS" || opName == "RELFILE" || opName == "TXLIB" || opName == "SHSCRIPT" || opName == "DELETE" {
+				if opName == "FROMDS" || opName == "RELFILE" || opName == "TXLIB" || opName == "DELETE" {
 					hasExternalDataSource = true
 					break
 				}
@@ -589,7 +861,7 @@ func (p *Provider) getMissingInlineDataMessage(stmt *parser.Node) string {
 
 			// These operands indicate external data sources
 			if primaryName == "FROMDS" || primaryName == "RELFILE" ||
-			   primaryName == "TXLIB" || primaryName == "SHSCRIPT" {
+				primaryName == "TXLIB" {
 				alternatives = append(alternatives, primaryName)
 			}
 		}

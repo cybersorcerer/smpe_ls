@@ -2,11 +2,10 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
-## What's New in 0.7.7
+## What's New in 0.7.8
 
-- **Go to Definition** - Navigate to SYSMOD/FMID definitions (`F12` or `Cmd+Click`)
-- **Find All References** - Find all references to a SYSMOD or FMID (`Shift+F12`)
-- **Git Commit Hash** - Build includes commit hash for traceability
+- **Column 72 Diagnostic** - Error when content extends beyond column 72 (configurable)
+- **Improved Formatting** - Enforces IBM SMP/E column 72 limit, preserves comments
 
 See the [CHANGELOG](CHANGELOG.md) for full details.
 
@@ -40,12 +39,12 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 
 | Platform | File |
 |----------|------|
-| Windows x64 | `vscode-smpe-win32-x64-0.7.7.vsix` |
-| Windows ARM64 | `vscode-smpe-win32-arm64-0.7.7.vsix` |
-| macOS Apple Silicon | `vscode-smpe-darwin-arm64-0.7.7.vsix` |
-| macOS Intel | `vscode-smpe-darwin-x64-0.7.7.vsix` |
-| Linux x64 | `vscode-smpe-linux-x64-0.7.7.vsix` |
-| Linux ARM64 | `vscode-smpe-linux-arm64-0.7.7.vsix` |
+| Windows x64 | `vscode-smpe-win32-x64-0.7.8.vsix` |
+| Windows ARM64 | `vscode-smpe-win32-arm64-0.7.8.vsix` |
+| macOS Apple Silicon | `vscode-smpe-darwin-arm64-0.7.8.vsix` |
+| macOS Intel | `vscode-smpe-darwin-x64-0.7.8.vsix` |
+| Linux x64 | `vscode-smpe-linux-x64-0.7.8.vsix` |
+| Linux ARM64 | `vscode-smpe-linux-arm64-0.7.8.vsix` |
 
 ### Installation in VS Code
 
@@ -57,7 +56,7 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 Alternatively via terminal:
 
 ```bash
-code --install-extension vscode-smpe-darwin-arm64-0.7.7.vsix
+code --install-extension vscode-smpe-darwin-arm64-0.7.8.vsix
 ```
 
 The Language Server is already included in the extension - no additional installation required.
@@ -102,6 +101,7 @@ All diagnostics are enabled by default. Set to `false` to disable specific check
 | `smpe.diagnostics.missingInlineData` | Report missing inline data |
 | `smpe.diagnostics.unknownSubOperand` | Report unknown sub-operands |
 | `smpe.diagnostics.subOperandValidation` | Report sub-operand validation errors |
+| `smpe.diagnostics.contentBeyondColumn72` | Report content that extends beyond column 72 |
 
 ## File Extensions
 

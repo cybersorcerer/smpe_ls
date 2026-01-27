@@ -1,18 +1,19 @@
 {
-	"instance":  {
-		"user": "userid",
-		"password": "password",
-		"host_name": "192.168.9.39",
-		"port": "443",
-		"verify": false
-	},
-	"smpe": {
-		"csi": "SMPE.GLOBAL.CSI",
-		"targetzone": [
-			"MYTZ"
-		],
-		"dlibzone": [
-			"MYDZ"
-		]
-	}
+	"instances":  [
+		{
+			"name": "zosmf",
+			"user": "<userid>",
+			"password": "<password>",
+			"host_name": "<myhost>",
+			"port": "443",
+			"verify": false,
+			"global": "SMPE.GLOBAL.CSI",
+			"targetzones": [
+				"MYTZ"
+			],
+			"dlibzones": [
+				"MYDZ"
+			]
+		}
+	]
 }
