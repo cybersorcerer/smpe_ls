@@ -43,5 +43,6 @@ cmd/smpe_test/smpe_test
 .claude/
 syntax_diagrams/
 TODO.md
+bug.smpe
 
 

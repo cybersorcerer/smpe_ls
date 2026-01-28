@@ -230,62 +230,6 @@ func (p *Provider) extractCommentsFromRange(lines []string, startLine, endLine i
 	return comments
 }
 
-// extractLeadingComments extracts comments from before the first statement
-// Deprecated: Use extractCommentsFromRange instead
-func (p *Provider) extractLeadingComments(lines []string, firstStmtLine int) []CommentInfo {
-	var comments []CommentInfo
-
-	for lineNum := 0; lineNum < firstStmtLine && lineNum < len(lines); lineNum++ {
-		line := lines[lineNum]
-		trimmed := strings.TrimSpace(line)
-
-		// Skip empty lines
-		if trimmed == "" {
-			continue
-		}
-
-		// Check if this line contains a comment
-		if strings.Contains(trimmed, "/*") {
-			// Extract the comment(s) from this line
-			commentStart := strings.Index(line, "/*")
-			commentEnd := strings.Index(line, "*/")
-
-			if commentEnd != -1 {
-				// Single-line comment
-				commentText := line[commentStart : commentEnd+2]
-				comments = append(comments, CommentInfo{
-					Text:      commentText,
-					Line:      lineNum,
-					Character: commentStart,
-					AtEnd:     false,
-					AfterDot:  false,
-				})
-			} else {
-				// Multi-line comment - find the end
-				var commentText strings.Builder
-				commentText.WriteString(line[commentStart:])
-
-				for lineNum++; lineNum < firstStmtLine && lineNum < len(lines); lineNum++ {
-					commentText.WriteString("\n")
-					commentText.WriteString(lines[lineNum])
-					if strings.Contains(lines[lineNum], "*/") {
-						break
-					}
-				}
-				comments = append(comments, CommentInfo{
-					Text:      commentText.String(),
-					Line:      lineNum,
-					Character: commentStart,
-					AtEnd:     false,
-					AfterDot:  false,
-				})
-			}
-		}
-	}
-
-	return comments
-}
-
 // FormatRange formats a specific range in the document
 func (p *Provider) FormatRange(doc *parser.Document, text string, startLine, endLine int) []lsp.TextEdit {
 	if !p.config.Enabled || doc == nil {
@@ -583,13 +527,8 @@ func (p *Provider) wrapCommentAt72(indent string, comment string) []string {
 	}
 
 	// Extract the comment content (without /* and */)
-	content := comment
-	if strings.HasPrefix(content, "/*") {
-		content = content[2:]
-	}
-	if strings.HasSuffix(content, "*/") {
-		content = content[:len(content)-2]
-	}
+	content := strings.TrimPrefix(comment, "/*")
+	content = strings.TrimSuffix(content, "*/")
 	content = strings.TrimSpace(content)
 
 	// Calculate available space per line
@@ -774,9 +713,8 @@ func (p *Provider) buildFormattedStatementWithLeadingComments(stmt *parser.Node,
 		}
 	}
 
-	// Separate leading comments from statement comments
+	// Separate leading comments from inline comments
 	// Leading comments should be inserted after the statement name line
-	var afterDotComments []CommentInfo
 	var inlineComments []CommentInfo
 	for _, c := range comments {
 		// Skip leading comments - they are handled separately
@@ -791,9 +729,8 @@ func (p *Provider) buildFormattedStatementWithLeadingComments(stmt *parser.Node,
 			continue
 		}
 
-		if c.AfterDot {
-			afterDotComments = append(afterDotComments, c)
-		} else {
+		// Skip after-dot comments - they are handled via extractTrailingCommentAfterTerminator
+		if !c.AfterDot {
 			inlineComments = append(inlineComments, c)
 		}
 	}
@@ -891,167 +828,6 @@ func (p *Provider) buildFormattedStatementWithLeadingComments(stmt *parser.Node,
 		if currentLine != "" {
 			outputLines = append(outputLines, currentLine)
 		}
-	}
-
-	// Insert inline comments back into the output
-	// Multi-line comments are inserted as separate lines before the terminator
-	// Single-line comments are added at the end of lines if they fit
-	if len(inlineComments) > 0 && len(outputLines) > 0 {
-		for _, c := range inlineComments {
-			// Check if this is a multi-line comment
-			if strings.Contains(c.Text, "\n") {
-				// Multi-line comment: insert before the terminator (last line if it's ".")
-				insertIdx := len(outputLines)
-				if insertIdx > 0 && strings.TrimSpace(outputLines[insertIdx-1]) == "." {
-					insertIdx = insertIdx - 1
-				} else if insertIdx > 0 {
-					// Check if last line starts with terminator
-					lastLine := strings.TrimSpace(outputLines[insertIdx-1])
-					if strings.HasPrefix(lastLine, ".") {
-						insertIdx = insertIdx - 1
-					}
-				}
-				// Insert the multi-line comment, wrapping lines that exceed column 72
-				commentLines := strings.Split(c.Text, "\n")
-				wrappedLines := p.wrapMultiLineCommentAt72(commentLines)
-				newOutput := make([]string, 0, len(outputLines)+len(wrappedLines))
-				newOutput = append(newOutput, outputLines[:insertIdx]...)
-				newOutput = append(newOutput, wrappedLines...)
-				newOutput = append(newOutput, outputLines[insertIdx:]...)
-				outputLines = newOutput
-			} else {
-				// Single-line comment: try to add at end of a line if it fits
-				added := false
-				for i := range outputLines {
-					lineLen := runeCount(outputLines[i])
-					commentLen := runeCount(c.Text)
-					if lineLen+1+commentLen <= MaxColumn {
-						outputLines[i] += " " + c.Text
-						added = true
-						break
-					}
-				}
-				// If it didn't fit anywhere, add it as a separate line before terminator
-				if !added {
-					insertIdx := len(outputLines)
-					if insertIdx > 0 && strings.TrimSpace(outputLines[insertIdx-1]) == "." {
-						insertIdx = insertIdx - 1
-					}
-					newOutput := make([]string, 0, len(outputLines)+1)
-					newOutput = append(newOutput, outputLines[:insertIdx]...)
-					newOutput = append(newOutput, c.Text)
-					newOutput = append(newOutput, outputLines[insertIdx:]...)
-					outputLines = newOutput
-				}
-			}
-		}
-	}
-
-	return strings.Join(outputLines, "\n")
-}
-
-// buildFormattedStatementWithComments builds the formatted text for a statement, preserving comments
-func (p *Provider) buildFormattedStatementWithComments(stmt *parser.Node, comments []CommentInfo, lines []string) string {
-	var outputLines []string
-	indent := strings.Repeat(" ", p.config.IndentContinuation)
-
-	// Start building the first line: statement name + parameter
-	firstLine := stmt.Name
-
-	// Add statement parameter if present
-	for _, child := range stmt.Children {
-		if child.Type == parser.NodeTypeParameter && child.Parent == stmt {
-			firstLine += "(" + child.Value + ")"
-			break
-		}
-	}
-
-	// Collect operands
-	var operands []*parser.Node
-	for _, child := range stmt.Children {
-		if child.Type == parser.NodeTypeOperand {
-			operands = append(operands, child)
-		}
-	}
-
-	// Find comments that should appear after the terminator
-	var afterDotComments []CommentInfo
-	var inlineComments []CommentInfo
-	for _, c := range comments {
-		if c.AfterDot {
-			afterDotComments = append(afterDotComments, c)
-		} else {
-			inlineComments = append(inlineComments, c)
-		}
-	}
-
-	if p.config.OneOperandPerLine && len(operands) > 0 {
-		// First line is just the statement header
-		outputLines = append(outputLines, p.wrapLineAt72(firstLine, ""))
-
-		// Each operand on its own line
-		for _, op := range operands {
-			opText := indent + p.formatOperand(op)
-			outputLines = append(outputLines, p.wrapLineAt72(opText, indent))
-		}
-
-		// Terminator on its own line
-		if stmt.HasTerminator {
-			termLine := "."
-			// Add after-dot comments on the same line as the terminator
-			if len(afterDotComments) > 0 {
-				for _, c := range afterDotComments {
-					termLine += " " + c.Text
-				}
-			}
-			outputLines = append(outputLines, termLine)
-		}
-	} else {
-		// All on fewer lines - need to track column position
-		currentLine := firstLine
-
-		for i, op := range operands {
-			opText := p.formatOperand(op)
-
-			// Check if adding this operand would exceed column 72
-			newLen := runeCount(currentLine) + 1 + runeCount(opText)
-			if newLen > MaxColumn && currentLine != firstLine {
-				// Start a new line
-				outputLines = append(outputLines, currentLine)
-				currentLine = indent + opText
-			} else {
-				if i == 0 || currentLine == firstLine {
-					currentLine += " " + opText
-				} else {
-					currentLine += " " + opText
-				}
-			}
-		}
-
-		// Add terminator
-		if stmt.HasTerminator {
-			if runeCount(currentLine)+1 > MaxColumn {
-				outputLines = append(outputLines, currentLine)
-				currentLine = "."
-			} else {
-				// Check if there's content - if so, put terminator on new line
-				if len(operands) > 0 {
-					outputLines = append(outputLines, currentLine)
-					currentLine = "."
-				} else {
-					currentLine += "\n."
-				}
-			}
-
-			// Add after-dot comments
-			if len(afterDotComments) > 0 {
-				for _, c := range afterDotComments {
-					currentLine += " " + c.Text
-				}
-			}
-		}
-
-		outputLines = append(outputLines, currentLine)
 	}
 
 	// Insert inline comments back into the output
