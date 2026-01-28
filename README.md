@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-0.7.8-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-0.7.9-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -106,7 +106,7 @@ smpe_ls --data /path/to/smpe.json
 
 ## 🎯 Supported MCS Statements
 
-### Version 0.7.8 (Current)
+### Version 0.7.9 (Current)
 
 **Control MCS (25 statements with full diagnostics):**
 
@@ -198,7 +198,15 @@ make release
 
 ## 📋 What's New
 
-### Version 0.7.8 (Latest)
+### Version 0.7.9 (Latest)
+
+**Bug Fixes:**
+
+- 🐛 **Multi-line Comment Parsing** - Parser now correctly captures full text of multi-line comments
+- 🐛 **Multi-line Comment Formatting** - Formatting preserves multi-line comments inside statements
+- 🐛 **Comment Line Wrapping** - Long lines within multi-line comments are now wrapped at column 72
+
+### Version 0.7.8
 
 **New Features:**
 

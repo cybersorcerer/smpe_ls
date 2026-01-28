@@ -894,17 +894,54 @@ func (p *Provider) buildFormattedStatementWithLeadingComments(stmt *parser.Node,
 	}
 
 	// Insert inline comments back into the output
-	// For now, we add them at the end of the relevant lines if they fit
-	// This is a simplified approach - comments will be preserved but may move slightly
+	// Multi-line comments are inserted as separate lines before the terminator
+	// Single-line comments are added at the end of lines if they fit
 	if len(inlineComments) > 0 && len(outputLines) > 0 {
-		// Try to add the first inline comment to the first line if it fits
 		for _, c := range inlineComments {
-			for i := range outputLines {
-				lineLen := runeCount(outputLines[i])
-				commentLen := runeCount(c.Text)
-				if lineLen+1+commentLen <= MaxColumn {
-					outputLines[i] += " " + c.Text
-					break
+			// Check if this is a multi-line comment
+			if strings.Contains(c.Text, "\n") {
+				// Multi-line comment: insert before the terminator (last line if it's ".")
+				insertIdx := len(outputLines)
+				if insertIdx > 0 && strings.TrimSpace(outputLines[insertIdx-1]) == "." {
+					insertIdx = insertIdx - 1
+				} else if insertIdx > 0 {
+					// Check if last line starts with terminator
+					lastLine := strings.TrimSpace(outputLines[insertIdx-1])
+					if strings.HasPrefix(lastLine, ".") {
+						insertIdx = insertIdx - 1
+					}
+				}
+				// Insert the multi-line comment, wrapping lines that exceed column 72
+				commentLines := strings.Split(c.Text, "\n")
+				wrappedLines := p.wrapMultiLineCommentAt72(commentLines)
+				newOutput := make([]string, 0, len(outputLines)+len(wrappedLines))
+				newOutput = append(newOutput, outputLines[:insertIdx]...)
+				newOutput = append(newOutput, wrappedLines...)
+				newOutput = append(newOutput, outputLines[insertIdx:]...)
+				outputLines = newOutput
+			} else {
+				// Single-line comment: try to add at end of a line if it fits
+				added := false
+				for i := range outputLines {
+					lineLen := runeCount(outputLines[i])
+					commentLen := runeCount(c.Text)
+					if lineLen+1+commentLen <= MaxColumn {
+						outputLines[i] += " " + c.Text
+						added = true
+						break
+					}
+				}
+				// If it didn't fit anywhere, add it as a separate line before terminator
+				if !added {
+					insertIdx := len(outputLines)
+					if insertIdx > 0 && strings.TrimSpace(outputLines[insertIdx-1]) == "." {
+						insertIdx = insertIdx - 1
+					}
+					newOutput := make([]string, 0, len(outputLines)+1)
+					newOutput = append(newOutput, outputLines[:insertIdx]...)
+					newOutput = append(newOutput, c.Text)
+					newOutput = append(newOutput, outputLines[insertIdx:]...)
+					outputLines = newOutput
 				}
 			}
 		}
@@ -1018,17 +1055,54 @@ func (p *Provider) buildFormattedStatementWithComments(stmt *parser.Node, commen
 	}
 
 	// Insert inline comments back into the output
-	// For now, we add them at the end of the relevant lines if they fit
-	// This is a simplified approach - comments will be preserved but may move slightly
+	// Multi-line comments are inserted as separate lines before the terminator
+	// Single-line comments are added at the end of lines if they fit
 	if len(inlineComments) > 0 && len(outputLines) > 0 {
-		// Try to add the first inline comment to the first line if it fits
 		for _, c := range inlineComments {
-			for i := range outputLines {
-				lineLen := runeCount(outputLines[i])
-				commentLen := runeCount(c.Text)
-				if lineLen+1+commentLen <= MaxColumn {
-					outputLines[i] += " " + c.Text
-					break
+			// Check if this is a multi-line comment
+			if strings.Contains(c.Text, "\n") {
+				// Multi-line comment: insert before the terminator (last line if it's ".")
+				insertIdx := len(outputLines)
+				if insertIdx > 0 && strings.TrimSpace(outputLines[insertIdx-1]) == "." {
+					insertIdx = insertIdx - 1
+				} else if insertIdx > 0 {
+					// Check if last line starts with terminator
+					lastLine := strings.TrimSpace(outputLines[insertIdx-1])
+					if strings.HasPrefix(lastLine, ".") {
+						insertIdx = insertIdx - 1
+					}
+				}
+				// Insert the multi-line comment, wrapping lines that exceed column 72
+				commentLines := strings.Split(c.Text, "\n")
+				wrappedLines := p.wrapMultiLineCommentAt72(commentLines)
+				newOutput := make([]string, 0, len(outputLines)+len(wrappedLines))
+				newOutput = append(newOutput, outputLines[:insertIdx]...)
+				newOutput = append(newOutput, wrappedLines...)
+				newOutput = append(newOutput, outputLines[insertIdx:]...)
+				outputLines = newOutput
+			} else {
+				// Single-line comment: try to add at end of a line if it fits
+				added := false
+				for i := range outputLines {
+					lineLen := runeCount(outputLines[i])
+					commentLen := runeCount(c.Text)
+					if lineLen+1+commentLen <= MaxColumn {
+						outputLines[i] += " " + c.Text
+						added = true
+						break
+					}
+				}
+				// If it didn't fit anywhere, add it as a separate line before terminator
+				if !added {
+					insertIdx := len(outputLines)
+					if insertIdx > 0 && strings.TrimSpace(outputLines[insertIdx-1]) == "." {
+						insertIdx = insertIdx - 1
+					}
+					newOutput := make([]string, 0, len(outputLines)+1)
+					newOutput = append(newOutput, outputLines[:insertIdx]...)
+					newOutput = append(newOutput, c.Text)
+					newOutput = append(newOutput, outputLines[insertIdx:]...)
+					outputLines = newOutput
 				}
 			}
 		}
@@ -1087,6 +1161,31 @@ func (p *Provider) findBreakPoint(line string, maxCol int) int {
 	}
 
 	return lastBreak
+}
+
+// wrapMultiLineCommentAt72 wraps each line of a multi-line comment to fit within column 72
+// It preserves the structure of the comment (first line with /*, middle lines, last line with */)
+func (p *Provider) wrapMultiLineCommentAt72(commentLines []string) []string {
+	var result []string
+
+	for _, line := range commentLines {
+		if runeCount(line) <= MaxColumn {
+			result = append(result, line)
+			continue
+		}
+
+		// Line is too long, need to wrap it
+		// Determine the indent of the original line
+		trimmed := strings.TrimLeft(line, " \t")
+		indent := line[:len(line)-len(trimmed)]
+
+		// Wrap the line content
+		wrapped := p.wrapLineAt72(line, indent)
+		wrappedLines := strings.Split(wrapped, "\n")
+		result = append(result, wrappedLines...)
+	}
+
+	return result
 }
 
 // formatOperand formats a single operand

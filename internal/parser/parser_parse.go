@@ -19,6 +19,7 @@ func (p *Parser) Parse(text string) *Document {
 	cleanLines := make([]string, len(lines))
 	inBlockComment := false
 	var commentStartLine, commentStartChar int
+	var blockCommentLines []string // Accumulate lines of multi-line comment
 
 	// Track if we're inside a statement region (from ++ to terminator)
 	inStatement := false
@@ -85,6 +86,8 @@ func (p *Parser) Parse(text string) *Document {
 					before = line[:byteStart]
 				}
 				cleanLines[lineNum] = before
+				// Start collecting the block comment text
+				blockCommentLines = []string{line[byteStart:]}
 				continue
 			}
 
@@ -93,15 +96,19 @@ func (p *Parser) Parse(text string) *Document {
 				inBlockComment = false
 				commentEnd := strings.Index(line, "*/")
 
-				// Convert byte offset to rune offset for LSP compatibility
-				runeCommentEnd := byteOffsetToRuneOffset(line, commentEnd+2)
+				// Add the final line of the block comment (up to and including */)
+				blockCommentLines = append(blockCommentLines, line[:commentEnd+2])
+
+				// Join all lines to get the complete comment text
+				commentValue := strings.Join(blockCommentLines, "\n")
 
 				commentNode := &Node{
-					Type: NodeTypeComment,
+					Type:  NodeTypeComment,
+					Value: commentValue,
 					Position: Position{
 						Line:      commentStartLine,
 						Character: commentStartChar,
-						Length:    runeCommentEnd,
+						Length:    runeCount(commentValue),
 					},
 				}
 				doc.Comments = append(doc.Comments, commentNode)
@@ -122,6 +129,8 @@ func (p *Parser) Parse(text string) *Document {
 
 			// Inside block comment
 			if inBlockComment {
+				// Collect this line as part of the block comment
+				blockCommentLines = append(blockCommentLines, line)
 				cleanLines[lineNum] = ""
 				continue
 			}
