@@ -11,6 +11,7 @@ type MCSStatement struct {
 	LanguageVariants bool      `json:"language_variants,omitempty"`
 	Description      string    `json:"description"`
 	Parameter        string    `json:"parameter,omitempty"`
+	Length           int       `json:"length,omitempty"`
 	Type             string    `json:"type"`
 	InlineData       bool      `json:"inline_data,omitempty"`
 	Operands         []Operand `json:"operands,omitempty"`

@@ -197,21 +197,29 @@ func (p *Provider) analyzeStatementWithConfig(stmt *parser.Node, config *Config)
 		))
 	}
 
-	// Check for required statement parameter
+	// Check for required statement parameter and its length
 	if config.MissingParameter && stmt.StatementDef != nil && stmt.StatementDef.Parameter != "" {
-		hasParameter := false
+		var paramNode *parser.Node
 		for _, child := range stmt.Children {
 			if child.Type == parser.NodeTypeParameter && child.Parent == stmt {
-				hasParameter = true
+				paramNode = child
 				break
 			}
 		}
 
-		if !hasParameter {
+		if paramNode == nil {
 			diagnostics = append(diagnostics, p.createDiagnosticFromNode(
 				stmt,
 				lsp.SeverityError,
 				"Missing required parameter: "+stmt.StatementDef.Parameter,
+			))
+		} else if stmt.StatementDef.Length > 0 && len(paramNode.Value) > stmt.StatementDef.Length {
+			// Check parameter length
+			diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+				paramNode,
+				lsp.SeverityWarning,
+				fmt.Sprintf("⚠️ Parameter '%s' exceeds maximum length (%d > %d)",
+					stmt.StatementDef.Parameter, len(paramNode.Value), stmt.StatementDef.Length),
 			))
 		}
 	}

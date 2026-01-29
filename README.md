@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-0.7.9-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-0.8.0-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -11,6 +11,7 @@ A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Mod
 - **🎨 Syntax Highlighting** - Color coding for MCS statements, operands, and comments
 - **💡 Intelligent Code Completion** - Context-aware completion for statements and operands
 - **🔍 Real-time Diagnostics** - Instant validation of SMP/E syntax and semantics
+- **🔧 Command-Line Linter** - CI/CD-ready linter with configurable diagnostics
 - **📖 Hover Documentation** - Inline documentation from IBM SMP/E Reference
 - **🔗 Go to Definition** - Navigate to SYSMOD/FMID definitions
 - **🔎 Find References** - Find all references to a SYSMOD or FMID
@@ -75,6 +76,29 @@ smpe_ls --debug
 smpe_ls --data /path/to/smpe.json
 ```
 
+### Command-Line Linter
+
+For CI/CD integration, use the `smpe_lint` tool:
+
+```bash
+# Lint SMP/E files
+smpe_lint *.smpe
+
+# Strict mode (warnings cause failure)
+smpe_lint --warnings-as-errors *.smpe
+
+# JSON output for programmatic processing
+smpe_lint --json *.smpe
+
+# Ignore specific diagnostics
+smpe_lint --ignore unknown_operand *.smpe
+
+# Use configuration file
+smpe_lint --config .smpe_lint.yaml *.smpe
+```
+
+See [cmd/smpe_lint/README.md](cmd/smpe_lint/README.md) for full documentation.
+
 ## 📝 Example
 
 ```smpe
@@ -106,7 +130,7 @@ smpe_ls --data /path/to/smpe.json
 
 ## 🎯 Supported MCS Statements
 
-### Version 0.7.9 (Current)
+### Version 0.8.0 (Current)
 
 **Control MCS (25 statements with full diagnostics):**
 
@@ -198,13 +222,14 @@ make release
 
 ## 📋 What's New
 
-### Version 0.7.9 (Latest)
+### Version 0.8.0 (Latest)
 
 **Bug Fixes:**
 
 - 🐛 **Multi-line Comment Parsing** - Parser now correctly captures full text of multi-line comments
 - 🐛 **Multi-line Comment Formatting** - Formatting preserves multi-line comments inside statements
 - 🐛 **Comment Line Wrapping** - Long lines within multi-line comments are now wrapped at column 72
+- 🐛 **Comment Before Terminator** - Comments before terminator on same line (e.g., `CALLLIBS /* comment */.`) are now preserved during formatting
 
 ### Version 0.7.8
 
@@ -369,6 +394,7 @@ Or in VSCode:
 smpe_ls/
 ├── cmd/
 │   ├── smpe_ls/        # Language server binary
+│   ├── smpe_lint/      # Command-line linter for CI/CD
 │   └── smpe_test/      # Central test suite
 ├── internal/
 │   ├── completion/     # Code completion provider
