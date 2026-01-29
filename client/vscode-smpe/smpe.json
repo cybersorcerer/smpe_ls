@@ -3,6 +3,7 @@
         "name": "++APAR",
         "description": "The ++APAR MCS identifies a service SYSMOD. The parameter **<SYSMOD-ID>** specifies a unique 7-character system modification identifier for the APAR fix. This type of SYSMOD is a temporary corrective fix to the  elements of target system and distribution libraries. All other MCSs for this SYSMOD follow this header MCS. The parameter SYSMOD ID specifies a unique 7-character system modification identifier for the APAR fix. The IBM\u00ae convention for the SYSMOD ID of a service SYSMOD (APAR, APAR fix, PTF) or USERMOD is tannnnn, where:\nt - identifies the type of SYSMOD. It is a single alphanumeric character. These are the values used by IBM:\nA-K - Used by IBM for various levels of an APAR fix\nL-T - Available for users\nU - Used by IBM for PTFs\nV-Z\nUsed by IBM for various levels of an APAR fix\na - is any alphabetic character(A-Z). Any valid character can be used for user SYSMODs.\nnnnnn - is an additional identifier for the SYSMOD. For PTFs and APAR fixes supplied by IBM, it is a number from 00001 to 99999. Any valid characters can be used for user SYSMODs.",
         "parameter": "SYSMOD-ID",
+        "length": 7,
         "type": "MCS",
         "operands": [
             {
@@ -60,6 +61,7 @@
     {
         "name": "++DELETE",
         "parameter": "NAME",
+        "length": 8,
         "description": "The Parameter NAME specifies the name of the load module to be deleted. During APPLY processing, the ++DELETE MCS deletes a load module and any known alias or symbolic link names from a target library and the associated target zone. It can also delete alias or symbolic link names without deleting the load module itself. During ACCEPT processing, if inline JCLIN was processed, the distribution zone's entries are updated to reflect the ++DELETE changes. The target libraries and target zone entries are not updated.",
         "operands": [
             {
@@ -87,6 +89,7 @@
     {
         "name": "++FEATURE",
         "parameter": "NAME",
+        "length": 8,
         "type": "MCS",
         "description": "The ++FEATURE MCS is used to describe a set of function SYSMODs that are collectively referred to as a FEATURE. It introduces descriptive information about a new or replacement set of functions into the global zone. A ++FEATURE MCS may be associated with an orderable software feature. The Parameter NAME is a 1- to 8-character feature name. It can contain uppercase alphabetic, numeric, or national characters ($, #, @).",
         "operands": [
@@ -123,6 +126,7 @@
     {
         "name": "++FUNCTION",
         "parameter": "SYSMOD-ID",
+        "length": 7,
         "type": "MCS",
         "description": "The ++FUNCTION MCS identifies a SYSMOD as a base function or dependent function. This type of SYSMOD introduces a new or replacement function into target system and distribution libraries. All other MCSs follow this header MCS statement.",
         "operands": [
@@ -167,6 +171,7 @@
     {
         "name": "++HOLD",
         "parameter": "SYSMOD-ID",
+        "length": 7,
         "type": "MCS",
         "description": "The ++HOLD MCS identifies a SYSMOD to be placed into exception SYSMOD status (signifying that special SMP/E processing is required before it can be applied or accepted). ++HOLD statements can occur within a SYSMOD (internal HOLDDATA), or they can be read directly from the SMPHOLD file during RECEIVE processing (external HOLDDATA).",
         "operands": [
@@ -446,6 +451,7 @@
     {
         "name": "++JAR",
         "parameter": "NAME",
+        "length": 8,
         "type": "MCS",
         "description": "The ++JAR MCS describes a Java ARchive (JAR) file. specifies the name of the JAR element member. The parameter <NAME> can contain any uppercase alphabetic, numeric, or national ($, #, @) character and can be 1 to 8 characters long. The Java jar command is used to construct and update such files in a UNIX file system. JAR elements can have the following characteristics: The record format (RECFM) must be F, FA, FM, FB, FBA, FBM, V, VA, VM, VB, VBA, or VBM. Elements with variable-length records cannot contain spanned records. The maximum LRECL is 32,654. The records can be numbered or unnumbered. The parameter NAME specifies the name of the JAR element member. The name can contain any uppercase alphabetic, numeric, or national ($, #, @) character and can be 1 to 8 characters long.",
         "operands": [
@@ -605,6 +611,7 @@
     {
         "name": "++JARUPD",
         "parameter": "NAME",
+        "length": 7,
         "type": "MCS",
         "description": "The ++JARUPD MCS describes an update to a Java ARchive (JAR) file in a UNIX file system. specifies the name of the JAR element member. The parameter <NAME> can contain any uppercase alphabetic, numeric, or national ($, #, @) character and can be 1 to 8 characters long. The Java jar command is used to construct and update such files in a UNIX file system. A JARUPD element is itself a Java Archive file, but it contains only the component files to be added to or replaced in an existing JAR file, as opposed to a complete replacement for an existing JAR file. To update JAR files, SMP/E must use the update (u) option of the jar command, which is provided in version 1.2 of the Java Development Kit (JDK). There is no way to delete component files from a JAR file. ++JARUPD can be used only to add or replace component files in a JAR file. If component files must be deleted, then the entire JAR file must be replaced with another JAR file from which those component files have been removed. The parameter NAME specifies the name of the JAR element member. The name can contain any uppercase alphabetic, numeric, or national ($, #, @) character and can be 1 to 8 characters long.",
         "operands": [
@@ -766,6 +773,7 @@
     {
         "name": "++VER",
         "parameter": "SREL",
+        "length": 4,
         "type": "MCS",
         "description": "The ++VER MCS describes the environment required for receiving and installing a SYSMOD. The Parameter <SREL> specifies the system or subsystem release on which the SYSMOD can be installed. The SREL must contain four alphanumeric characters, usually one alphabetic character followed by three numeric characters. These are the systems and subsystems defined by IBM\u00ae, with their SRELs:\n\n- System\n    SREL\n- DB2\n    P115\n- CICS\n    C150\n- IMS\n    P115\n- MVS\n    Z038\n- NCP\n    P004\n\nThe SREL is used during RECEIVE processing to determine whether a SYSMOD should be received. A SYSMOD must contain a separate ++VER MCS for each environment to which it applies. At least one ++VER MCS must be present in a SYSMOD, and a maximum of 255 ++VER statements are allowed for each SYSMOD.",
         "operands": [
@@ -823,6 +831,7 @@
     {
         "name": "++ZAP",
         "parameter": "name",
+        "length": 8,
         "type": "MCS",
         "description": "The ++ZAP Statement describes a module update within a PTF, APAR fix, or USERMOD. specifies the name of the module member in the distribution library and, optionally, in the target system library. The Parameter <name> can contain any alphanumeric characters and $, #, @, or hex C0. It must precede the IMASPZAP statements within the SYSMOD.",
         "operands": [
@@ -855,6 +864,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "Online book member. Allows a 3-character national language identifier suffix (e.g., ++BOOKENU for English US, ++BOOKDEU for German).",
         "operands": [
@@ -962,6 +972,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "Index for an online publications library (bookshelf). Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -1069,6 +1080,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "Graphics source for an online book. Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -1174,6 +1186,7 @@
     {
         "name": "++CLIST",
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "CLIST (Command List) - A data element containing TSO commands.",
         "operands": [
@@ -1278,6 +1291,7 @@
     {
         "name": "++DATA",
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "Data not covered by other types - Generic data element.",
         "operands": [
@@ -1382,6 +1396,7 @@
     {
         "name": "++DATA1",
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "IBM generic data type 1 - For IBM use only, to define elements not covered by existing data types.",
         "operands": [
@@ -1486,6 +1501,7 @@
     {
         "name": "++DATA2",
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "IBM generic data type 2 - For IBM use only.",
         "operands": [
@@ -1590,6 +1606,7 @@
     {
         "name": "++DATA3",
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "IBM generic data type 3 - For IBM use only.",
         "operands": [
@@ -1694,6 +1711,7 @@
     {
         "name": "++DATA4",
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "IBM generic data type 4 - For IBM use only.",
         "operands": [
@@ -1798,6 +1816,7 @@
     {
         "name": "++DATA5",
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "IBM generic data type 5 - For IBM use only.",
         "operands": [
@@ -1904,6 +1923,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "IBM generic data type 6 - For IBM use only. Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -2009,6 +2029,7 @@
     {
         "name": "++EXEC",
         "parameter": "name",
+        "length": 8,
         "inline_data": true,
         "type": "Data Element MCS",
         "description": "EXEC - Executable REXX procedure.",
@@ -2117,6 +2138,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "Printer Font Object Contents Architecture (FOCA) font. Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -2224,6 +2246,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "GDF graphics panel. Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -2331,6 +2354,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "Help information (e.g., member in SYS1.HELP or dialog help panel). Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -2438,6 +2462,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "Graphics image for an online book. Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -2545,6 +2570,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "Message member (e.g., for a dialog or message data set). Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -2650,6 +2676,7 @@
     {
         "name": "++PARM",
         "parameter": "name",
+        "length": 8,
         "inline_data": true,
         "type": "Data Element MCS",
         "description": "PARMLIB member - System parameter library member.",
@@ -2757,6 +2784,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "Panel for a dialog (ISPF panel). Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -2864,6 +2892,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "Printer object element. Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -2969,6 +2998,7 @@
     {
         "name": "++PROC",
         "parameter": "name",
+        "length": 8,
         "inline_data": true,
         "type": "Data Element MCS",
         "description": "Procedure in PROCLIB - JCL procedure member.",
@@ -3074,6 +3104,7 @@
     {
         "name": "++PRODXML",
         "parameter": "name",
+        "length": 8,
         "inline_data": true,
         "type": "Data Element MCS",
         "description": "Product XML document - Software product metadata in XML format.",
@@ -3181,6 +3212,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "Printer source element. Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -3288,6 +3320,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "Graphics page segment for an online book. Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -3395,6 +3428,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "Online publications library (bookshelf). Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -3502,6 +3536,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "Sample data, program, or JCL in a data set for sample code. Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -3609,6 +3644,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "File skeleton for a dialog (ISPF skeleton). Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -3716,6 +3752,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "Table for a dialog (ISPF table). Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -3823,6 +3860,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "Text element. Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -3928,6 +3966,7 @@
     {
         "name": "++USER1",
         "parameter": "name",
+        "length": 8,
         "inline_data": true,
         "type": "Data Element MCS",
         "description": "User-defined data type 1 - For user-defined elements not covered by existing data types.",
@@ -4033,6 +4072,7 @@
     {
         "name": "++USER2",
         "parameter": "name",
+        "length": 8,
         "inline_data": true,
         "type": "Data Element MCS",
         "description": "User-defined data type 2 - For user-defined elements.",
@@ -4138,6 +4178,7 @@
     {
         "name": "++USER3",
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "inline_data": true,
         "description": "User-defined data type 3 - For user-defined elements.",
@@ -4243,6 +4284,7 @@
     {
         "name": "++USER4",
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "inline_data": true,
         "description": "User-defined data type 4 - For user-defined elements.",
@@ -4348,6 +4390,7 @@
     {
         "name": "++USER5",
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "inline_data": true,
         "description": "User-defined data type 5 - For user-defined elements.",
@@ -4455,6 +4498,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "General utility input. Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -4562,6 +4606,7 @@
         "language_variants": true,
         "inline_data": true,
         "parameter": "name",
+        "length": 8,
         "type": "Data Element MCS",
         "description": "General utility output. Allows a 3-character national language identifier suffix.",
         "operands": [
@@ -4667,6 +4712,7 @@
     {
         "name": "++MAC",
         "parameter": "NAME",
+        "length": 8,
         "type": "MCS",
         "inline_data": true,
         "description": "The ++MAC MCS describes a single macro replacement. It must immediately precede the macro definition statements when they are within the SYSMOD. The parameter NAME specifies the name of the macro member in the distribution library and, optionally, in the target system library.",
@@ -4816,6 +4862,7 @@
     {
         "name": "++MACUPD",
         "parameter": "NAME",
+        "length": 8,
         "type": "MCS",
         "inline_data": true,
         "description": "The ++MACUPD MCS describes a single macro update within a PTF, an APAR fix, or a USERMOD. It must immediately precede the macro update statements within the SYSMOD. The parameter NAME specifies the name of the macro member in the distribution library and, optionally, in the target system library.",
@@ -4872,6 +4919,7 @@
     {
         "name": "++MOD",
         "parameter": "NAME",
+        "length": 8,
         "type": "MCS",
         "inline_data": true,
         "description": "The ++MOD MCS describes a single module replacement. It must immediately precede the module definition statements when they are within the SYSMOD. You should use the ++MOD MCS when you want to provide the object form of a module. If you want to provide the source form and have it assembled when the SYSMOD is installed, use the ++SRC MCS instead. The parameter NAME specifies the name of the module in the distribution library and, optionally, in the target library.",
@@ -5136,6 +5184,7 @@
     {
         "name": "++MOVE",
         "parameter": "NAME",
+        "length": 8,
         "type": "MCS",
         "description": "The ++MOVE MCS moves a macro, a module, a source, or a load module (and any known aliases) from one library to another. The associated target or distribution zone is automatically updated to show that the entry has been deleted from the old library and added to the new one. The parameter NAME specifies the name of the element or load module to be moved.",
         "operands": [
@@ -5260,6 +5309,7 @@
     {
         "name": "++PROGRAM",
         "parameter": "NAME",
+        "length": 8,
         "type": "MCS",
         "description": "The ++PROGRAM MCS describes a program element (a pre-built load module or a program object). It must immediately precede the load module or program object when they are within the SYSMOD. Use the ++PROGRAM when you want to ship executables as program parts. If you want to provide the object form of the module, use the ++MOD MCS instead. JCLIN is not used to define the program element. The parameter NAME specifies the name of the program element member (1-8 characters).",
         "operands": [
@@ -5364,6 +5414,7 @@
     {
         "name": "++PTF",
         "parameter": "SYSMOD-ID",
+        "length": 7,
         "type": "MCS",
         "description": "The ++PTF MCS identifies a service SYSMOD. This type of SYSMOD can replace or update elements in target and distribution libraries, such as for a permanent correction, or it can add new elements. All other MCSs for this SYSMOD follow this header MCS. The parameter SYSMOD-ID specifies a unique 7-character system modification identifier for the PTF.",
         "operands": [
@@ -5401,6 +5452,7 @@
     {
         "name": "++RELEASE",
         "parameter": "SYSMOD-ID",
+        "length": 7,
         "type": "MCS",
         "description": "The ++RELEASE MCS removes a previously held SYSMOD from exception SYSMOD status. ++RELEASE statements are processed by the RECEIVE command. The parameter SYSMOD-ID specifies the SYSMOD to be released from hold status.",
         "operands": [
@@ -5576,6 +5628,7 @@
     {
         "name": "++RENAME",
         "parameter": "OLD-NAME",
+        "length": 8,
         "type": "MCS",
         "description": "During APPLY processing, the ++RENAME MCS renames a load module in all the target libraries and the LMOD entry in the target zone. It also updates the LMOD subentry of the MOD entry for each module in the load module. The parameter OLD-NAME specifies the name of the load module to be renamed.",
         "operands": [
@@ -5711,6 +5764,7 @@
     {
         "name": "++SRCUPD",
         "parameter": "NAME",
+        "length": 8,
         "type": "MCS",
         "inline_data": true,
         "description": "The ++SRCUPD MCS describes a single set of source update statements within a PTF, an APAR fix, or a USERMOD. It must immediately precede the source update statements within the SYSMOD. The parameter NAME specifies the name of the source in the distribution library and, optionally, in the target library.",
@@ -5741,6 +5795,7 @@
     {
         "name": "++AIX1",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++AIX1 MCS describes an AIX client element. Elements to be used by an AIX client. Same operands as HFS elements.",
@@ -5862,6 +5917,7 @@
     {
         "name": "++AIX2",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++AIX2 MCS describes an AIX client element. Elements to be used by an AIX client. Same as ++AIX1.",
@@ -5983,6 +6039,7 @@
     {
         "name": "++AIX3",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++AIX3 MCS describes an AIX client element. Elements to be used by an AIX client. Same as ++AIX1.",
@@ -6104,6 +6161,7 @@
     {
         "name": "++AIX4",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++AIX4 MCS describes an AIX client element. Elements to be used by an AIX client. Same as ++AIX1.",
@@ -6225,6 +6283,7 @@
     {
         "name": "++AIX5",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++AIX5 MCS describes an AIX client element. Elements to be used by an AIX client. Same as ++AIX1.",
@@ -6346,6 +6405,7 @@
     {
         "name": "++CLIENT1",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++CLIENT1 MCS describes a client element. Elements to be used by any client (intended for clients not described by other element types). Same operands as HFS elements.",
@@ -6467,6 +6527,7 @@
     {
         "name": "++CLIENT2",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++CLIENT2 MCS describes a client element. Elements to be used by any client (intended for clients not described by other element types). Same as ++CLIENT1.",
@@ -6588,6 +6649,7 @@
     {
         "name": "++CLIENT3",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++CLIENT3 MCS describes a client element. Elements to be used by any client (intended for clients not described by other element types). Same as ++CLIENT1.",
@@ -6709,6 +6771,7 @@
     {
         "name": "++CLIENT4",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++CLIENT4 MCS describes a client element. Elements to be used by any client (intended for clients not described by other element types). Same as ++CLIENT1.",
@@ -6830,6 +6893,7 @@
     {
         "name": "++CLIENT5",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++CLIENT5 MCS describes a client element. Elements to be used by any client (intended for clients not described by other element types). Same as ++CLIENT1.",
@@ -6951,6 +7015,7 @@
     {
         "name": "++HFS",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++HFS MCS describes a generic hierarchical file system element (data not covered by other types). It must immediately precede the element data when they are within the SYSMOD. The parameter NAME specifies the name of the hierarchical file system element member in the distribution library. Note: ++HFS can optionally be coded as ++HFSxxx where xxx is a 3-character national language identifier (e.g., ++HFSENU for English US).",
@@ -7101,6 +7166,7 @@
     {
         "name": "++SHELLSCR",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++SHELLSCR MCS describes a UNIX shell script element. It must immediately precede the shell script data when they are within the SYSMOD. The parameter NAME specifies the name of the shell script element member in the distribution library.",
@@ -7243,6 +7309,7 @@
     {
         "name": "++OS21",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++OS21 MCS describes an OS/2 client element. It must immediately precede the element data when they are within the SYSMOD. The parameter NAME specifies the name of the element member in the distribution library.",
@@ -7364,6 +7431,7 @@
     {
         "name": "++OS22",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++OS22 MCS describes an OS/2 client element. Same as ++OS21.",
@@ -7485,6 +7553,7 @@
     {
         "name": "++OS23",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++OS23 MCS describes an OS/2 client element. Same as ++OS21.",
@@ -7606,6 +7675,7 @@
     {
         "name": "++OS24",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++OS24 MCS describes an OS/2 client element. Same as ++OS21.",
@@ -7727,6 +7797,7 @@
     {
         "name": "++OS25",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++OS25 MCS describes an OS/2 client element. Same as ++OS21.",
@@ -7848,6 +7919,7 @@
     {
         "name": "++UNIX1",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++UNIX1 MCS describes a UNIX client element. Same operands as HFS elements.",
@@ -7969,6 +8041,7 @@
     {
         "name": "++UNIX2",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++UNIX2 MCS describes a UNIX client element. Same as ++UNIX1.",
@@ -8090,6 +8163,7 @@
     {
         "name": "++UNIX3",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++UNIX3 MCS describes a UNIX client element. Same as ++UNIX1.",
@@ -8211,6 +8285,7 @@
     {
         "name": "++UNIX4",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++UNIX4 MCS describes a UNIX client element. Same as ++UNIX1.",
@@ -8332,6 +8407,7 @@
     {
         "name": "++UNIX5",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++UNIX5 MCS describes a UNIX client element. Same as ++UNIX1.",
@@ -8453,6 +8529,7 @@
     {
         "name": "++WIN1",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++WIN1 MCS describes a Windows client element. Same operands as HFS elements.",
@@ -8574,6 +8651,7 @@
     {
         "name": "++WIN2",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++WIN2 MCS describes a Windows client element. Same as ++WIN1.",
@@ -8695,6 +8773,7 @@
     {
         "name": "++WIN3",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++WIN3 MCS describes a Windows client element. Same as ++WIN1.",
@@ -8816,6 +8895,7 @@
     {
         "name": "++WIN4",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++WIN4 MCS describes a Windows client element. Same as ++WIN1.",
@@ -8937,6 +9017,7 @@
     {
         "name": "++WIN5",
         "parameter": "NAME",
+        "length": 8,
         "type": "HFS",
         "inline_data": true,
         "description": "The ++WIN5 MCS describes a Windows client element. Same as ++WIN1.",
@@ -9058,6 +9139,7 @@
     {
         "name": "++USERMOD",
         "parameter": "SYSMOD-ID",
+        "length": 7,
         "type": "MCS",
         "description": "The ++USERMOD MCS identifies a user modification. This type of SYSMOD can be used to add user-defined functions or to replace or update elements for IBM-supplied code in the target or distribution libraries. All other MCSs for this SYSMOD follow this header MCS. The parameter SYSMOD-ID specifies a unique 7-character system modification identifier for the USERMOD.",
         "operands": [

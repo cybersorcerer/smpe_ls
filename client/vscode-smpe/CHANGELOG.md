@@ -2,13 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
-## [0.7.9-alpha] - 2026
+## [0.8.0-alpha] - 2026
 
 ### Fixed
 
 - **Multi-line Comment Parsing** - Parser now correctly captures full text of multi-line comments
 - **Multi-line Comment Formatting** - Formatting preserves multi-line comments inside statements
 - **Comment Line Wrapping** - Long lines within multi-line comments are now wrapped at column 72
+- **Comment Before Terminator** - Comments before terminator on same line (e.g., `CALLLIBS /* comment */.`) are now preserved during formatting
 
 ## [0.7.8-alpha] - 2026
 

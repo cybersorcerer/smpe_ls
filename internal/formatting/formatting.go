@@ -325,13 +325,10 @@ func (p *Provider) extractCommentsInRange(comments []*parser.Node, startLine, en
 					info.AtEnd = true
 				}
 
-				// Check if comment is after terminator
-				afterComment := ""
-				commentEnd := comment.Position.Character + len(comment.Value)
-				if commentEnd < len(line) {
-					afterComment = strings.TrimSpace(line[commentEnd:])
-				}
-				if strings.Contains(beforeComment, ".") || afterComment == "." {
+				// Check if comment is after terminator (dot appears BEFORE the comment)
+				// Note: If the dot appears AFTER the comment (e.g., "CALLLIBS /* comment */.")
+				// then AfterDot should be false - the comment belongs to the statement
+				if strings.Contains(beforeComment, ".") {
 					info.AfterDot = true
 				}
 			}
