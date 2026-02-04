@@ -8,6 +8,8 @@ tsconfig.json
 !out/**/*.js
 !smpe_ls
 !smpe_ls.exe
+!smpe_lint
+!smpe_lint.exe
 !smpe.json
 !CHANGELOG.md
 !README.md

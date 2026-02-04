@@ -215,70 +215,76 @@ vscode: build vscode-compile
 	@echo "3. Open a .smpe file to activate the extension"
 
 package-windows: vscode-deps
-	@echo "Building Windows AMD64 binary (commit: $(COMMIT))..."
+	@echo "Building Windows AMD64 binaries (commit: $(COMMIT))..."
 	GOOS=windows GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_ls.exe ./cmd/smpe_ls
+	GOOS=windows GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_lint.exe ./cmd/smpe_lint
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
 	@echo "Creating VSIX package for Windows..."
 	cd client/vscode-smpe && npx --yes @vscode/vsce package --target win32-x64
 	@echo ""
 	@echo "VSIX package created in client/vscode-smpe/"
-	@rm -f client/vscode-smpe/smpe_ls.exe
+	@rm -f client/vscode-smpe/smpe_ls.exe client/vscode-smpe/smpe_lint.exe
 
 package-windows-arm64: vscode-deps
-	@echo "Building Windows ARM64 binary (commit: $(COMMIT))..."
+	@echo "Building Windows ARM64 binaries (commit: $(COMMIT))..."
 	GOOS=windows GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_ls.exe ./cmd/smpe_ls
+	GOOS=windows GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_lint.exe ./cmd/smpe_lint
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
 	@echo "Creating VSIX package for Windows ARM64..."
 	cd client/vscode-smpe && npx --yes @vscode/vsce package --target win32-arm64
 	@echo ""
 	@echo "VSIX package created in client/vscode-smpe/"
-	@rm -f client/vscode-smpe/smpe_ls.exe
+	@rm -f client/vscode-smpe/smpe_ls.exe client/vscode-smpe/smpe_lint.exe
 
 package-linux: vscode-deps
-	@echo "Building Linux AMD64 binary (commit: $(COMMIT))..."
+	@echo "Building Linux AMD64 binaries (commit: $(COMMIT))..."
 	GOOS=linux GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
+	GOOS=linux GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_lint ./cmd/smpe_lint
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
 	@echo "Creating VSIX package for Linux..."
 	cd client/vscode-smpe && npx --yes @vscode/vsce package --target linux-x64
 	@echo ""
 	@echo "VSIX package created in client/vscode-smpe/"
-	@rm -f client/vscode-smpe/smpe_ls
+	@rm -f client/vscode-smpe/smpe_ls client/vscode-smpe/smpe_lint
 
 package-linux-arm64: vscode-deps
-	@echo "Building Linux ARM64 binary (commit: $(COMMIT))..."
+	@echo "Building Linux ARM64 binaries (commit: $(COMMIT))..."
 	GOOS=linux GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
+	GOOS=linux GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_lint ./cmd/smpe_lint
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
 	@echo "Creating VSIX package for Linux ARM64..."
 	cd client/vscode-smpe && npx --yes @vscode/vsce package --target linux-arm64
 	@echo ""
 	@echo "VSIX package created in client/vscode-smpe/"
-	@rm -f client/vscode-smpe/smpe_ls
+	@rm -f client/vscode-smpe/smpe_ls client/vscode-smpe/smpe_lint
 
 package-macos: vscode-deps
-	@echo "Building macOS ARM64 (Apple Silicon) binary (commit: $(COMMIT))..."
+	@echo "Building macOS ARM64 (Apple Silicon) binaries (commit: $(COMMIT))..."
 	GOOS=darwin GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
+	GOOS=darwin GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_lint ./cmd/smpe_lint
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
 	@echo "Creating VSIX package for macOS ARM64..."
 	cd client/vscode-smpe && npx --yes @vscode/vsce package --target darwin-arm64
 	@echo ""
 	@echo "VSIX package created in client/vscode-smpe/"
-	@rm -f client/vscode-smpe/smpe_ls
+	@rm -f client/vscode-smpe/smpe_ls client/vscode-smpe/smpe_lint
 
 package-macos-x64: vscode-deps
-	@echo "Building macOS AMD64 (Intel) binary (commit: $(COMMIT))..."
+	@echo "Building macOS AMD64 (Intel) binaries (commit: $(COMMIT))..."
 	GOOS=darwin GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
+	GOOS=darwin GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_lint ./cmd/smpe_lint
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
 	@echo "Creating VSIX package for macOS Intel..."
 	cd client/vscode-smpe && npx --yes @vscode/vsce package --target darwin-x64
 	@echo ""
 	@echo "VSIX package created in client/vscode-smpe/"
-	@rm -f client/vscode-smpe/smpe_ls
+	@rm -f client/vscode-smpe/smpe_ls client/vscode-smpe/smpe_lint
 
 package-all: vscode-deps
 	@echo "═══════════════════════════════════════════════════════════════"
