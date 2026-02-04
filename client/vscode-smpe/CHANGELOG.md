@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.8.1-alpha] - 2026
+
+### Added
+
+- **Command-Line Linter** - New `smpe_lint` tool for CI/CD integration
+  - Markdown and JSON output formats
+  - Configurable diagnostics via YAML/JSON config files
+  - `--disable` flag to disable specific diagnostics
+  - `--warnings-as-errors` for strict mode
+  - `--init` to create sample configuration files
+
+### Fixed
+
+- **Comment Indentation** - Comments now start at column 3 (2 space indent) instead of column 1
+- **Multi-line Comment Before Terminator** - Multi-line comments before terminator are now correctly placed before the `.` during formatting
+- **SHSCRIPT Comma Preservation** - Commas in `SHSCRIPT(MYSCRIPT, POST)` are now preserved during formatting
+- **Leading Comment Indentation** - Leading comments moved into statements now correctly start at column 3
+
 ## [0.8.0-alpha] - 2026
 
 ### Fixed

@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-0.8.0-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-0.8.1-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -130,7 +130,7 @@ See [cmd/smpe_lint/README.md](cmd/smpe_lint/README.md) for full documentation.
 
 ## 🎯 Supported MCS Statements
 
-### Version 0.8.0 (Current)
+### Version 0.8.1 (Current)
 
 **Control MCS (25 statements with full diagnostics):**
 
@@ -222,7 +222,25 @@ make release
 
 ## 📋 What's New
 
-### Version 0.8.0 (Latest)
+### Version 0.8.1 (Latest)
+
+**New Features:**
+
+- 🔧 **Command-Line Linter** - New `smpe_lint` tool for CI/CD integration
+  - Markdown and JSON output formats
+  - Configurable diagnostics via YAML/JSON config files
+  - `--disable` flag to disable specific diagnostics
+  - `--warnings-as-errors` for strict mode
+  - `--init` to create sample configuration files
+
+**Bug Fixes:**
+
+- 🐛 **Comment Indentation** - Comments now start at column 3 (2 space indent) instead of column 1
+- 🐛 **Multi-line Comment Before Terminator** - Multi-line comments before terminator are now correctly placed before the `.` during formatting
+- 🐛 **SHSCRIPT Comma Preservation** - Commas in `SHSCRIPT(MYSCRIPT, POST)` are now preserved during formatting
+- 🐛 **Leading Comment Indentation** - Leading comments moved into statements now correctly start at column 3
+
+### Version 0.8.0
 
 **Bug Fixes:**
 
