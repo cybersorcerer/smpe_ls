@@ -2,6 +2,7 @@
 
 # Build configuration
 BINARY_NAME=smpe_ls
+LINT_BINARY_NAME=smpe_lint
 BUILD_DIR=.
 INSTALL_DIR=$(HOME)/.local/bin
 DATA_INSTALL_DIR=$(HOME)/.local/share/smpe_ls
@@ -9,13 +10,14 @@ DATA_DIR=data
 COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 LDFLAGS=-s -w -X main.commit=$(COMMIT)
 
-all: build
+all: build build-lint
 
 help:
 	@echo "SMPE Language Server - Available Make Targets"
 	@echo "════════════════════════════════════════════════════════════════"
 	@echo "Build & Install:"
 	@echo "  make build        - Build the language server binary"
+	@echo "  make build-lint   - Build the linting tool"
 	@echo "  make install      - Install binary and data files to ~/.local/"
 	@echo "  make build-all    - Build binaries for all platforms"
 	@echo "  make release      - Create release packages for all platforms"
@@ -41,12 +43,20 @@ build:
 	go build -ldflags="-X main.commit=$(COMMIT)" -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/smpe_ls
 	@echo "Build complete: $(BUILD_DIR)/$(BINARY_NAME)"
 
+build-lint:
+	@echo "Building $(LINT_BINARY_NAME) (commit: $(COMMIT))..."
+	go build -ldflags="-X main.commit=$(COMMIT)" -o $(BUILD_DIR)/$(LINT_BINARY_NAME) ./cmd/smpe_lint
+	@echo "Build complete: $(BUILD_DIR)/$(LINT_BINARY_NAME)"
+
 install: build
 	@echo "Installing $(BINARY_NAME) to $(INSTALL_DIR)..."
 	@mkdir -p $(INSTALL_DIR)
 	@cp $(BUILD_DIR)/$(BINARY_NAME) $(INSTALL_DIR)/
 	@chmod +x $(INSTALL_DIR)/$(BINARY_NAME)
 	@echo "Installed binary to $(INSTALL_DIR)/$(BINARY_NAME)"
+	@cp $(BUILD_DIR)/$(LINT_BINARY_NAME) $(INSTALL_DIR)/
+	@chmod +x $(INSTALL_DIR)/$(LINT_BINARY_NAME)
+	@echo "Installed binary to $(INSTALL_DIR)/$(LINT_BINARY_NAME)"
 	@echo ""
 	@echo "Installing data files to $(DATA_INSTALL_DIR)..."
 	@mkdir -p $(DATA_INSTALL_DIR)
@@ -59,11 +69,13 @@ install: build
 clean:
 	@echo "Cleaning build artifacts..."
 	@rm -f $(BUILD_DIR)/$(BINARY_NAME)
+	@rm -f $(BUILD_DIR)/$(LINT_BINARY_NAME)
 	@echo "Clean complete"
 
 clean-all:
 	@echo "Cleaning all build artifacts including extension..."
 	@rm -f $(BUILD_DIR)/$(BINARY_NAME)
+	@rm -f $(BUILD_DIR)/$(LINT_BINARY_NAME)
 	@rm -rf dist/
 	@rm -rf release/
 	@rm -rf client/vscode-smpe/out
@@ -77,18 +89,24 @@ build-all:
 	@echo ""
 	@echo "Building Linux AMD64..."
 	@GOOS=linux GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_ls-linux-amd64 ./cmd/smpe_ls
+	@GOOS=linux GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_lint-linux-amd64 ./cmd/smpe_lint
 	@echo "Building Linux ARM64..."
 	@GOOS=linux GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_ls-linux-arm64 ./cmd/smpe_ls
+	@GOOS=linux GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_lint-linux-arm64 ./cmd/smpe_lint
 	@echo ""
 	@echo "Building macOS Apple Silicon (ARM64)..."
 	@GOOS=darwin GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_ls-macos-arm64 ./cmd/smpe_ls
+	@GOOS=darwin GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_lint-macos-arm64 ./cmd/smpe_lint
 	@echo "Building macOS Intel (AMD64)..."
 	@GOOS=darwin GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_ls-macos-amd64 ./cmd/smpe_ls
+	@GOOS=darwin GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_lint-macos-amd64 ./cmd/smpe_lint
 	@echo ""
 	@echo "Building Windows AMD64..."
 	@GOOS=windows GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_ls-windows-amd64.exe ./cmd/smpe_ls
+	@GOOS=windows GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_lint-windows-amd64.exe ./cmd/smpe_lint
 	@echo "Building Windows ARM64..."
 	@GOOS=windows GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_ls-windows-arm64.exe ./cmd/smpe_ls
+	@GOOS=windows GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o dist/smpe_lint-windows-arm64.exe ./cmd/smpe_lint
 	@echo ""
 	@echo "All binaries built successfully in dist/"
 	@ls -lh dist/
@@ -103,6 +121,7 @@ release: build-all
 	echo "Packaging Linux AMD64..."; \
 	mkdir -p release/smpe_ls-$$VERSION-linux-amd64; \
 	cp dist/smpe_ls-linux-amd64 release/smpe_ls-$$VERSION-linux-amd64/smpe_ls; \
+	cp dist/smpe_lint-linux-amd64 release/smpe_ls-$$VERSION-linux-amd64/smpe_lint; \
 	cp data/smpe.json release/smpe_ls-$$VERSION-linux-amd64/; \
 	cp README.md release/smpe_ls-$$VERSION-linux-amd64/ 2>/dev/null || true; \
 	tar czf release/smpe_ls-$$VERSION-linux-amd64.tar.gz -C release smpe_ls-$$VERSION-linux-amd64; \
@@ -110,6 +129,7 @@ release: build-all
 	echo "Packaging Linux ARM64..."; \
 	mkdir -p release/smpe_ls-$$VERSION-linux-arm64; \
 	cp dist/smpe_ls-linux-arm64 release/smpe_ls-$$VERSION-linux-arm64/smpe_ls; \
+	cp dist/smpe_lint-linux-arm64 release/smpe_ls-$$VERSION-linux-arm64/smpe_lint; \
 	cp data/smpe.json release/smpe_ls-$$VERSION-linux-arm64/; \
 	cp README.md release/smpe_ls-$$VERSION-linux-arm64/ 2>/dev/null || true; \
 	tar czf release/smpe_ls-$$VERSION-linux-arm64.tar.gz -C release smpe_ls-$$VERSION-linux-arm64; \
@@ -117,6 +137,7 @@ release: build-all
 	echo "Packaging macOS Apple Silicon..."; \
 	mkdir -p release/smpe_ls-$$VERSION-macos-arm64; \
 	cp dist/smpe_ls-macos-arm64 release/smpe_ls-$$VERSION-macos-arm64/smpe_ls; \
+	cp dist/smpe_lint-macos-arm64 release/smpe_ls-$$VERSION-macos-arm64/smpe_lint; \
 	cp data/smpe.json release/smpe_ls-$$VERSION-macos-arm64/; \
 	cp README.md release/smpe_ls-$$VERSION-macos-arm64/ 2>/dev/null || true; \
 	tar czf release/smpe_ls-$$VERSION-macos-arm64.tar.gz -C release smpe_ls-$$VERSION-macos-arm64; \
@@ -124,6 +145,7 @@ release: build-all
 	echo "Packaging macOS Intel..."; \
 	mkdir -p release/smpe_ls-$$VERSION-macos-amd64; \
 	cp dist/smpe_ls-macos-amd64 release/smpe_ls-$$VERSION-macos-amd64/smpe_ls; \
+	cp dist/smpe_lint-macos-amd64 release/smpe_ls-$$VERSION-macos-amd64/smpe_lint; \
 	cp data/smpe.json release/smpe_ls-$$VERSION-macos-amd64/; \
 	cp README.md release/smpe_ls-$$VERSION-macos-amd64/ 2>/dev/null || true; \
 	tar czf release/smpe_ls-$$VERSION-macos-amd64.tar.gz -C release smpe_ls-$$VERSION-macos-amd64; \
@@ -131,6 +153,7 @@ release: build-all
 	echo "Packaging Windows AMD64..."; \
 	mkdir -p release/smpe_ls-$$VERSION-windows-amd64; \
 	cp dist/smpe_ls-windows-amd64.exe release/smpe_ls-$$VERSION-windows-amd64/smpe_ls.exe; \
+	cp dist/smpe_lint-windows-amd64.exe release/smpe_ls-$$VERSION-windows-amd64/smpe_lint.exe; \
 	cp data/smpe.json release/smpe_ls-$$VERSION-windows-amd64/; \
 	cp README.md release/smpe_ls-$$VERSION-windows-amd64/ 2>/dev/null || true; \
 	cd release && zip -r smpe_ls-$$VERSION-windows-amd64.zip smpe_ls-$$VERSION-windows-amd64; \
@@ -139,6 +162,7 @@ release: build-all
 	echo "Packaging Windows ARM64..."; \
 	mkdir -p release/smpe_ls-$$VERSION-windows-arm64; \
 	cp dist/smpe_ls-windows-arm64.exe release/smpe_ls-$$VERSION-windows-arm64/smpe_ls.exe; \
+	cp dist/smpe_lint-windows-arm64.exe release/smpe_ls-$$VERSION-windows-arm64/smpe_lint.exe; \
 	cp data/smpe.json release/smpe_ls-$$VERSION-windows-arm64/; \
 	cp README.md release/smpe_ls-$$VERSION-windows-arm64/ 2>/dev/null || true; \
 	cd release && zip -r smpe_ls-$$VERSION-windows-arm64.zip smpe_ls-$$VERSION-windows-arm64; \

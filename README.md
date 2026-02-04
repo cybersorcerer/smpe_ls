@@ -11,6 +11,7 @@ A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Mod
 - **🎨 Syntax Highlighting** - Color coding for MCS statements, operands, and comments
 - **💡 Intelligent Code Completion** - Context-aware completion for statements and operands
 - **🔍 Real-time Diagnostics** - Instant validation of SMP/E syntax and semantics
+- **🔧 Command-Line Linter** - CI/CD-ready linter with configurable diagnostics
 - **📖 Hover Documentation** - Inline documentation from IBM SMP/E Reference
 - **🔗 Go to Definition** - Navigate to SYSMOD/FMID definitions
 - **🔎 Find References** - Find all references to a SYSMOD or FMID
@@ -74,6 +75,29 @@ smpe_ls --debug
 # Use custom data file
 smpe_ls --data /path/to/smpe.json
 ```
+
+### Command-Line Linter
+
+For CI/CD integration, use the `smpe_lint` tool:
+
+```bash
+# Lint SMP/E files
+smpe_lint *.smpe
+
+# Strict mode (warnings cause failure)
+smpe_lint --warnings-as-errors *.smpe
+
+# JSON output for programmatic processing
+smpe_lint --json *.smpe
+
+# Ignore specific diagnostics
+smpe_lint --ignore unknown_operand *.smpe
+
+# Use configuration file
+smpe_lint --config .smpe_lint.yaml *.smpe
+```
+
+See [cmd/smpe_lint/README.md](cmd/smpe_lint/README.md) for full documentation.
 
 ## 📝 Example
 
@@ -370,6 +394,7 @@ Or in VSCode:
 smpe_ls/
 ├── cmd/
 │   ├── smpe_ls/        # Language server binary
+│   ├── smpe_lint/      # Command-line linter for CI/CD
 │   └── smpe_test/      # Central test suite
 ├── internal/
 │   ├── completion/     # Code completion provider
