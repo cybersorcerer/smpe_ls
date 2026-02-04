@@ -170,7 +170,7 @@ jobs:
           COMMIT=$(git rev-parse --short HEAD)
           echo "commit=$COMMIT" >> $GITHUB_OUTPUT
 
-      - name: Build binary
+      - name: Build binaries
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
@@ -178,8 +178,10 @@ jobs:
         run: |
           if [ "${{ matrix.goos }}" = "windows" ]; then
             go build -ldflags="-s -w -X main.commit=${{ steps.commit.outputs.commit }}" -o client/vscode-smpe/smpe_ls.exe ./cmd/smpe_ls
+            go build -ldflags="-s -w -X main.commit=${{ steps.commit.outputs.commit }}" -o client/vscode-smpe/smpe_lint.exe ./cmd/smpe_lint
           else
             go build -ldflags="-s -w -X main.commit=${{ steps.commit.outputs.commit }}" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
+            go build -ldflags="-s -w -X main.commit=${{ steps.commit.outputs.commit }}" -o client/vscode-smpe/smpe_lint ./cmd/smpe_lint
           fi
 
       - name: Copy data files
