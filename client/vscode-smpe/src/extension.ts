@@ -7,9 +7,12 @@ import {
 	ServerOptions,
 	Executable
 } from 'vscode-languageclient/node';
+import { QueryProvider } from './zosmf/queryProvider';
+import { ResultPanel } from './webview/resultPanel';
 
 let client: LanguageClient;
 let outputChannel: vscode.OutputChannel;
+let queryProvider: QueryProvider;
 
 function log(message: string) {
 	const timestamp = new Date().toISOString();
@@ -280,6 +283,34 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		})
 	);
+
+	// Initialize z/OSMF Query Provider
+	queryProvider = new QueryProvider(context, outputChannel);
+	queryProvider.onResult((result) => {
+		const panel = ResultPanel.createOrShow(context.extensionUri);
+		panel.showResult(result);
+	});
+
+	// Register z/OSMF commands
+	context.subscriptions.push(
+		vscode.commands.registerCommand('smpe.zosmf.createConfig', () => {
+			queryProvider.createConfig();
+		}),
+		vscode.commands.registerCommand('smpe.zosmf.clearPassword', () => {
+			queryProvider.clearPasswords();
+		}),
+		vscode.commands.registerCommand('smpe.zosmf.querySysmod', () => {
+			queryProvider.querySysmod();
+		}),
+		vscode.commands.registerCommand('smpe.zosmf.queryDddef', () => {
+			queryProvider.queryDddef();
+		}),
+		vscode.commands.registerCommand('smpe.zosmf.queryZones', () => {
+			queryProvider.queryZones();
+		})
+	);
+
+	log('z/OSMF Query commands registered');
 }
 
 export function deactivate(): Thenable<void> | undefined {

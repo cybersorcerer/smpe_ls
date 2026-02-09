@@ -2,7 +2,7 @@
   "name": "vscode-smpe",
   "displayName": "SMP/E Language Support",
   "description": "Language support for SMP/E MCS statements",
-  "version": "0.8.1-alpha",
+  "version": "0.8.2-alpha",
   "publisher": "cybersorcerer",
   "license": "AGPL-3.0",
   "repository": {
@@ -191,7 +191,29 @@
         ],
         "editor.wordWrap": "off"
       }
-    }
+    },
+    "commands": [
+      {
+        "command": "smpe.zosmf.querySysmod",
+        "title": "SMP/E: Query SYSMOD via z/OSMF"
+      },
+      {
+        "command": "smpe.zosmf.queryDddef",
+        "title": "SMP/E: Query DDDEF via z/OSMF"
+      },
+      {
+        "command": "smpe.zosmf.queryZones",
+        "title": "SMP/E: List Zones via z/OSMF"
+      },
+      {
+        "command": "smpe.zosmf.createConfig",
+        "title": "SMP/E: Create z/OSMF Config"
+      },
+      {
+        "command": "smpe.zosmf.clearPassword",
+        "title": "SMP/E: Clear Stored Password"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -205,6 +227,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "vscode-languageclient": "^8.1.0"
+    "vscode-languageclient": "^8.1.0",
+    "yaml": "^2.3.4"
   }
 }
