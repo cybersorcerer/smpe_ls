@@ -8,26 +8,11 @@ servers:
     csi: ZOS31.SMPE.GLOBAL.CSI
     user: SVARFUN
     rejectUnauthorized: false
+    zones:
+      - MVST100
+      - MVSD100
     defaultZones:
-      - GLOBAL
-
-  - name: Tsy02
-    host: https://192.168.9.66
-    port: 443
-    csi: ZOS31.SMPE.GLOBAL.CSI
-    user: SVARFUN
-    rejectUnauthorized: false
-    defaultZones:
-      - GLOBAL
-
-  - name: Pca1
-    host: https://192.168.9.87
-    port: 443
-    csi: ZOS31.SMPE.GLOBAL.CSI
-    user: SVARFUN
-    rejectUnauthorized: false
-    defaultZones:
-      - GLOBAL
+      - MVST100
 
   # Add more servers as needed:
   # - name: Development
@@ -38,4 +23,4 @@ servers:
   #   rejectUnauthorized: false
 
 # Optional: Default server name (if not set, user is always prompted)
-defaultServer: Maint
+# defaultServer: Production

@@ -295,10 +295,13 @@ export class FreeFormPanel {
             font-size: 0.8em;
             margin-left: 8px;
         }
+        #tableContainer {
+            overflow-x: auto;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.9em;
+            font-size: var(--vscode-font-size);
         }
         th, td {
             text-align: left;
@@ -310,13 +313,16 @@ export class FreeFormPanel {
             max-width: 300px;
         }
         th {
-            background-color: var(--vscode-editor-background);
+            background-color: var(--vscode-keybindingTable-headerBackground, rgba(128, 128, 128, 0.15));
             color: var(--vscode-foreground);
             font-weight: 600;
             position: sticky;
             top: 0;
         }
-        tr:hover {
+        tbody tr:nth-child(odd) {
+            background-color: var(--vscode-keybindingTable-rowsBackground, rgba(128, 128, 128, 0.04));
+        }
+        tbody tr:hover {
             background-color: var(--vscode-list-hoverBackground);
         }
         .status-bar {
@@ -341,6 +347,77 @@ export class FreeFormPanel {
             font-size: 0.85em;
             color: var(--vscode-descriptionForeground);
             margin-top: 2px;
+        }
+        .subentry-picker {
+            display: none;
+            margin-bottom: 8px;
+            padding: 8px;
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 2px;
+            background-color: var(--vscode-editor-background);
+        }
+        .subentry-picker.visible {
+            display: block;
+        }
+        .subentry-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2px 12px;
+        }
+        .subentry-grid label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            min-width: unset;
+            font-weight: normal;
+            font-size: 0.9em;
+            cursor: pointer;
+            padding: 2px 0;
+        }
+        .subentry-grid input[type="checkbox"] {
+            flex: none;
+            margin: 0;
+        }
+        .subentry-picker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .subentry-picker-header span {
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        .toggle-link {
+            background: none;
+            border: none;
+            color: var(--vscode-textLink-foreground);
+            cursor: pointer;
+            font-size: var(--vscode-font-size);
+            padding: 0;
+            text-decoration: underline;
+        }
+        .toggle-link:hover {
+            color: var(--vscode-textLink-activeForeground);
+        }
+        .cell-tooltip {
+            display: none;
+            position: fixed;
+            background-color: var(--vscode-editorHoverWidget-background, var(--vscode-editor-background));
+            color: var(--vscode-editorHoverWidget-foreground, var(--vscode-foreground));
+            border: 1px solid var(--vscode-editorHoverWidget-border, var(--vscode-panel-border));
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: var(--vscode-font-size);
+            max-width: 600px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            z-index: 1000;
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .cell-tooltip.visible {
+            display: block;
         }
     </style>
 </head>
@@ -377,16 +454,27 @@ export class FreeFormPanel {
         <div class="form-row">
             <label for="subentries">Subentries</label>
             <input type="text" id="subentries" placeholder="FMID,ERROR,RECDATE (comma-separated)" />
+            <button id="togglePickerBtn" title="Pick subentries">Pick...</button>
+        </div>
+        <div id="subentryPicker" class="subentry-picker">
+            <div class="subentry-picker-header">
+                <span id="pickerTitle">Available Subentries</span>
+                <div style="display: flex; gap: 8px;">
+                    <button id="addSubentriesBtn">Add Selected</button>
+                </div>
+            </div>
+            <div id="subentryGrid" class="subentry-grid"></div>
         </div>
         <div class="form-row">
             <label for="filter">Filter</label>
             <input type="text" id="filter" placeholder="ENAME='UA12345' (optional)" />
         </div>
         <div class="button-row">
-            <button id="executeBtn" onclick="executeQuery()">Execute Query</button>
+            <button id="executeBtn">Execute Query</button>
         </div>
     </div>
 
+    <div id="cellTooltip" class="cell-tooltip"></div>
     <div id="statusBar" class="status-bar" style="display:none;"></div>
 
     <div id="resultSection" class="result-section" style="display:none;">
@@ -395,8 +483,8 @@ export class FreeFormPanel {
                 <h3>Results<span id="countBadge" class="count-badge">0</span></h3>
             </div>
             <div class="toolbar">
-                <button class="secondary" onclick="exportJson()">Export JSON</button>
-                <button class="secondary" onclick="exportCsv()">Export CSV</button>
+                <button id="exportJsonBtn">Export JSON</button>
+                <button id="exportCsvBtn">Export CSV</button>
             </div>
         </div>
         <div id="tableContainer"></div>
@@ -406,6 +494,21 @@ export class FreeFormPanel {
         const vscode = acquireVsCodeApi();
         let currentResult = null;
         let currentSubentries = [];
+
+        // Valid subentries per entry type (IBM z/OS 3.1 SMP/E Reference)
+        const SUBENTRIES_BY_TYPE = {
+            SYSMOD: ['ACCEPT','APPLY','ASSEM','BYPASS','CIFREQ','DELBY','DELETE2','DELLMOD','DESCRIPTION','DLMOD','ELEMENT','ELEMMOV','EMOVE','ENAME','ERROR','FEATURE','FESN','FMID','IFREQ','INSTALLDATE','INSTALLTIME','JAR','JARUPD','JCLIN','LASTSUP','LASTUPD','LASTUPDTYPE','MAC','MACUPD','MOD','NPRE2','PRE2','PROGRAM','RECDATE','RECTIME','REGEN','RENLMOD','REQ2','RESDATE','RESTIME','RESTORE','REWORK','RLMOD','SMODTYPE','SOURCEID','SRC','SRCUPD','SUPBY','SUPING2','SZAP','UCLDATE','UCLTIME','VERSION2','XZAP'],
+            DDDEF: ['CONCAT','DATACLAS','DATASET','DIR','DISP','DSNTYPE','DSPREFIX','ENAME','INITDISP','MGMTCLAS','PATH','PROTECT','SPACE','STORCLAS','SYSOUT','UNIT','UNITS','VOLUME','WAITFORDSN'],
+            TARGETZONE: ['ENAME','OPTIONS','RELATED','SREL','TIEDTO','UPGLEVEL','XZLINK','ZDESC'],
+            DLIB: ['ENAME','LASTUPD','LASTUPDTYPE','SYSLIB'],
+            GLOBALZONE: ['ENAME','FMID','OPTIONS','SREL','UPGLEVEL','ZDESC','ZONEINDEX'],
+            ASSEM: ['ASMIN','ENAME','LASTUPD','LASTUPDTYPE'],
+            DATA: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            LMOD: ['CALLLIBS','COPIED','ENAME','LASTUPD','LASTUPDTYPE','LEPARM','LECNTL','LMODALIAS','LMODSYMLINK','MODDEL','RC','SIDEDECKLIB','SYSLIB','UTIN','XZMOD','XZMODP'],
+            MAC: ['DISTLIB','ENAME','FMID','GENASM','LASTUPD','LASTUPDTYPE','MALIAS','RMID','SYSLIB','UMID'],
+            MOD: ['ASSEMBLE','CSECT','DALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','LEPARM','LMOD','RMID','RMIDASM','TALIAS','UMID','XZLMOD','XZLMODP'],
+            SRC: ['DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB','UMID']
+        };
 
         // Handle messages from extension
         window.addEventListener('message', event => {
@@ -470,6 +573,7 @@ export class FreeFormPanel {
             }
 
             document.getElementById('executeBtn').disabled = true;
+            document.getElementById('subentryPicker').classList.remove('visible');
             showProgress('Connecting...');
 
             vscode.postMessage({
@@ -599,6 +703,91 @@ export class FreeFormPanel {
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;');
         }
+
+        // Subentry picker: build checkbox grid for current entry type
+        function updateSubentryGrid() {
+            const entryType = document.getElementById('entryType').value;
+            const grid = document.getElementById('subentryGrid');
+            const subs = (SUBENTRIES_BY_TYPE[entryType] || []).slice().sort();
+            grid.innerHTML = '';
+            for (const sub of subs) {
+                const lbl = document.createElement('label');
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.value = sub;
+                lbl.appendChild(cb);
+                lbl.appendChild(document.createTextNode(sub));
+                grid.appendChild(lbl);
+            }
+        }
+
+        // Toggle picker visibility
+        document.getElementById('togglePickerBtn').addEventListener('click', () => {
+            const picker = document.getElementById('subentryPicker');
+            picker.classList.toggle('visible');
+        });
+
+        // Add checked subentries to text field
+        document.getElementById('addSubentriesBtn').addEventListener('click', () => {
+            const grid = document.getElementById('subentryGrid');
+            const input = document.getElementById('subentries');
+            const checked = Array.from(grid.querySelectorAll('input[type="checkbox"]:checked'));
+            if (checked.length === 0) { return; }
+
+            const selected = checked.map(cb => cb.value);
+            const current = input.value.trim();
+            const existing = current ? current.split(',').map(s => s.trim().toUpperCase()) : [];
+            const toAdd = selected.filter(s => !existing.includes(s));
+            if (toAdd.length === 0) { return; }
+
+            if (current) {
+                input.value = current + ',' + toAdd.join(',');
+            } else {
+                input.value = toAdd.join(',');
+            }
+
+            // Uncheck all and close picker
+            checked.forEach(cb => { cb.checked = false; });
+            document.getElementById('subentryPicker').classList.remove('visible');
+        });
+
+        document.getElementById('entryType').addEventListener('change', () => {
+            updateSubentryGrid();
+            document.getElementById('subentries').value = '';
+            document.getElementById('filter').value = '';
+            document.getElementById('subentryPicker').classList.remove('visible');
+        });
+
+        // Initial population
+        updateSubentryGrid();
+
+        // Attach event listeners (onclick attributes are blocked by CSP)
+        document.getElementById('executeBtn').addEventListener('click', executeQuery);
+        document.getElementById('exportJsonBtn').addEventListener('click', exportJson);
+        document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
+
+        // Custom tooltip for truncated cells (title attr doesn't work in VSCode webviews)
+        const tooltip = document.getElementById('cellTooltip');
+        let tooltipTimeout = null;
+        document.addEventListener('mouseover', (e) => {
+            const td = e.target.closest('td');
+            if (!td) { return; }
+            // Only show tooltip if content is truncated
+            if (td.scrollWidth <= td.clientWidth) { return; }
+            clearTimeout(tooltipTimeout);
+            tooltip.textContent = td.textContent;
+            tooltip.classList.add('visible');
+            const rect = td.getBoundingClientRect();
+            tooltip.style.left = rect.left + 'px';
+            tooltip.style.top = (rect.bottom + 4) + 'px';
+        });
+        document.addEventListener('mouseout', (e) => {
+            const td = e.target.closest('td');
+            if (!td) { return; }
+            tooltipTimeout = setTimeout(() => {
+                tooltip.classList.remove('visible');
+            }, 100);
+        });
     </script>
 </body>
 </html>`;

@@ -383,8 +383,29 @@ export class ZosmfClient {
                         this.log(`Status URL changed to: ${asyncResponse.statusurl}`);
                         return this.pollForResult(asyncResponse.statusurl, headers, rejectUnauthorized, progress);
                     }
+                } else if (response.statusCode === 500) {
+                    // Server error during polling - may be transient, retry a few times
+                    this.log(`Server error during poll (attempt ${attempts}): ${response.body}`);
+                    if (attempts >= 3) {
+                        let errorDetail = 'Server error during query processing';
+                        try {
+                            const errorBody = JSON.parse(response.body);
+                            if (errorBody.message) {
+                                errorDetail = errorBody.message;
+                            } else if (errorBody.reason) {
+                                errorDetail = errorBody.reason;
+                            }
+                        } catch {
+                            if (response.body) {
+                                errorDetail += `: ${response.body.substring(0, 500)}`;
+                            }
+                        }
+                        throw new Error(errorDetail);
+                    }
+                    // Retry
                 } else {
-                    throw new Error(`Unexpected status response: HTTP ${response.statusCode}`);
+                    this.log(`Unexpected poll status ${response.statusCode}: ${response.body}`);
+                    throw new Error(`Status poll failed: HTTP ${response.statusCode}`);
                 }
             } catch (error) {
                 if (error instanceof Error && error.message.includes('ECONNRESET')) {

@@ -259,6 +259,9 @@ export class ResultPanel {
         .toolbar button:hover {
             background-color: var(--vscode-button-hoverBackground);
         }
+        .table-scroll {
+            overflow-x: auto;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -268,15 +271,22 @@ export class ResultPanel {
             text-align: left;
             padding: 8px;
             border-bottom: 1px solid var(--vscode-panel-border);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 300px;
         }
         th {
-            background-color: var(--vscode-editor-background);
+            background-color: var(--vscode-keybindingTable-headerBackground, rgba(128, 128, 128, 0.15));
             color: var(--vscode-foreground);
             font-weight: 600;
             position: sticky;
             top: 0;
         }
-        tr:hover {
+        tbody tr:nth-child(odd) {
+            background-color: var(--vscode-keybindingTable-rowsBackground, rgba(128, 128, 128, 0.04));
+        }
+        tbody tr:hover {
             background-color: var(--vscode-list-hoverBackground);
         }
         .entry-sysmod {
@@ -324,6 +334,25 @@ export class ResultPanel {
             font-size: 0.8em;
             margin-left: 8px;
         }
+        .cell-tooltip {
+            display: none;
+            position: fixed;
+            background-color: var(--vscode-editorHoverWidget-background, var(--vscode-editor-background));
+            color: var(--vscode-editorHoverWidget-foreground, var(--vscode-foreground));
+            border: 1px solid var(--vscode-editorHoverWidget-border, var(--vscode-panel-border));
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: var(--vscode-font-size);
+            max-width: 600px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            z-index: 1000;
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .cell-tooltip.visible {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -340,7 +369,8 @@ export class ResultPanel {
             <button onclick="exportCsv()">Export CSV</button>
         </div>
     </div>
-    ${tableHtml}
+    <div id="cellTooltip" class="cell-tooltip"></div>
+    <div class="table-scroll">${tableHtml}</div>
     ${messagesHtml}
     <script nonce="${nonce}">
         const vscode = acquireVsCodeApi();
@@ -356,6 +386,28 @@ export class ResultPanel {
         function copyText(text) {
             vscode.postMessage({ command: 'copy', data: text });
         }
+
+        // Custom tooltip for truncated cells
+        const tooltip = document.getElementById('cellTooltip');
+        let tooltipTimeout = null;
+        document.addEventListener('mouseover', (e) => {
+            const td = e.target.closest('td');
+            if (!td) { return; }
+            if (td.scrollWidth <= td.clientWidth) { return; }
+            clearTimeout(tooltipTimeout);
+            tooltip.textContent = td.textContent;
+            tooltip.classList.add('visible');
+            const rect = td.getBoundingClientRect();
+            tooltip.style.left = rect.left + 'px';
+            tooltip.style.top = (rect.bottom + 4) + 'px';
+        });
+        document.addEventListener('mouseout', (e) => {
+            const td = e.target.closest('td');
+            if (!td) { return; }
+            tooltipTimeout = setTimeout(() => {
+                tooltip.classList.remove('visible');
+            }, 100);
+        });
     </script>
 </body>
 </html>`;
