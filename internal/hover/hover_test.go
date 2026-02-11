@@ -192,8 +192,8 @@ func TestHoverOnOperandWithMutuallyExclusive(t *testing.T) {
 	content := hover.Contents.Value
 
 	// Check for mutually exclusive info
-	if !strings.Contains(content, "Mutually Exclusive") {
-		t.Errorf("Expected hover to contain 'Mutually Exclusive', got: %s", content)
+	if !strings.Contains(content, "Cannot be used with") {
+		t.Errorf("Expected hover to contain 'Cannot be used with', got: %s", content)
 	}
 
 	if !strings.Contains(content, "DISTLIB") {
