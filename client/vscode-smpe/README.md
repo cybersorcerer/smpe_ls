@@ -2,12 +2,11 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
-## What's New in 0.8.1
+## What's New in 0.8.3
 
-- **Command-Line Linter** - New `smpe_lint` tool for CI/CD integration with configurable diagnostics
-- **Comment Indentation Fix** - Comments now start at column 3 (2 space indent)
-- **Multi-line Comment Before Terminator** - Correctly placed before the `.` during formatting
-- **SHSCRIPT Comma Preservation** - Commas in operand parameters are preserved
+- **z/OSMF Free Form CSI Query** - New Webview with input form and dynamic result table for free-form z/OSMF CSI queries
+- **Zone Pattern Matching** - Wildcard support (`*`, `?`) for zone parameters in z/OSMF queries
+- **List-type Parameter Fix** - `PRE`, `REQ`, `SUP` with multiple values no longer produce false warnings
 
 See the [CHANGELOG](CHANGELOG.md) for full details.
 
@@ -41,12 +40,12 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 
 | Platform | File |
 |----------|------|
-| Windows x64 | `vscode-smpe-win32-x64-0.8.1.vsix` |
-| Windows ARM64 | `vscode-smpe-win32-arm64-0.8.1.vsix` |
-| macOS Apple Silicon | `vscode-smpe-darwin-arm64-0.8.1.vsix` |
-| macOS Intel | `vscode-smpe-darwin-x64-0.8.1.vsix` |
-| Linux x64 | `vscode-smpe-linux-x64-0.8.1.vsix` |
-| Linux ARM64 | `vscode-smpe-linux-arm64-0.8.1.vsix` |
+| Windows x64 | `vscode-smpe-win32-x64-0.8.3.vsix` |
+| Windows ARM64 | `vscode-smpe-win32-arm64-0.8.3.vsix` |
+| macOS Apple Silicon | `vscode-smpe-darwin-arm64-0.8.3.vsix` |
+| macOS Intel | `vscode-smpe-darwin-x64-0.8.3.vsix` |
+| Linux x64 | `vscode-smpe-linux-x64-0.8.3.vsix` |
+| Linux ARM64 | `vscode-smpe-linux-arm64-0.8.3.vsix` |
 
 ### Installation in VS Code
 
@@ -58,7 +57,7 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 Alternatively via terminal:
 
 ```bash
-code --install-extension vscode-smpe-darwin-arm64-0.8.1.vsix
+code --install-extension vscode-smpe-darwin-arm64-0.8.3.vsix
 ```
 
 The Language Server is already included in the extension - no additional installation required.

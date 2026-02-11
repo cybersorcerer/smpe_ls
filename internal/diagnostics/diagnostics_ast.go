@@ -332,17 +332,34 @@ func (p *Provider) validateOperandsASTWithConfig(stmt *parser.Node, operands map
 				if op.Length > 0 {
 					for _, child := range opNode.Children {
 						if child.Type == parser.NodeTypeParameter {
-							paramValue := strings.TrimSpace(child.Value)
-							// Remove surrounding quotes if present (for string values)
-							if len(paramValue) >= 2 && paramValue[0] == '\'' && paramValue[len(paramValue)-1] == '\'' {
-								paramValue = paramValue[1 : len(paramValue)-1]
-							}
-							if paramValue != "" && len(paramValue) > op.Length {
-								diagnostics = append(diagnostics, p.createDiagnosticFromNode(
-									child,
-									lsp.SeverityWarning,
-									fmt.Sprintf("⚠️ Operand '%s' parameter exceeds maximum length (%d > %d)", name, len(paramValue), op.Length),
-								))
+							if op.Type == "list" {
+								// List type: validate each element individually
+								for _, listItem := range child.Children {
+									if listItem.Type == parser.NodeTypeParameter {
+										itemValue := strings.TrimSpace(listItem.Value)
+										if itemValue != "" && len(itemValue) > op.Length {
+											diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+												listItem,
+												lsp.SeverityWarning,
+												fmt.Sprintf("⚠️ List element '%s' in operand '%s' exceeds maximum length (%d > %d)", itemValue, name, len(itemValue), op.Length),
+											))
+										}
+									}
+								}
+							} else {
+								// Non-list type: validate entire parameter value
+								paramValue := strings.TrimSpace(child.Value)
+								// Remove surrounding quotes if present (for string values)
+								if len(paramValue) >= 2 && paramValue[0] == '\'' && paramValue[len(paramValue)-1] == '\'' {
+									paramValue = paramValue[1 : len(paramValue)-1]
+								}
+								if paramValue != "" && len(paramValue) > op.Length {
+									diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+										child,
+										lsp.SeverityWarning,
+										fmt.Sprintf("⚠️ Operand '%s' parameter exceeds maximum length (%d > %d)", name, len(paramValue), op.Length),
+									))
+								}
 							}
 							break
 						}

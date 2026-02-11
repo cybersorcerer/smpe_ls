@@ -48,7 +48,7 @@ build-lint:
 	go build -ldflags="-X main.commit=$(COMMIT)" -o $(BUILD_DIR)/$(LINT_BINARY_NAME) ./cmd/smpe_lint
 	@echo "Build complete: $(BUILD_DIR)/$(LINT_BINARY_NAME)"
 
-install: build
+install: build build-lint
 	@echo "Installing $(BINARY_NAME) to $(INSTALL_DIR)..."
 	@mkdir -p $(INSTALL_DIR)
 	@cp $(BUILD_DIR)/$(BINARY_NAME) $(INSTALL_DIR)/

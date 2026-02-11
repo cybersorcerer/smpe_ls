@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.8.3-alpha] - 2026
+
+### Added
+
+- **z/OSMF Free Form CSI Query** - New Webview-based query interface (`SMP/E: Free Form CSI Query`)
+  - Combined input form and result table in a single Webview panel
+  - Server selection from `.smpe-zosmf.yaml` configuration
+  - Zone input with wildcard pattern matching (`*` and `?`)
+  - Entry Type dropdown (SYSMOD, DDDEF, TARGETZONE, DLIB, GLOBALZONE, etc.)
+  - Free-form Subentries and Filter input
+  - Dynamic result table with column headers derived from specified subentries
+  - JSON and CSV export
+- **Zone Pattern Matching** - Wildcard support (`*`, `?`) for zone parameters in z/OSMF queries
+  - Matches against `zones` list defined in `.smpe-zosmf.yaml` server configuration
+
+### Fixed
+
+- **List-type Parameter Validation** - `PRE`, `REQ`, `SUP` operands with multiple values no longer produce false length warnings
+- **golangci-lint** - Fixed `ineffassign` error in `formatting.go`
+
 ## [0.8.1-alpha] - 2026
 
 ### Added

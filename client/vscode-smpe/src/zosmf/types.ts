@@ -16,6 +16,7 @@ export interface ZosmfServer {
     csi: string;
     user: string;
     rejectUnauthorized: boolean;
+    zones?: string[];
     defaultZones?: string[];
 }
 

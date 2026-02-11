@@ -2,7 +2,7 @@
   "name": "vscode-smpe",
   "displayName": "SMP/E Language Support",
   "description": "Language support for SMP/E MCS statements",
-  "version": "0.8.2-alpha",
+  "version": "0.8.3-alpha",
   "publisher": "cybersorcerer",
   "license": "AGPL-3.0",
   "repository": {
@@ -212,6 +212,10 @@
       {
         "command": "smpe.zosmf.clearPassword",
         "title": "SMP/E: Clear Stored Password"
+      },
+      {
+        "command": "smpe.zosmf.freeFormQuery",
+        "title": "SMP/E: Free Form CSI Query"
       }
     ]
   },

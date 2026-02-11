@@ -9,6 +9,7 @@ import {
 } from 'vscode-languageclient/node';
 import { QueryProvider } from './zosmf/queryProvider';
 import { ResultPanel } from './webview/resultPanel';
+import { FreeFormPanel } from './webview/freeFormPanel';
 
 let client: LanguageClient;
 let outputChannel: vscode.OutputChannel;
@@ -307,6 +308,9 @@ export function activate(context: vscode.ExtensionContext) {
 		}),
 		vscode.commands.registerCommand('smpe.zosmf.queryZones', () => {
 			queryProvider.queryZones();
+		}),
+		vscode.commands.registerCommand('smpe.zosmf.freeFormQuery', () => {
+			FreeFormPanel.createOrShow(queryProvider, outputChannel);
 		})
 	);
 

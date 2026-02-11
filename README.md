@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-0.8.1-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-0.8.3-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -130,7 +130,7 @@ See [cmd/smpe_lint/README.md](cmd/smpe_lint/README.md) for full documentation.
 
 ## 🎯 Supported MCS Statements
 
-### Version 0.8.1 (Current)
+### Version 0.8.3 (Current)
 
 **Control MCS (25 statements with full diagnostics):**
 
@@ -222,7 +222,19 @@ make release
 
 ## 📋 What's New
 
-### Version 0.8.1 (Latest)
+### Version 0.8.3 (Latest)
+
+**New Features:**
+
+- 🌐 **z/OSMF Free Form CSI Query** - Webview-based query interface with input form and dynamic result table
+- 🔍 **Zone Pattern Matching** - Wildcard support (`*`, `?`) for zone parameters in z/OSMF queries
+
+**Bug Fixes:**
+
+- 🐛 **List-type Parameter Validation** - `PRE`, `REQ`, `SUP` with multiple values no longer produce false length warnings
+- 🐛 **golangci-lint** - Fixed `ineffassign` error in `formatting.go`
+
+### Version 0.8.1
 
 **New Features:**
 

@@ -862,7 +862,6 @@ func (p *Provider) buildFormattedStatementWithLeadingComments(stmt *parser.Node,
 		// Flush current line before multi-line comments
 		if currentLine != "" {
 			outputLines = append(outputLines, currentLine)
-			currentLine = ""
 		}
 
 		// Insert multi-line inline comments BEFORE the terminator

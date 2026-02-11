@@ -227,6 +227,28 @@ export class ZosmfClient {
     }
 
     /**
+     * Execute a free-form CSI query with user-specified parameters
+     */
+    async queryFreeForm(
+        server: ZosmfServer,
+        credentials: Credentials,
+        zones: string[],
+        entryType: string,
+        subentries: string[],
+        filter: string,
+        progress?: ProgressCallback
+    ): Promise<QueryResult> {
+        const body = {
+            zones: zones,
+            entries: [entryType],
+            subentries: [subentries.join(',')],
+            filter: filter
+        };
+
+        return this.executeQuery(server, credentials, body, progress);
+    }
+
+    /**
      * Execute a query and handle async polling
      */
     private async executeQuery(

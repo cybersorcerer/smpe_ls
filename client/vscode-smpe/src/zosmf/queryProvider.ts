@@ -107,14 +107,28 @@ export class QueryProvider {
     }
 
     /**
-     * Prompt for zone names
+     * Match a zone pattern (with * and ?) against available zones
+     */
+    private matchZonePattern(pattern: string, zones: string[]): string[] {
+        const regexStr = '^' + pattern
+            .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+            .replace(/\*/g, '.*')
+            .replace(/\?/g, '.')
+            + '$';
+        const regex = new RegExp(regexStr, 'i');
+        return zones.filter(z => regex.test(z));
+    }
+
+    /**
+     * Prompt for zone names (supports * and ? wildcards when zones are defined in config)
      */
     private async promptForZones(server: ZosmfServer): Promise<string[] | undefined> {
         const defaultValue = server.defaultZones?.join(', ') || '';
+        const hasZones = server.zones && server.zones.length > 0;
 
         const input = await vscode.window.showInputBox({
-            prompt: 'Enter zone name(s)',
-            placeHolder: 'GLOBAL, TARGET (comma-separated)',
+            prompt: hasZones ? 'Enter zone name(s) or pattern (* and ? wildcards)' : 'Enter zone name(s)',
+            placeHolder: hasZones ? 'GLOBAL, MVS* (comma-separated, wildcards supported)' : 'GLOBAL, TARGET (comma-separated)',
             value: defaultValue,
             ignoreFocusOut: true,
             validateInput: (value) => {
@@ -129,7 +143,74 @@ export class QueryProvider {
             return undefined;
         }
 
-        return input.split(',').map(z => z.trim().toUpperCase()).filter(z => z.length > 0);
+        const entries = input.split(',').map(z => z.trim().toUpperCase()).filter(z => z.length > 0);
+
+        if (!hasZones) {
+            return entries;
+        }
+
+        const resolvedZones: string[] = [];
+        for (const entry of entries) {
+            if (entry.includes('*') || entry.includes('?')) {
+                const matched = this.matchZonePattern(entry, server.zones!);
+                if (matched.length === 0) {
+                    vscode.window.showWarningMessage(`No zones match pattern '${entry}'`);
+                } else {
+                    this.log(`Pattern '${entry}' matched zones: ${matched.join(', ')}`);
+                    resolvedZones.push(...matched);
+                }
+            } else {
+                resolvedZones.push(entry);
+            }
+        }
+
+        if (resolvedZones.length === 0) {
+            vscode.window.showErrorMessage('No zones resolved from input');
+            return undefined;
+        }
+
+        return [...new Set(resolvedZones)];
+    }
+
+    /**
+     * Get the config manager (for external use by FreeFormPanel)
+     */
+    getConfigManager(): ConfigManager {
+        return this.configManager;
+    }
+
+    /**
+     * Get the client (for external use by FreeFormPanel)
+     */
+    getClient(): ZosmfClient {
+        return this.client;
+    }
+
+    /**
+     * Resolve zone patterns against server's configured zones
+     */
+    resolveZonePatterns(server: ZosmfServer, zoneInput: string[]): string[] {
+        const hasZones = server.zones && server.zones.length > 0;
+        if (!hasZones) {
+            return zoneInput;
+        }
+
+        const resolvedZones: string[] = [];
+        for (const entry of zoneInput) {
+            if (entry.includes('*') || entry.includes('?')) {
+                const matched = this.matchZonePattern(entry, server.zones!);
+                if (matched.length === 0) {
+                    this.log(`No zones match pattern '${entry}'`);
+                } else {
+                    this.log(`Pattern '${entry}' matched zones: ${matched.join(', ')}`);
+                    resolvedZones.push(...matched);
+                }
+            } else {
+                resolvedZones.push(entry);
+            }
+        }
+
+        return [...new Set(resolvedZones)];
     }
 
     /**

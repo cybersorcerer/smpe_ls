@@ -52,7 +52,7 @@
             {
                 "name": "TO",
                 "parameter": "SYSMOD-IDs",
-                "type": "string",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies the SYSMODs with which the source ID is to be associated."
             }
@@ -80,7 +80,7 @@
             },
             {
                 "name": "TO",
-                "type": "string",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies the SYSMODs with which the source ID is to be associated."
             }
@@ -102,8 +102,8 @@
             },
             {
                 "name": "FMID",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "SYSMOD-IDs",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies the list of all function SYSMODs that make up this feature. Each FMID is 7 characters long and must be a valid SYSMOD ID. That is, it must contain uppercase alphabetic, numeric, or national characters ($, @, #). If multiple FMIDs are specified, they must be separated by commas."
             },
@@ -435,7 +435,7 @@
             {
                 "name": "REQ",
                 "parameter": "SYSMOD_ID",
-                "type": "string",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies the SYSMODs that are needed if the function SYSMOD specified on the FMID operand of the ++IF MCS is installed. This operand is required."
             },
@@ -594,15 +594,15 @@
             },
             {
                 "name": "UMID",
-                "parameter": "SYSMOD-ID",
-                "type": "string",
+                "parameter": "SYSMOD-IDs",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies the SYSMODs that have updated this JAR file since it was last replaced. This operand can be used only in a service-updated function, and the specified SYSMODs must be integrated into the function."
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies one or more function SYSMODs that currently contain the element. The function containing the element MCS takes over ownership of the element from the specified functions. When VERSION is specified on an element statement, it overrides any VERSION operand values that might be specified on the ++VER MCS."
             }
@@ -794,35 +794,35 @@
             {
                 "name": "NPRE",
                 "parameter": "SYSMOD_IDs",
-                "type": "string",
+                "type": "list",
                 "length": 7,
                 "description": "Indicates which function SYSMODs cannot exist in the same zone as this function. These are negative prerequisite SYSMODs. The current SYSMOD cannot be applied or accepted if any of the listed SYSMODs are already present. This operand has no effect on RECEIVE eligibility. NPRE can only be specified within a function SYSMOD."
             },
             {
                 "name": "PRE",
                 "parameter": "SYSMOD_IDs",
-                "type": "string",
+                "type": "list",
                 "length": 7,
                 "description": "Indicates which SYSMODs are prerequisites for this SYSMOD. A prerequisite SYSMOD must either be already installed, or must be installed concurrently with this SYSMOD. If a SYSMOD replaces an existing element, the PRE operand must specify the previous SYSMOD that replaced the element (RMID) and all the SYSMODs that have updated the element (UMIDs) since it was last replaced. If a SYSMOD updates an existing element, the PRE operand must specify the previous SYSMOD that replaced the element. It should also specify the last SYSMOD that updated the element since then. This operand has no effect on RECEIVE eligibility. "
             },
             {
                 "name": "REQ",
                 "parameter": "SYSMOD_IDs",
-                "type": "string",
+                "type": "list",
                 "length": 7,
                 "description": "Indicates which SYSMODs are requisites for this SYSMOD. The specified SYSMOD must either be already installed, or must be installed concurrently with this SYSMOD. If the specified SYSMOD also specifies this SYSMOD as a requisite, these two SYSMODs are corequisites, and neither can be installed independently; they must be installed within the same APPLY and ACCEPT command."
             },
             {
                 "name": "SUP",
                 "parameter": "SYSMOD_IDs",
-                "type": "string",
+                "type": "list",
                 "length": 7,
                 "description": "Indicates which SYSMODs are superseded (contained in and replaced) by this SYSMOD. For example, it may specify one or more APARs fixed in the element modifications supplied with this SYSMOD. For functions, the same SYSMOD can be specified on both DELETE and SUP. This cleans up entries for the deleted function, and, at the same time, allows SYSMODs that name the deleted function as a requisite to still be installed."
             },
             {
                 "name": "VERSION",
                 "parameter": "SYSMOD_IDs",
-                "type": "string",
+                "type": "list",
                 "length": 7,
                 "description": "Indicates functions whose elements should be considered functionally lower than the elements contained in this SYSMOD. It specifies one or more function SYSMODs that currently contain the element. The function containing the ++VER MCS takes over ownership of all the elements from the specified functions. When VERSION is specified on an element statement, it overrides any VERSION operand values specified on the ++VER MCS."
             }
@@ -871,7 +871,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element in both the target and distribution libraries."
             },
@@ -960,8 +960,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
@@ -979,7 +979,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element in both the target and distribution libraries."
             },
@@ -1068,8 +1068,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
@@ -1087,7 +1087,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element in both the target and distribution libraries."
             },
@@ -1176,8 +1176,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
@@ -1193,7 +1193,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element in both the target and distribution libraries."
             },
@@ -1281,8 +1281,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
@@ -1298,7 +1298,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element in both the target and distribution libraries."
             },
@@ -1386,8 +1386,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
@@ -1403,7 +1403,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -1491,8 +1491,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -1508,7 +1508,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -1596,8 +1596,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -1613,7 +1613,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -1701,8 +1701,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -1718,7 +1718,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -1806,8 +1806,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -1823,7 +1823,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -1911,8 +1911,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -1930,7 +1930,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -2019,8 +2019,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -2037,7 +2037,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -2126,8 +2126,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -2145,7 +2145,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -2234,8 +2234,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -2253,7 +2253,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -2342,8 +2342,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -2361,7 +2361,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -2450,8 +2450,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -2469,7 +2469,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -2558,8 +2558,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -2577,7 +2577,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -2666,8 +2666,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -2684,7 +2684,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -2772,8 +2772,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -2791,7 +2791,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -2880,8 +2880,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -2899,7 +2899,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -2988,8 +2988,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -3006,7 +3006,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -3094,8 +3094,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -3112,7 +3112,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -3200,8 +3200,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -3219,7 +3219,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -3308,8 +3308,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -3327,7 +3327,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -3416,8 +3416,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -3435,7 +3435,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -3524,8 +3524,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -3543,7 +3543,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -3632,8 +3632,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -3651,7 +3651,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -3740,8 +3740,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -3759,7 +3759,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -3848,8 +3848,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -3867,7 +3867,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -3956,8 +3956,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -3974,7 +3974,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -4062,8 +4062,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -4080,7 +4080,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -4168,8 +4168,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -4186,7 +4186,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -4274,8 +4274,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -4292,7 +4292,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -4380,8 +4380,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -4398,7 +4398,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -4486,8 +4486,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -4505,7 +4505,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -4594,8 +4594,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -4613,7 +4613,7 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS",
-                "type": "string",
+                "type": "list",
                 "length": 8,
                 "description": "Specifies the alias names for the data element."
             },
@@ -4702,8 +4702,8 @@
             },
             {
                 "name": "VERSION",
-                "parameter": "FMID",
-                "type": "string",
+                "parameter": "FMID-LIST",
+                "type": "list",
                 "length": 7,
                 "description": "Specifies function SYSMODs that currently contain the element."
             }
@@ -4720,7 +4720,8 @@
             {
                 "name": "ASSEM",
                 "parameter": "MODULE-NAMES",
-                "type": "string",
+                "type": "list",
+				"length": 8,
                 "mutually_exclusive": "DELETE",
                 "description": "Specifies the names of modules to be assembled in addition to those modules named as GENASM subentries in the MAC entry."
             },
@@ -4854,7 +4855,8 @@
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
+                "type": "list",
+				"length": 7,
                 "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
@@ -4870,7 +4872,8 @@
             {
                 "name": "ASSEM",
                 "parameter": "MODULE-NAMES",
-                "type": "string",
+                "type": "list",
+                "length": 8,
                 "description": "Specifies the names of modules to be assembled in addition to those named as GENASM subentries in the MAC entry."
             },
             {
@@ -4897,7 +4900,8 @@
             {
                 "name": "MALIAS",
                 "parameter": "ALIAS-NAMES",
-                "type": "string",
+                "type": "list",
+                "length": 8,
                 "description": "Specifies the alias names for the macro in both the target system and distribution libraries."
             },
             {
@@ -4927,7 +4931,8 @@
             {
                 "name": "CSECT",
                 "parameter": "CSECT-NAMES",
-                "type": "string",
+                "type": "list",
+                "length": 8,
                 "mutually_exclusive": "DELETE",
                 "description": "Lists all the CSECTs contained in the module. Required if module contains more than one CSECT or if CSECT name is different from module name."
             },
@@ -5132,7 +5137,8 @@
             {
                 "name": "LMOD",
                 "parameter": "LMOD-NAMES",
-                "type": "string",
+                "type": "list",
+                "length": 8,
                 "mutually_exclusive": "DELETE",
                 "description": "Lists existing load modules that are to contain the module."
             },
@@ -5154,7 +5160,7 @@
             {
                 "name": "TALIAS",
                 "parameter": "ALIAS-NAMES",
-                "type": "string",
+                "type": "list",
                 "mutually_exclusive": "DELETE|DALIAS",
                 "description": "Specifies one or more alias names for the module."
             },
@@ -5169,14 +5175,15 @@
             {
                 "name": "UMID",
                 "parameter": "SYSMOD-IDS",
-                "type": "string",
+                "type": "list",
                 "mutually_exclusive": "DELETE",
                 "description": "Specifies the SYSMODs that have updated this module since it was last replaced."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
+                "type": "list",
+				"length": 7,
                 "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
@@ -5199,7 +5206,8 @@
             {
                 "name": "FMID",
                 "parameter": "FMID-LIST",
-                "type": "string",
+                "type": "list",
+				"length": 7,
                 "mutually_exclusive": "LMOD",
                 "description": "Specifies the FMID that owns the element."
             },
@@ -5272,7 +5280,7 @@
             {
                 "name": "SREL",
                 "parameter": "SREL-LIST",
-                "type": "string",
+                "type": "list",
                 "length": 4,
                 "required": true,
                 "description": "Specifies the system or subsystem releases on which the PRODUCT can be installed. Each SREL value must be four alphanumeric characters."
@@ -5280,7 +5288,7 @@
             {
                 "name": "PRODSUP",
                 "parameter": "PRODUCT-LIST",
-                "type": "string",
+                "type": "list",
                 "description": "Indicates which PRODUCTs are superseded (replaced) by this PRODUCT."
             },
             {
@@ -5316,7 +5324,8 @@
             {
                 "name": "ALIAS",
                 "parameter": "ALIAS-NAMES",
-                "type": "string",
+                "type": "list",
+                "length": 8,
                 "mutually_exclusive": "DELETE",
                 "description": "Specifies an alternate name for the program object or load module."
             },
@@ -5406,7 +5415,8 @@
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
+                "type": "list",
+                "length": 7,
                 "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
@@ -5749,14 +5759,16 @@
             {
                 "name": "UMID",
                 "parameter": "SYSMOD-IDS",
-                "type": "string",
+                "type": "list",
+                "length": 7,
                 "mutually_exclusive": "DELETE",
                 "description": "Specifies the UMIDs of the source."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
+                "type": "list",
+				"length": 7,
                 "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
@@ -5817,7 +5829,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -5860,21 +5872,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -5898,19 +5910,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+				"length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -5939,7 +5952,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -5982,21 +5995,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -6020,19 +6033,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+				"length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -6061,7 +6075,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -6104,21 +6118,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -6142,19 +6156,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+				"length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -6183,7 +6198,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -6226,21 +6241,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -6264,19 +6279,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+				"length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -6305,7 +6321,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -6348,21 +6364,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -6386,19 +6402,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+				"length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -6427,7 +6444,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -6470,21 +6487,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -6508,19 +6525,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+				"length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -6549,7 +6567,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -6592,21 +6610,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -6630,19 +6648,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+                "length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -6671,7 +6690,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -6714,21 +6733,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -6752,19 +6771,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+                "length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -6793,7 +6813,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -6836,21 +6856,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -6874,19 +6894,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+                "length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -6915,7 +6936,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -6958,21 +6979,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -6996,19 +7017,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+                "length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -7158,7 +7180,8 @@
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
+                "type": "list",
+                "length": 7,
                 "description": "Specifies one or more function SYSMODs that currently contain the element. The function containing the element MCS takes over ownership of the element from the specified functions. When VERSION is specified on an element statement, it overrides any VERSION operand values that might be specified on the ++VER MCS."
             }
         ]
@@ -7301,7 +7324,8 @@
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
+                "type": "list",
+                "length": 7,
                 "description": "Specifies one or more function SYSMODs that currently contain the element. The function containing the element MCS takes over ownership of the element from the specified functions. When VERSION is specified on an element statement, it overrides any VERSION operand values that might be specified on the ++VER MCS."
             }
         ]
@@ -7423,7 +7447,8 @@
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
+                "type": "list",
+                "length": 7,
                 "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
@@ -7453,7 +7478,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library ddname."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -7496,21 +7521,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Alternative link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Copy utility parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -7534,19 +7559,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library ddname."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode installation."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning functions."
+                "type": "list",
+                "length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -7575,7 +7601,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library ddname."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -7618,21 +7644,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -7656,19 +7682,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+                "length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -7697,7 +7724,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -7740,21 +7767,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -7778,19 +7805,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+                "length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -7819,7 +7847,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -7862,21 +7890,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -7900,19 +7928,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+                "length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -7941,7 +7970,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -7984,21 +8013,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -8022,19 +8051,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+                "length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -8063,7 +8093,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -8106,21 +8136,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -8144,19 +8174,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+                "length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -8185,7 +8216,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -8228,21 +8259,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -8266,19 +8297,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+                "length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -8307,7 +8339,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -8350,21 +8382,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -8388,19 +8420,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+                "length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -8429,7 +8462,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -8472,21 +8505,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -8510,19 +8543,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+                "length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -8551,7 +8585,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -8594,21 +8628,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -8632,19 +8666,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+                "length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -8673,7 +8708,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -8716,21 +8751,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -8754,19 +8789,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+                "length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -8795,7 +8831,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -8838,21 +8874,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -8876,19 +8912,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+                "length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -8917,7 +8954,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -8960,21 +8997,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -8998,19 +9035,20 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
-                "description": "Versioning."
+                "type": "list",
+                "length": 7,
+                "description": "Specifies one or more function SYSMODs that currently contain the element."
             }
         ]
     },
@@ -9039,7 +9077,7 @@
                 "parameter": "DDNAME",
                 "type": "string",
                 "length": 8,
-                "description": "Distribution library."
+                "description": "Specifies the ddname of the distribution library for the specified module."
             },
             {
                 "name": "FROMDS",
@@ -9082,21 +9120,21 @@
                 "parameter": "LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Link names."
+                "description": "Specifies the alternative names by which this JAR element can be known in a UNIX file system. The full name is produced by concatenating the specified linkname with a UNIX file system directory identified by the SYSLIB subentry. Each linkname is passed to the HFS copy utility as an execution parameter. The linkname can be from 1 to 1023 characters. A linkname can be enclosed in single apostrophes ('). A linkname must be enclosed in single apostrophes if any of the following is true: The linkname contains lowercase alphabetic characters. The linkname contains a character that is not uppercase alphabetic, numeric, national ($, #, @), slash (/), plus (+), hyphen, period, or ampersand (&). The linkname spans more than one line in the control statement."
             },
             {
                 "name": "PARM",
                 "parameter": "CHARACTER-STRING",
                 "type": "string",
                 "length": 300,
-                "description": "Parameters."
+                "description": "Specifies a character string that is to be passed to the hierarchical file system copy utility as an execution-time parameter. The values that can be specified on the PARM operand, such as PATHMODE, are those accepted by the BPXCOPY utility. The maximum length of this character string is 300 bytes of nonblank data. If any blanks are specified in the PARM value, they are deleted by SMP/E during processing and do not count toward the 300-byte maximum. PARM is an optional operand. The character string can be entered free-form, without regard to blanks (which are compressed out of the string), and can span multiple 80-byte records. If parentheses are specified in the PARM value, there must always be a pair (left and right); otherwise, the results are unpredictable."
             },
             {
                 "name": "SYMLINK",
                 "parameter": "SYMBOLIC-LINKNAMES",
                 "type": "string",
                 "length": 1023,
-                "description": "Symbolic links."
+                "description": "Specifies a list of one or more symbolic links, which are file names that can be used as alternate names for referring to this element in a UNIX file system. Each linkname listed here is associated with a pathname listed in the SYMPATH operand. The SYMLINK value specified should be a relative path value (that is, it does not start with a slash ['/']). When the symbolic link is created, it is created relative to the pathname of the element's SYSLIB ddname. SYMLINK must be specified if the SYMPATH operand is specified, otherwise it must be omitted. A symbolic linkname can be from one to 1023 characters. Any characters in the range X'40' through X'FE' may be specified."
             },
             {
                 "name": "RELFILE",
@@ -9120,18 +9158,19 @@
                 "type": "string",
                 "length": 8,
                 "mutually_exclusive": "DELETE",
-                "description": "Target library."
+                "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
             },
             {
                 "name": "TEXT",
                 "type": "boolean",
                 "mutually_exclusive": "BINARY",
-                "description": "Text mode."
+                "description": "Indicates that the hierarchical file system copy utility should install the element into a UNIX file system in text mode. This means that the element is installed with breakpoints for logical records."
             },
             {
                 "name": "VERSION",
                 "parameter": "FMID-LIST",
-                "type": "string",
+                "type": "list",
+				"length": 7,
                 "description": "Versioning."
             }
         ]

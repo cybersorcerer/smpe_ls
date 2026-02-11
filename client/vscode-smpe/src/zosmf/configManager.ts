@@ -25,6 +25,10 @@ servers:
     csi: SMPE.GLOBAL.CSI
     user: USERID
     rejectUnauthorized: true
+    zones:
+      - GLOBAL
+      - MVST100
+      - MVSD100
     defaultZones:
       - GLOBAL
 
