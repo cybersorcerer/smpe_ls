@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-0.8.3-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-0.8.4--alpha-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -130,7 +130,7 @@ See [cmd/smpe_lint/README.md](cmd/smpe_lint/README.md) for full documentation.
 
 ## 🎯 Supported MCS Statements
 
-### Version 0.8.3 (Current)
+### Version 0.8.4 (Current)
 
 **Control MCS (25 statements with full diagnostics):**
 
@@ -222,7 +222,21 @@ make release
 
 ## 📋 What's New
 
-### Version 0.8.3 (Latest)
+### Version 0.8.4 (Latest)
+
+**New Features:**
+
+- 📋 **List Wrapping** - Comma-separated operand lists are automatically wrapped when exceeding a configurable threshold (default: 2 items per line)
+- 🔎 **CodeLens for z/OSMF Queries** - Inline CodeLens actions for querying SYSMODs and DDDEFs via z/OSMF
+
+**Bug Fixes:**
+
+- 🐛 **Parser Crash** - Fixed `slice bounds out of range` panic when formatting files with certain comment patterns
+- 🐛 **Formatting Idempotency** - Second format pass no longer destroys comments; formatting is now stable/idempotent
+- 🐛 **Inline Comment Handling** - Single-line and multi-line inline comments stay with their operand during formatting
+- 🐛 **DELETE Mode DISTLIB Diagnostic** - `++MOD DELETE`, `++SRC DELETE`, `++PROGRAM DELETE` no longer produce false "Missing required operand: DISTLIB" warnings
+
+### Version 0.8.3
 
 **New Features:**
 

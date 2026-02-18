@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.8.4-alpha] - 2026
+
+### Added
+
+- **List Wrapping** - Comma-separated operand lists (e.g., `PRE`, `REQ`, `SUP`) are automatically wrapped when exceeding a configurable threshold (default: 2 items per line)
+- **CodeLens for z/OSMF Queries** - Inline CodeLens actions for querying SYSMODs and DDDEFs via z/OSMF
+- New formatting setting: `smpe.formatting.wrapListsAfterN` - Number of list items before wrapping (default: 2, 0 = disabled)
+
+### Fixed
+
+- **Parser Crash** - Fixed `slice bounds out of range` panic when formatting files containing `*/` before `/*` on the same line
+- **Formatting Idempotency** - Second format pass no longer destroys comments; formatting is now stable/idempotent
+- **Inline Comment Handling** - Single-line and multi-line inline comments stay with their operand during formatting instead of being moved to the statement header
+- **DELETE Mode DISTLIB Diagnostic** - `++MOD DELETE`, `++SRC DELETE`, and `++PROGRAM DELETE` no longer produce false "Missing required operand: DISTLIB" warnings
+
 ## [0.8.3-alpha] - 2026
 
 ### Added

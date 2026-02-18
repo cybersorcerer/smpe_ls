@@ -2,7 +2,7 @@
   "name": "vscode-smpe",
   "displayName": "SMP/E Language Support",
   "description": "Language support for SMP/E MCS statements",
-  "version": "0.8.3-alpha",
+  "version": "0.8.4-alpha",
   "publisher": "cybersorcerer",
   "license": "AGPL-3.0",
   "repository": {
@@ -160,6 +160,13 @@
           "default": true,
           "description": "Place each operand on its own line"
         },
+        "smpe.formatting.wrapListsAfterN": {
+          "type": "integer",
+          "default": 2,
+          "minimum": 0,
+          "maximum": 20,
+          "description": "Wrap comma-separated lists if they have more than N items (0 = never wrap)"
+        },
         "smpe.formatting.formatOnSave": {
           "type": "boolean",
           "default": false,
@@ -216,6 +223,14 @@
       {
         "command": "smpe.zosmf.freeFormQuery",
         "title": "SMP/E: Free Form CSI Query"
+      },
+      {
+        "command": "smpe.codelens.querySysmod",
+        "title": "SMP/E: Query SYSMOD (CodeLens)"
+      },
+      {
+        "command": "smpe.codelens.queryDddef",
+        "title": "SMP/E: Query DDDEF (CodeLens)"
       }
     ]
   },

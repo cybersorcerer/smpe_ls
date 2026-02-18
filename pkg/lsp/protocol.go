@@ -136,6 +136,7 @@ type ServerCapabilities struct {
 	DocumentSymbolProvider          bool                   `json:"documentSymbolProvider,omitempty"`
 	DefinitionProvider              bool                   `json:"definitionProvider,omitempty"`
 	ReferencesProvider              bool                   `json:"referencesProvider,omitempty"`
+	CodeLensProvider                *CodeLensOptions       `json:"codeLensProvider,omitempty"`
 }
 
 // TextDocumentSyncKind values
@@ -256,6 +257,7 @@ type FormattingOptions struct {
 	Enabled             bool `json:"enabled"`
 	IndentContinuation  int  `json:"indentContinuation"`
 	OneOperandPerLine   bool `json:"oneOperandPerLine"`
+	WrapListsAfterN     int  `json:"wrapListsAfterN"`
 	MoveLeadingComments bool `json:"moveLeadingComments"`
 }
 
@@ -343,3 +345,26 @@ const (
 	SymbolKindOperator      SymbolKind = 25
 	SymbolKindTypeParameter SymbolKind = 26
 )
+
+// CodeLensParams represents textDocument/codeLens request params
+type CodeLensParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+}
+
+// CodeLens represents a code lens
+type CodeLens struct {
+	Range   Range    `json:"range"`
+	Command *Command `json:"command,omitempty"`
+}
+
+// Command represents a command that can be executed
+type Command struct {
+	Title     string        `json:"title"`
+	Command   string        `json:"command"`
+	Arguments []interface{} `json:"arguments,omitempty"`
+}
+
+// CodeLensOptions describes code lens options
+type CodeLensOptions struct {
+	ResolveProvider bool `json:"resolveProvider,omitempty"`
+}

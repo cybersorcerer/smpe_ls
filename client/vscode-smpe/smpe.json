@@ -5642,8 +5642,8 @@
         "type": "MCS",
         "description": "During APPLY processing, the ++RENAME MCS renames a load module in all the target libraries and the LMOD entry in the target zone. It also updates the LMOD subentry of the MOD entry for each module in the load module. The parameter OLD-NAME specifies the name of the load module to be renamed.",
         "operands": [
-            {
-                "name": "TONAME",
+			{
+				"name": "TONAME",
                 "parameter": "NEW-NAME",
                 "type": "string",
                 "length": 8,
@@ -5653,8 +5653,9 @@
         ]
     },
     {
-        "name": "++SRC",
+		"name": "++SRC",
         "parameter": "NAME",
+		"length": 8,
         "type": "MCS",
         "inline_data": true,
         "description": "The ++SRC MCS describes a single source replacement. It must immediately precede the source definition statements when they are within the SYSMOD. You should use the ++SRC MCS when you want to provide the source form of a module and have it get assembled when the SYSMOD is installed. If you want to provide the object form of the module, use the ++MOD MCS instead. The parameter NAME specifies the name of the source in the distribution library and, optionally, in the target library.",
