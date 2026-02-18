@@ -1,0 +1,28 @@
+# z/OSMF Connection Configurations
+# Multiple servers can be defined
+
+servers:
+  - name: Maint
+    host: https://192.168.9.39
+    port: 443
+    csi: ZOS31.SMPE.GLOBAL.CSI
+    user: SVARFUN
+    rejectUnauthorized: false
+    zones:
+      - MVST100
+      - MVSD100
+    defaultZones:
+      - GLOBAL
+      - MVST100
+      - MVSD100
+
+  # Add more servers as needed:
+  # - name: Development
+  #   host: https://dev.zosmf.example.com
+  #   port: 443
+  #   csi: SMPE.DEV.CSI
+  #   user: DEVUSER
+  #   rejectUnauthorized: false
+
+# Optional: Default server name (if not set, user is always prompted)
+# defaultServer: Production

@@ -2,11 +2,13 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
-## What's New in 0.8.3
+## What's New in 0.8.4
 
-- **z/OSMF Free Form CSI Query** - New Webview with input form and dynamic result table for free-form z/OSMF CSI queries
-- **Zone Pattern Matching** - Wildcard support (`*`, `?`) for zone parameters in z/OSMF queries
-- **List-type Parameter Fix** - `PRE`, `REQ`, `SUP` with multiple values no longer produce false warnings
+- **List Wrapping** - Comma-separated operand lists are automatically wrapped when exceeding a configurable threshold
+- **CodeLens for z/OSMF Queries** - Inline CodeLens actions for querying SYSMODs and DDDEFs via z/OSMF
+- **Formatting Stability** - Formatting is now fully idempotent; inline comments stay with their operands
+- **Parser Crash Fix** - Fixed panic when formatting files with certain comment patterns
+- **DELETE Mode Fix** - `++MOD DELETE`, `++SRC DELETE`, `++PROGRAM DELETE` no longer produce false DISTLIB warnings
 
 See the [CHANGELOG](CHANGELOG.md) for full details.
 
@@ -40,12 +42,12 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 
 | Platform | File |
 |----------|------|
-| Windows x64 | `vscode-smpe-win32-x64-0.8.3.vsix` |
-| Windows ARM64 | `vscode-smpe-win32-arm64-0.8.3.vsix` |
-| macOS Apple Silicon | `vscode-smpe-darwin-arm64-0.8.3.vsix` |
-| macOS Intel | `vscode-smpe-darwin-x64-0.8.3.vsix` |
-| Linux x64 | `vscode-smpe-linux-x64-0.8.3.vsix` |
-| Linux ARM64 | `vscode-smpe-linux-arm64-0.8.3.vsix` |
+| Windows x64 | `vscode-smpe-win32-x64-0.8.4-alpha.vsix` |
+| Windows ARM64 | `vscode-smpe-win32-arm64-0.8.4-alpha.vsix` |
+| macOS Apple Silicon | `vscode-smpe-darwin-arm64-0.8.4-alpha.vsix` |
+| macOS Intel | `vscode-smpe-darwin-x64-0.8.4-alpha.vsix` |
+| Linux x64 | `vscode-smpe-linux-x64-0.8.4-alpha.vsix` |
+| Linux ARM64 | `vscode-smpe-linux-arm64-0.8.4-alpha.vsix` |
 
 ### Installation in VS Code
 
@@ -57,7 +59,7 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 Alternatively via terminal:
 
 ```bash
-code --install-extension vscode-smpe-darwin-arm64-0.8.3.vsix
+code --install-extension vscode-smpe-darwin-arm64-0.8.4-alpha.vsix
 ```
 
 The Language Server is already included in the extension - no additional installation required.
@@ -79,6 +81,7 @@ The Language Server is already included in the extension - no additional install
 | `smpe.formatting.enabled` | `true` | Enable document formatting |
 | `smpe.formatting.indentContinuation` | `3` | Spaces for continuation lines |
 | `smpe.formatting.oneOperandPerLine` | `true` | Place each operand on its own line |
+| `smpe.formatting.wrapListsAfterN` | `2` | Wrap comma-separated lists after N items per line (0 = disabled) |
 | `smpe.formatting.formatOnSave` | `false` | Automatically format document when saving |
 
 ### Diagnostics

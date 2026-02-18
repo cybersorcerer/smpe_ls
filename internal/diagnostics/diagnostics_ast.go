@@ -379,7 +379,7 @@ func (p *Provider) validateOperandsASTWithConfig(stmt *parser.Node, operands map
 	// Check for missing required operands
 	// Note: Operands with required_group are handled separately below
 	if config.MissingRequiredOperand {
-		requiredOperands := getRequiredOperands(stmt.Name)
+		requiredOperands := getRequiredOperands(stmt.Name, operands)
 		for _, requiredOp := range requiredOperands {
 			// Check if any alias of this operand is present
 			found := false
@@ -1007,7 +1007,7 @@ func (p *Provider) createDiagnosticFromNode(node *parser.Node, severity int, mes
 
 // getRequiredOperands returns the list of required operands for a statement
 // These requirements are derived from the syntax diagrams in syntax_diagrams/
-func getRequiredOperands(statementType string) []string {
+func getRequiredOperands(statementType string, presentOperands map[string]*parser.Node) []string {
 	switch statementType {
 	case "++ASSIGN":
 		// From syntax_diagrams/assign.png: SOURCEID and TO are required
@@ -1027,8 +1027,9 @@ func getRequiredOperands(statementType string) []string {
 	case "++MOD":
 		// From syntax_diagrams/mod_add_replace.png: DISTLIB is required for ADD/REPLACE mode
 		// From syntax_diagrams/mod_delete.png: DELETE mode has no required operands beyond DELETE itself
-		// Note: We return DISTLIB as required, but mutually_exclusive validation in smpe.json
-		// will handle the case where DELETE is present (which makes DISTLIB optional)
+		if _, hasDelete := presentOperands["DELETE"]; hasDelete {
+			return []string{}
+		}
 		return []string{"DISTLIB"}
 	case "++MOVE":
 		// From syntax_diagrams/move-distlib.png and move-syslib.png:
@@ -1059,9 +1060,10 @@ func getRequiredOperands(statementType string) []string {
 	case "++SRC":
 		// From syntax_diagrams/src-add-replace.png and src-delete.png:
 		// DISTLIB is required in ADD/REPLACE mode (when DELETE is not specified)
-		// In DELETE mode, DELETE is specified and makes DISTLIB optional (via mutually_exclusive)
-		// We return DISTLIB as required, but mutually_exclusive validation in smpe.json
-		// will handle the case where DELETE is present (which makes DISTLIB optional)
+		// In DELETE mode, DISTLIB is optional
+		if _, hasDelete := presentOperands["DELETE"]; hasDelete {
+			return []string{}
+		}
 		return []string{"DISTLIB"}
 	case "++RENAME":
 		// From syntax_diagrams/rename.png:
@@ -1079,9 +1081,10 @@ func getRequiredOperands(statementType string) []string {
 	case "++PROGRAM":
 		// From syntax_diagrams/program-add-replace.png and program-delete.png:
 		// DISTLIB is required for ADD/REPLACE mode
-		// In DELETE mode, DELETE is specified and makes DISTLIB optional (via mutually_exclusive)
-		// We return DISTLIB as required, but mutually_exclusive validation in smpe.json
-		// will handle the case where DELETE is present (which makes DISTLIB optional)
+		// In DELETE mode, DISTLIB is optional
+		if _, hasDelete := presentOperands["DELETE"]; hasDelete {
+			return []string{}
+		}
 		return []string{"DISTLIB"}
 	case "++PTF":
 		// From syntax_diagrams/ptf.png:

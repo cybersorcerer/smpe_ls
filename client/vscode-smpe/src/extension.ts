@@ -174,6 +174,7 @@ export function activate(context: vscode.ExtensionContext) {
 		enabled: config.get<boolean>('formatting.enabled', true),
 		indentContinuation: config.get<number>('formatting.indentContinuation', 3),
 		oneOperandPerLine: config.get<boolean>('formatting.oneOperandPerLine', true),
+		wrapListsAfterN: config.get<number>('formatting.wrapListsAfterN', 2),
 		moveLeadingComments: config.get<boolean>('formatting.moveLeadingComments', false)
 	};
 
@@ -267,6 +268,7 @@ export function activate(context: vscode.ExtensionContext) {
 					enabled: updatedConfig.get<boolean>('formatting.enabled', true),
 					indentContinuation: updatedConfig.get<number>('formatting.indentContinuation', 3),
 					oneOperandPerLine: updatedConfig.get<boolean>('formatting.oneOperandPerLine', true),
+					wrapListsAfterN: updatedConfig.get<number>('formatting.wrapListsAfterN', 2),
 					moveLeadingComments: updatedConfig.get<boolean>('formatting.moveLeadingComments', false)
 				};
 
@@ -311,6 +313,12 @@ export function activate(context: vscode.ExtensionContext) {
 		}),
 		vscode.commands.registerCommand('smpe.zosmf.freeFormQuery', () => {
 			FreeFormPanel.createOrShow(queryProvider, outputChannel);
+		}),
+		vscode.commands.registerCommand('smpe.codelens.querySysmod', (sysmodId: string) => {
+			queryProvider.querySysmodDirect([sysmodId]);
+		}),
+		vscode.commands.registerCommand('smpe.codelens.queryDddef', (dddefName: string) => {
+			queryProvider.queryDddefDirect([dddefName]);
 		})
 	);
 

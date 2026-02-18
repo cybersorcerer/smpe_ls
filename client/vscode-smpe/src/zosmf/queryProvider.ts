@@ -388,6 +388,70 @@ export class QueryProvider {
     }
 
     /**
+     * Query SYSMOD directly (from CodeLens click, skips SYSMOD name prompt)
+     */
+    async querySysmodDirect(sysmods: string[]): Promise<void> {
+        const ctx = await this.getServerAndCredentials();
+        if (!ctx) {
+            return;
+        }
+
+        const zones = await this.promptForZones(ctx.server);
+        if (!zones) {
+            return;
+        }
+
+        this.log(`CodeLens: Querying SYSMODs: ${sysmods.join(', ')} in zones: ${zones.join(', ')}`);
+
+        const result = await this.executeWithProgress(
+            `Querying SYSMODs on ${ctx.server.name}`,
+            (progress) => this.client.querySysmod(
+                ctx.server,
+                ctx.credentials,
+                zones,
+                sysmods,
+                progress
+            )
+        );
+
+        if (result) {
+            this.handleResult(ctx.server.name, 'sysmod', result);
+        }
+    }
+
+    /**
+     * Query DDDEF directly (from CodeLens click, skips DDDEF name prompt)
+     */
+    async queryDddefDirect(dddefs: string[]): Promise<void> {
+        const ctx = await this.getServerAndCredentials();
+        if (!ctx) {
+            return;
+        }
+
+        const zones = await this.promptForZones(ctx.server);
+        if (!zones) {
+            return;
+        }
+
+        this.log(`CodeLens: Querying DDDEFs: ${dddefs.join(', ')} in zones: ${zones.join(', ')}`);
+
+        const result = await this.executeWithProgress(
+            `Querying DDDEFs on ${ctx.server.name}`,
+            (progress) => this.client.queryDddef(
+                ctx.server,
+                ctx.credentials,
+                zones,
+                dddefs,
+                progress
+            )
+        );
+
+        if (result) {
+            this.handleResult(ctx.server.name, 'dddef', result);
+        }
+    }
+
+    /**
      * Handle query result
      */
     private handleResult(serverName: string, queryType: QueryType, result: QueryResult): void {

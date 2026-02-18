@@ -19,6 +19,7 @@ type Config struct {
 	Enabled             bool
 	IndentContinuation  int  // Number of spaces for continuation lines (default: 3)
 	OneOperandPerLine   bool // Put each operand on its own line
+	WrapListsAfterN     int  // Wrap comma-separated lists if they have more than N items (default: 2, 0=never wrap)
 	AlignOperands       bool // Align operands vertically
 	PreserveComments    bool // Keep comments in their original position
 	MoveLeadingComments bool // Move comments from before first statement into the statement
@@ -30,6 +31,7 @@ func DefaultConfig() *Config {
 		Enabled:             true,
 		IndentContinuation:  3,
 		OneOperandPerLine:   true,
+		WrapListsAfterN:     2, // Wrap lists with more than 2 items
 		AlignOperands:       false,
 		PreserveComments:    true,
 		MoveLeadingComments: false, // Default: don't move, just show diagnostic
@@ -757,11 +759,24 @@ func (p *Provider) buildFormattedStatementWithLeadingComments(stmt *parser.Node,
 		}
 	}
 
+	// Determine first operand line to distinguish leading from inline comments
+	firstOperandLine := -1
+	if len(operands) > 0 {
+		firstOperandLine = operands[0].Position.Line
+	}
+
 	// Separate leading comments from inline comments
-	// Leading comments should be inserted after the statement name line
+	// Leading comments: standalone comments (not AtEnd) that appear before the first operand
+	// These are inserted after the statement header line
+	// Inline comments: comments that appear on the same line as an operand (AtEnd)
 	var inlineComments []CommentInfo
 	for _, c := range comments {
-		// Skip leading comments - they are handled separately
+		// Skip after-dot comments - they are handled via extractTrailingCommentAfterTerminator
+		if c.AfterDot {
+			continue
+		}
+
+		// Check if this is already in the leadingComments list
 		isLeading := false
 		for _, lc := range leadingComments {
 			if lc.Text == c.Text && lc.Line == c.Line {
@@ -773,48 +788,105 @@ func (p *Provider) buildFormattedStatementWithLeadingComments(stmt *parser.Node,
 			continue
 		}
 
-		// Skip after-dot comments - they are handled via extractTrailingCommentAfterTerminator
-		if !c.AfterDot {
-			inlineComments = append(inlineComments, c)
+		// Standalone comments (not at end of a line with other content) that appear
+		// before the first operand are treated as leading comments
+		if !c.AtEnd && (firstOperandLine < 0 || c.Line < firstOperandLine) {
+			leadingComments = append(leadingComments, c)
+			continue
 		}
+
+		inlineComments = append(inlineComments, c)
 	}
 
 	// Extract trailing comment after terminator directly from original text
 	// This handles multi-line comments that the parser doesn't capture correctly
 	trailingComment := p.extractTrailingCommentAfterTerminator(stmt, lines)
 
+	// Build a map: source line -> inline comment(s) for that line
+	// so we can attach comments to their correct operand
+	lineComments := make(map[int][]CommentInfo)
+	for _, c := range inlineComments {
+		lineComments[c.Line] = append(lineComments[c.Line], c)
+	}
+
+	commentIndent := "  "
+
 	if p.config.OneOperandPerLine && len(operands) > 0 {
-		// First line is just the statement header
-		outputLines = append(outputLines, p.wrapLineAt72(firstLine, ""))
+		// Statement header line with any comment that was on that same line
+		headerLine := firstLine
+		headerLine = p.appendCommentsToLine(headerLine, lineComments[stmt.Position.Line], &outputLines, commentIndent)
+		if headerLine != "" {
+			outputLines = append(outputLines, p.wrapLineAt72(headerLine, ""))
+		}
 
 		// Insert leading comments after the statement header line
-		// Comments start at column 3 (2 space indent), not at operand indent
-		commentIndent := "  "
 		for _, lc := range leadingComments {
-			// Wrap comment if it exceeds column 72
 			wrappedLines := p.wrapCommentAt72(commentIndent, lc.Text)
 			outputLines = append(outputLines, wrappedLines...)
 		}
 
-		// Each operand on its own line
-		for _, op := range operands {
-			opText := indent + p.formatOperand(op)
-			outputLines = append(outputLines, p.wrapLineAt72(opText, indent))
+		// Build a map: operand index -> comments that belong to that operand
+		// A comment belongs to the operand on the same line, OR to the
+		// preceding operand if it's on a line between two operands.
+		opComments := make(map[int][]CommentInfo)
+		for _, c := range inlineComments {
+			// Skip comments on the header line (already handled)
+			if c.Line == stmt.Position.Line {
+				continue
+			}
+			// Find which operand this comment belongs to
+			bestOp := -1
+			for oi, op := range operands {
+				if op.Position.Line <= c.Line {
+					bestOp = oi
+				}
+			}
+			if bestOp >= 0 {
+				opComments[bestOp] = append(opComments[bestOp], c)
+			}
 		}
 
-		// Insert multi-line inline comments BEFORE the terminator
-		for _, c := range inlineComments {
-			if strings.Contains(c.Text, "\n") {
-				commentLines := strings.Split(c.Text, "\n")
-				wrappedLines := p.wrapMultiLineCommentAt72(commentLines)
-				outputLines = append(outputLines, wrappedLines...)
+		// Each operand on its own line, with their inline comments preserved
+		for oi, op := range operands {
+			opText := p.formatOperand(op)
+			comments := opComments[oi]
+
+			// Separate same-line (AtEnd) comments from following-line comments
+			var sameLineComments []CommentInfo
+			var followingComments []CommentInfo
+			for _, c := range comments {
+				if c.Line == op.Position.Line && c.AtEnd {
+					sameLineComments = append(sameLineComments, c)
+				} else {
+					followingComments = append(followingComments, c)
+				}
+			}
+
+			if strings.Contains(opText, "\n") {
+				// Wrapped list operand
+				p.appendWrappedOperand(opText, indent, &outputLines)
+				// Append same-line and following comments after the wrapped operand
+				for _, c := range sameLineComments {
+					p.appendCommentLines(c.Text, commentIndent, &outputLines)
+				}
+			} else {
+				opLine := indent + opText
+				// Try to fit same-line comments on the operand line
+				opLine = p.appendCommentsToLine(opLine, sameLineComments, &outputLines, commentIndent)
+				if opLine != "" {
+					outputLines = append(outputLines, p.wrapLineAt72(opLine, indent))
+				}
+			}
+
+			// Append following-line comments (multi-line or standalone between operands)
+			for _, c := range followingComments {
+				p.appendCommentLines(c.Text, commentIndent, &outputLines)
 			}
 		}
 
 		// Terminator on its own line
 		if stmt.HasTerminator {
 			termLine := "."
-			// Add trailing comment after terminator (may be multi-line)
 			if trailingComment != "" {
 				termLine += " " + trailingComment
 			}
@@ -827,10 +899,7 @@ func (p *Provider) buildFormattedStatementWithLeadingComments(stmt *parser.Node,
 		// If we have leading comments and no operands, insert them after header
 		if len(leadingComments) > 0 {
 			outputLines = append(outputLines, currentLine)
-			// Comments start at column 3 (2 space indent)
-			commentIndent := "  "
 			for _, lc := range leadingComments {
-				// Wrap comment if it exceeds column 72
 				wrappedLines := p.wrapCommentAt72(commentIndent, lc.Text)
 				outputLines = append(outputLines, wrappedLines...)
 			}
@@ -840,13 +909,11 @@ func (p *Provider) buildFormattedStatementWithLeadingComments(stmt *parser.Node,
 		for i, op := range operands {
 			opText := p.formatOperand(op)
 
-			// Check if adding this operand would exceed column 72
 			if currentLine == "" {
 				currentLine = indent + opText
 			} else {
 				newLen := runeCount(currentLine) + 1 + runeCount(opText)
 				if newLen > MaxColumn && currentLine != firstLine {
-					// Start a new line
 					outputLines = append(outputLines, currentLine)
 					currentLine = indent + opText
 				} else {
@@ -859,63 +926,22 @@ func (p *Provider) buildFormattedStatementWithLeadingComments(stmt *parser.Node,
 			}
 		}
 
-		// Flush current line before multi-line comments
 		if currentLine != "" {
 			outputLines = append(outputLines, currentLine)
 		}
 
-		// Insert multi-line inline comments BEFORE the terminator
+		// Insert inline comments that weren't on operand lines
 		for _, c := range inlineComments {
-			if strings.Contains(c.Text, "\n") {
-				commentLines := strings.Split(c.Text, "\n")
-				wrappedLines := p.wrapMultiLineCommentAt72(commentLines)
-				outputLines = append(outputLines, wrappedLines...)
-			}
+			p.appendCommentLines(c.Text, commentIndent, &outputLines)
 		}
 
 		// Add terminator
 		if stmt.HasTerminator {
 			termLine := "."
-			// Add trailing comment after terminator (may be multi-line)
 			if trailingComment != "" {
 				termLine += " " + trailingComment
 			}
 			outputLines = append(outputLines, termLine)
-		}
-	}
-
-	// Insert single-line inline comments into the output
-	// Multi-line comments are already handled above (before terminator)
-	// Single-line comments are added at the end of lines if they fit
-	if len(inlineComments) > 0 && len(outputLines) > 0 {
-		for _, c := range inlineComments {
-			// Skip multi-line comments - already handled
-			if strings.Contains(c.Text, "\n") {
-				continue
-			}
-			// Single-line comment: try to add at end of a line if it fits
-			added := false
-			for i := range outputLines {
-				lineLen := runeCount(outputLines[i])
-				commentLen := runeCount(c.Text)
-				if lineLen+1+commentLen <= MaxColumn {
-					outputLines[i] += " " + c.Text
-					added = true
-					break
-				}
-			}
-			// If it didn't fit anywhere, add it as a separate line before terminator
-			if !added {
-				insertIdx := len(outputLines)
-				if insertIdx > 0 && strings.TrimSpace(outputLines[insertIdx-1]) == "." {
-					insertIdx = insertIdx - 1
-				}
-				newOutput := make([]string, 0, len(outputLines)+1)
-				newOutput = append(newOutput, outputLines[:insertIdx]...)
-				newOutput = append(newOutput, c.Text)
-				newOutput = append(newOutput, outputLines[insertIdx:]...)
-				outputLines = newOutput
-			}
 		}
 	}
 
@@ -991,6 +1017,7 @@ func (p *Provider) wrapMultiLineCommentAt72(commentLines []string) []string {
 }
 
 // formatOperand formats a single operand
+// Returns the formatted operand, which may contain newlines if lists are wrapped
 func (p *Provider) formatOperand(op *parser.Node) string {
 	if op == nil {
 		return ""
@@ -1003,9 +1030,32 @@ func (p *Provider) formatOperand(op *parser.Node) string {
 	hasContent := false
 	for _, child := range op.Children {
 		if child.Type == parser.NodeTypeParameter {
-			sb.WriteString("(")
-			sb.WriteString(p.formatOperandParameter(child))
-			sb.WriteString(")")
+			paramValue := p.formatOperandParameter(child)
+
+			// Check if parameter contains wrapped list (starts and ends with newline)
+			if strings.HasPrefix(paramValue, "\n") && strings.HasSuffix(paramValue, "\n") {
+				// Multi-line list format:
+				// OPERAND(
+				//    item1,
+				//    item2,
+				//    item3
+				// )
+				sb.WriteString("(\n")
+				// Remove leading and trailing newlines
+				trimmed := strings.Trim(paramValue, "\n")
+				lines := strings.Split(trimmed, "\n")
+				for _, line := range lines {
+					sb.WriteString("   ") // 3 spaces indent for list items
+					sb.WriteString(line)
+					sb.WriteString("\n")
+				}
+				sb.WriteString(")")
+			} else {
+				// Regular single-line parameter
+				sb.WriteString("(")
+				sb.WriteString(paramValue)
+				sb.WriteString(")")
+			}
 			hasContent = true
 			break
 		}
@@ -1035,9 +1085,83 @@ func (p *Provider) formatOperandParameter(param *parser.Node) string {
 		return ""
 	}
 
+	// Check if this is a comma-separated list that should be wrapped
+	if p.config.WrapListsAfterN > 0 && strings.Contains(param.Value, ",") {
+		items := strings.Split(param.Value, ",")
+		// Trim spaces from each item
+		for i := range items {
+			items[i] = strings.TrimSpace(items[i])
+		}
+
+		// Only wrap if we have more than WrapListsAfterN items
+		if len(items) > p.config.WrapListsAfterN {
+			// Return special marker that formatOperand will detect
+			return "\n" + strings.Join(items, ",\n") + "\n"
+		}
+	}
+
 	// Preserve the original parameter value - don't reformat it
 	// This keeps commas, spaces, and other separators as the user wrote them
 	return param.Value
+}
+
+// appendCommentsToLine tries to append comments to the current line.
+// If a comment fits within column 72, it's appended inline.
+// If not, the current line is flushed to outputLines and the comment is
+// wrapped onto its own line(s). Returns the (possibly modified) current line.
+// An empty return means the line was already flushed.
+func (p *Provider) appendCommentsToLine(line string, comments []CommentInfo, outputLines *[]string, commentIndent string) string {
+	for _, c := range comments {
+		if strings.Contains(c.Text, "\n") {
+			// Multi-line comment: flush current line, then add wrapped comment
+			if line != "" {
+				*outputLines = append(*outputLines, p.wrapLineAt72(line, commentIndent))
+				line = ""
+			}
+			commentLines := strings.Split(c.Text, "\n")
+			wrappedLines := p.wrapMultiLineCommentAt72(commentLines)
+			*outputLines = append(*outputLines, wrappedLines...)
+		} else {
+			// Single-line comment: try to fit on current line
+			if line != "" && runeCount(line)+1+runeCount(c.Text) <= MaxColumn {
+				line += " " + c.Text
+			} else {
+				// Doesn't fit: flush current line, put comment on its own line
+				if line != "" {
+					*outputLines = append(*outputLines, p.wrapLineAt72(line, commentIndent))
+					line = ""
+				}
+				wrappedLines := p.wrapCommentAt72(commentIndent, c.Text)
+				*outputLines = append(*outputLines, wrappedLines...)
+			}
+		}
+	}
+	return line
+}
+
+// appendCommentLines adds a comment (single or multi-line) as separate line(s),
+// wrapped at column 72
+func (p *Provider) appendCommentLines(text string, commentIndent string, outputLines *[]string) {
+	if strings.Contains(text, "\n") {
+		commentLines := strings.Split(text, "\n")
+		wrappedLines := p.wrapMultiLineCommentAt72(commentLines)
+		*outputLines = append(*outputLines, wrappedLines...)
+	} else {
+		wrappedLines := p.wrapCommentAt72(commentIndent, text)
+		*outputLines = append(*outputLines, wrappedLines...)
+	}
+}
+
+// appendWrappedOperand adds a multi-line (wrapped list) operand to outputLines
+func (p *Provider) appendWrappedOperand(opText string, indent string, outputLines *[]string) {
+	opLines := strings.Split(opText, "\n")
+	for i, line := range opLines {
+		if i == 0 {
+			*outputLines = append(*outputLines, p.wrapLineAt72(indent+line, indent))
+		} else {
+			*outputLines = append(*outputLines, p.wrapLineAt72(line, indent))
+		}
+	}
 }
 
 // runeCount returns the number of runes in a string

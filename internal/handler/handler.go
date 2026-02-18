@@ -4,6 +4,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/cybersorcerer/smpe_ls/internal/codelens"
 	"github.com/cybersorcerer/smpe_ls/internal/completion"
 	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/diagnostics"
@@ -75,6 +76,7 @@ type Handler struct {
 	formattingProvider  *formatting.Provider
 	symbolProvider      *symbols.Provider
 	referencesProvider  *references.Provider
+	codeLensProvider    *codelens.Provider
 	server              *lsp.Server
 	diagnosticsConfig   *DiagnosticsConfig
 }
@@ -100,6 +102,7 @@ func New(version string, dataPath string) (*Handler, error) {
 	formattingProvider := formatting.NewProvider()
 	symbolProvider := symbols.NewProvider()
 	referencesProvider := references.NewProvider()
+	codeLensProvider := codelens.NewProvider()
 
 	return &Handler{
 		version:             version,
@@ -113,6 +116,7 @@ func New(version string, dataPath string) (*Handler, error) {
 		formattingProvider:  formattingProvider,
 		symbolProvider:      symbolProvider,
 		referencesProvider:  referencesProvider,
+		codeLensProvider:    codeLensProvider,
 		diagnosticsConfig:   DefaultDiagnosticsConfig(),
 	}, nil
 }
@@ -161,10 +165,11 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 			Enabled:             opts.Enabled,
 			IndentContinuation:  opts.IndentContinuation,
 			OneOperandPerLine:   opts.OneOperandPerLine,
+			WrapListsAfterN:     opts.WrapListsAfterN,
 			MoveLeadingComments: opts.MoveLeadingComments,
 		})
-		logger.Info("Formatting config received from client: Enabled=%v, IndentContinuation=%d, OneOperandPerLine=%v, MoveLeadingComments=%v",
-			opts.Enabled, opts.IndentContinuation, opts.OneOperandPerLine, opts.MoveLeadingComments)
+		logger.Info("Formatting config received from client: Enabled=%v, IndentContinuation=%d, OneOperandPerLine=%v, WrapListsAfterN=%d, MoveLeadingComments=%v",
+			opts.Enabled, opts.IndentContinuation, opts.OneOperandPerLine, opts.WrapListsAfterN, opts.MoveLeadingComments)
 	} else {
 		logger.Info("Using default formatting config")
 	}
@@ -187,6 +192,7 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 			DocumentSymbolProvider:          true,
 			DefinitionProvider:              true,
 			ReferencesProvider:              true,
+			CodeLensProvider:                &lsp.CodeLensOptions{},
 			SemanticTokensProvider: &lsp.SemanticTokensOptions{
 				Legend: lsp.SemanticTokensLegend{
 					TokenTypes: []string{
@@ -447,10 +453,11 @@ func (h *Handler) WorkspaceDidChangeConfiguration(params lsp.DidChangeConfigurat
 			Enabled:             opts.Enabled,
 			IndentContinuation:  opts.IndentContinuation,
 			OneOperandPerLine:   opts.OneOperandPerLine,
+			WrapListsAfterN:     opts.WrapListsAfterN,
 			MoveLeadingComments: opts.MoveLeadingComments,
 		})
-		logger.Info("Updated formatting config: Enabled=%v, IndentContinuation=%d, OneOperandPerLine=%v, MoveLeadingComments=%v",
-			opts.Enabled, opts.IndentContinuation, opts.OneOperandPerLine, opts.MoveLeadingComments)
+		logger.Info("Updated formatting config: Enabled=%v, IndentContinuation=%d, OneOperandPerLine=%v, WrapListsAfterN=%d, MoveLeadingComments=%v",
+			opts.Enabled, opts.IndentContinuation, opts.OneOperandPerLine, opts.WrapListsAfterN, opts.MoveLeadingComments)
 	}
 
 	return nil
@@ -646,4 +653,33 @@ func (h *Handler) TextDocumentReferences(params lsp.ReferenceParams) ([]lsp.Loca
 	logger.Debug("Found %d references", len(locations))
 
 	return locations, nil
+}
+
+// TextDocumentCodeLens handles code lens request
+func (h *Handler) TextDocumentCodeLens(params lsp.CodeLensParams) ([]lsp.CodeLens, error) {
+	logger.Debug("CodeLens requested for: %s", params.TextDocument.URI)
+
+	h.documentsMutex.RLock()
+	text, textExists := h.documents[params.TextDocument.URI]
+	doc, hasDoc := h.parsedDocuments[params.TextDocument.URI]
+	h.documentsMutex.RUnlock()
+
+	if !textExists {
+		logger.Debug("Document not found: %s", params.TextDocument.URI)
+		return nil, nil
+	}
+
+	// Ensure we have a parsed document
+	if !hasDoc {
+		logger.Debug("No parsed document found for code lens, parsing now: %s", params.TextDocument.URI)
+		h.documentsMutex.Lock()
+		doc = h.parser.Parse(text)
+		h.parsedDocuments[params.TextDocument.URI] = doc
+		h.documentsMutex.Unlock()
+	}
+
+	lenses := h.codeLensProvider.GetCodeLenses(doc)
+	logger.Debug("CodeLens returned %d lenses", len(lenses))
+
+	return lenses, nil
 }

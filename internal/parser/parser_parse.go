@@ -42,6 +42,18 @@ func (p *Parser) Parse(text string) *Document {
 			if hasCommentStart && hasCommentEnd {
 				commentStart := strings.Index(line, "/*")
 				commentEnd := strings.Index(line, "*/")
+				// If */ appears before /* (e.g., end of block comment on same line as new comment),
+				// find the closing */ that belongs to the /*
+				if commentEnd < commentStart {
+					rest := line[commentStart+2:]
+					idx := strings.Index(rest, "*/")
+					if idx >= 0 {
+						commentEnd = commentStart + 2 + idx
+					} else {
+						cleanLines[lineNum] = line
+						continue
+					}
+				}
 				commentValue := line[commentStart : commentEnd+2]
 
 				// Convert byte offsets to rune offsets for LSP compatibility

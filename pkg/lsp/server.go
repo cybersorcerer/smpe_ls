@@ -32,6 +32,7 @@ type Handler interface {
 	TextDocumentDocumentSymbol(params DocumentSymbolParams) ([]DocumentSymbol, error)
 	TextDocumentDefinition(params DefinitionParams) (*Location, error)
 	TextDocumentReferences(params ReferenceParams) ([]Location, error)
+	TextDocumentCodeLens(params CodeLensParams) ([]CodeLens, error)
 	WorkspaceDidChangeConfiguration(params DidChangeConfigurationParams) error
 }
 
@@ -257,10 +258,22 @@ func (s *Server) handleRequest(req *Request) error {
 
 		return s.sendResponse(req.ID, result)
 
+	case "textDocument/codeLens":
+		var params CodeLensParams
+		if err := json.Unmarshal(req.Params, &params); err != nil {
+			return s.sendErrorResponse(req.ID, InvalidParams, "Invalid params")
+		}
+
+		result, err := s.handler.TextDocumentCodeLens(params)
+		if err != nil {
+			return s.sendErrorResponse(req.ID, InternalError, err.Error())
+		}
+
+		return s.sendResponse(req.ID, result)
+
 	// Optional capabilities - respond with null to indicate not supported
 	case "textDocument/onTypeFormatting",
 		"textDocument/codeAction",
-		"textDocument/codeLens",
 		"textDocument/rename",
 		"textDocument/signatureHelp",
 		"textDocument/documentHighlight",
