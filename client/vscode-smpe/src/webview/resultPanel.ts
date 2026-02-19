@@ -425,7 +425,10 @@ export class ResultPanel {
     }
 
     private renderSysmodTable(entries: ZosmfEntry[]): string {
-        const rows = entries.map(entry => {
+        const sorted = [...entries].sort((a, b) =>
+            a.zonename.localeCompare(b.zonename) || a.entryname.localeCompare(b.entryname)
+        );
+        const rows = sorted.map(entry => {
             const subData = this.extractSubentryData(entry.subentries);
             const entryClass = `entry-${entry.entrytype.toLowerCase()}`;
             const errorClass = subData['ERROR'] === 'NO' ? 'error-no' : (subData['ERROR'] ? 'error-yes' : '');
@@ -462,7 +465,9 @@ export class ResultPanel {
     }
 
     private renderDddefTable(entries: ZosmfEntry[]): string {
-        const rows = entries.filter(e => e.entrytype === 'DDDEF').map(entry => {
+        const rows = entries.filter(e => e.entrytype === 'DDDEF').sort((a, b) =>
+            a.zonename.localeCompare(b.zonename) || a.entryname.localeCompare(b.entryname)
+        ).map(entry => {
             const subData = this.extractSubentryData(entry.subentries);
 
             return `<tr>

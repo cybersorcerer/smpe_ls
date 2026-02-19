@@ -19,7 +19,8 @@ export class QueryProvider {
         outputChannel: vscode.OutputChannel
     ) {
         this.configManager = new ConfigManager(context, outputChannel);
-        this.client = new ZosmfClient(outputChannel);
+        const timeoutSeconds = vscode.workspace.getConfiguration('smpe.zosmf').get<number>('queryTimeoutSeconds', 300);
+        this.client = new ZosmfClient(outputChannel, timeoutSeconds);
         this.outputChannel = outputChannel;
     }
 

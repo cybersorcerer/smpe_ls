@@ -591,7 +591,10 @@ export class FreeFormPanel {
             currentSubentries = subentries;
             document.getElementById('executeBtn').disabled = false;
 
-            const entries = result.entries || [];
+            const entries = (result.entries || []).slice().sort((a, b) =>
+                (a.zonename || '').localeCompare(b.zonename || '') ||
+                (a.entryname || '').localeCompare(b.entryname || '')
+            );
             document.getElementById('countBadge').textContent = entries.length;
 
             const statusBar = document.getElementById('statusBar');

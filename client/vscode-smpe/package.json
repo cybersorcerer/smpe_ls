@@ -177,6 +177,13 @@
           "default": true,
           "description": "Move comments from before first statement into the statement during formatting"
         },
+        "smpe.zosmf.queryTimeoutSeconds": {
+          "type": "integer",
+          "default": 300,
+          "minimum": 30,
+          "maximum": 600,
+          "description": "Maximum time in seconds to wait for a z/OSMF CSI query result (default: 300s / 5 minutes)"
+        },
         "smpe.editor.showColumnRulers": {
           "type": "boolean",
           "default": true,

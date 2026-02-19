@@ -18,14 +18,16 @@ import {
 } from './types';
 
 const POLL_INTERVAL_MS = 2000;
-const MAX_POLL_ATTEMPTS = 150; // 5 minutes max
+const MAX_404_RETRIES = 30;    // retry up to 1 minute while z/OSMF initializes the query
 
 export class ZosmfClient {
     private outputChannel: vscode.OutputChannel;
     private insecureAgent: https.Agent;
+    private maxPollAttempts: number;
 
-    constructor(outputChannel: vscode.OutputChannel) {
+    constructor(outputChannel: vscode.OutputChannel, queryTimeoutSeconds: number = 300) {
         this.outputChannel = outputChannel;
+        this.maxPollAttempts = Math.ceil((queryTimeoutSeconds * 1000) / POLL_INTERVAL_MS);
 
         // Create a reusable insecure agent for servers with certificate issues
         // This mimics how Zowe Explorer handles self-signed/expired certificates
@@ -300,27 +302,28 @@ export class ZosmfClient {
                 this.log(`Async response, polling: ${asyncResponse.statusurl}`);
                 return this.pollForResult(asyncResponse.statusurl, headers, server.rejectUnauthorized, progress);
             } else if (response.statusCode === 401) {
-                throw new Error('Authentication failed. Please check your credentials.');
+                this.log(`HTTP 401 Unauthorized. Response: ${response.body}`);
+                throw new Error('HTTP 401 Unauthorized: Authentication failed. Please check your z/OSMF credentials.');
             } else if (response.statusCode === 403) {
-                throw new Error('Access denied. User may not have permission for this CSI.');
+                this.log(`HTTP 403 Forbidden. Response: ${response.body}`);
+                throw new Error('HTTP 403 Forbidden: Access denied. The user may not have permission to access this CSI data set.');
+            } else if (response.statusCode === 404) {
+                this.log(`HTTP 404 Not Found. Response: ${response.body}`);
+                throw new Error(`HTTP 404 Not Found: The z/OSMF CSI query endpoint was not found. Please verify the host, port, and CSI data set name.`);
             } else {
-                // Try to extract error message from response
-                let errorMsg = `HTTP ${response.statusCode}`;
-                this.log(`Response body: ${response.body}`);
+                this.log(`HTTP ${response.statusCode}. Response: ${response.body}`);
+                let detail = response.body ? response.body.substring(0, 500) : '(no response body)';
                 try {
                     const errorBody = JSON.parse(response.body);
-                    this.log(`Parsed error: ${JSON.stringify(errorBody, null, 2)}`);
                     if (errorBody.message) {
-                        errorMsg = errorBody.message;
+                        detail = errorBody.message;
                     } else if (errorBody.error) {
-                        errorMsg = errorBody.error;
+                        detail = errorBody.error;
+                    } else if (errorBody.reason) {
+                        detail = errorBody.reason;
                     }
-                } catch {
-                    if (response.body) {
-                        errorMsg += `: ${response.body.substring(0, 500)}`;
-                    }
-                }
-                throw new Error(errorMsg);
+                } catch { /* use raw body */ }
+                throw new Error(`HTTP ${response.statusCode}: ${detail}`);
             }
         } catch (error) {
             if (error instanceof Error) {
@@ -341,8 +344,9 @@ export class ZosmfClient {
         progress?: ProgressCallback
     ): Promise<QueryResult> {
         let attempts = 0;
+        let notFoundCount = 0;
 
-        while (attempts < MAX_POLL_ATTEMPTS) {
+        while (attempts < this.maxPollAttempts) {
             attempts++;
             progress?.(`Waiting for results... (${attempts})`);
 
@@ -372,40 +376,39 @@ export class ZosmfClient {
                         }
                         return { messages: ['Query completed but no results returned'] };
                     } else if (statusResponse.status === 'failed') {
-                        throw new Error(statusResponse.error || 'Query failed');
+                        const reason = statusResponse.error || statusResponse.reason || statusResponse.message || '(no details provided)';
+                        this.log(`Query failed. z/OSMF response: ${response.body}`);
+                        throw new Error(`Query failed: ${reason}`);
                     }
                     // status === 'running', continue polling
                 } else if (response.statusCode === 202) {
                     // Still processing, continue
                     const asyncResponse = JSON.parse(response.body);
                     if (asyncResponse.statusurl && asyncResponse.statusurl !== statusUrl) {
-                        // Status URL changed, update it
                         this.log(`Status URL changed to: ${asyncResponse.statusurl}`);
                         return this.pollForResult(asyncResponse.statusurl, headers, rejectUnauthorized, progress);
                     }
+                } else if (response.statusCode === 404) {
+                    // z/OSMF may return 404 briefly while the query is being initialized
+                    notFoundCount++;
+                    this.log(`HTTP 404 during poll (retry ${notFoundCount}/${MAX_404_RETRIES}). Response: ${response.body}`);
+                    if (notFoundCount >= MAX_404_RETRIES) {
+                        throw new Error(`HTTP 404 Not Found: The query status URL was not found after ${MAX_404_RETRIES} retries (${MAX_404_RETRIES * POLL_INTERVAL_MS / 1000}s). The z/OSMF server may be unavailable or the query expired.`);
+                    }
                 } else if (response.statusCode === 500) {
-                    // Server error during polling - may be transient, retry a few times
-                    this.log(`Server error during poll (attempt ${attempts}): ${response.body}`);
+                    this.log(`HTTP 500 during poll (attempt ${attempts}). Response: ${response.body}`);
                     if (attempts >= 3) {
-                        let errorDetail = 'Server error during query processing';
+                        let detail = response.body ? response.body.substring(0, 500) : '(no response body)';
                         try {
                             const errorBody = JSON.parse(response.body);
-                            if (errorBody.message) {
-                                errorDetail = errorBody.message;
-                            } else if (errorBody.reason) {
-                                errorDetail = errorBody.reason;
-                            }
-                        } catch {
-                            if (response.body) {
-                                errorDetail += `: ${response.body.substring(0, 500)}`;
-                            }
-                        }
-                        throw new Error(errorDetail);
+                            detail = errorBody.message || errorBody.reason || detail;
+                        } catch { /* use raw body */ }
+                        throw new Error(`HTTP 500 Internal Server Error: ${detail}`);
                     }
-                    // Retry
+                    // Retry on first 2 occurrences
                 } else {
-                    this.log(`Unexpected poll status ${response.statusCode}: ${response.body}`);
-                    throw new Error(`Status poll failed: HTTP ${response.statusCode}`);
+                    this.log(`HTTP ${response.statusCode} during poll. Response: ${response.body}`);
+                    throw new Error(`HTTP ${response.statusCode}: Unexpected response while polling for query results.`);
                 }
             } catch (error) {
                 if (error instanceof Error && error.message.includes('ECONNRESET')) {
@@ -417,7 +420,7 @@ export class ZosmfClient {
             }
         }
 
-        throw new Error('Query timed out waiting for results');
+        throw new Error(`Query timed out: no result received after ${this.maxPollAttempts} poll attempts (${this.maxPollAttempts * POLL_INTERVAL_MS / 1000}s).`);
     }
 
     /**
