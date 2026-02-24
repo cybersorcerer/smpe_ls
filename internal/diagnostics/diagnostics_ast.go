@@ -347,11 +347,21 @@ func (p *Provider) validateOperandsASTWithConfig(stmt *parser.Node, operands map
 									}
 								}
 							} else {
-								// Non-list type: validate entire parameter value
+								// Non-list type: validate the primary parameter value.
+								// If the operand has optional suffix values (e.g. SHSCRIPT(MYSCRIPT, POST)),
+								// only the first comma-separated token is the actual parameter; the rest
+								// are keyword qualifiers defined in op.Values and must not be length-checked.
 								paramValue := strings.TrimSpace(child.Value)
 								// Remove surrounding quotes if present (for string values)
 								if len(paramValue) >= 2 && paramValue[0] == '\'' && paramValue[len(paramValue)-1] == '\'' {
 									paramValue = paramValue[1 : len(paramValue)-1]
+								}
+								// If the operand has keyword values (e.g. PRE/POST for SHSCRIPT),
+								// only check the primary token before the first comma.
+								if len(op.Values) > 0 {
+									if idx := strings.IndexByte(paramValue, ','); idx >= 0 {
+										paramValue = strings.TrimSpace(paramValue[:idx])
+									}
 								}
 								if paramValue != "" && len(paramValue) > op.Length {
 									diagnostics = append(diagnostics, p.createDiagnosticFromNode(

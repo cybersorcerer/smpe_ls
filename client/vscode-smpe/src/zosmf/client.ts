@@ -251,6 +251,32 @@ export class ZosmfClient {
     }
 
     /**
+     * Extract error detail from z/OSMF error response body.
+     * Per IBM docs: { "error": { "reason": <int>, "messages": ["..."] } }
+     * Logs the raw response body and returns a human-readable string.
+     */
+    private extractZosmfError(rawBody: string): string {
+        if (!rawBody) {
+            return '(no response body)';
+        }
+        try {
+            const body = JSON.parse(rawBody);
+            // IBM documented format: { "error": { "reason": <int>, "messages": ["..."] } }
+            if (body.error) {
+                const reason = body.error.reason !== undefined ? ` (reason: ${body.error.reason})` : '';
+                const messages = Array.isArray(body.error.messages) && body.error.messages.length > 0
+                    ? body.error.messages.join(' | ')
+                    : '';
+                return messages ? `${messages}${reason}` : `z/OSMF error${reason}`;
+            }
+            // Fallback for non-standard response fields
+            if (body.message) { return body.message; }
+            if (body.reason)  { return String(body.reason); }
+        } catch { /* not JSON */ }
+        return rawBody.substring(0, 500);
+    }
+
+    /**
      * Execute a query and handle async polling
      */
     private async executeQuery(
@@ -301,29 +327,32 @@ export class ZosmfClient {
                 const asyncResponse = JSON.parse(response.body) as AsyncResponse;
                 this.log(`Async response, polling: ${asyncResponse.statusurl}`);
                 return this.pollForResult(asyncResponse.statusurl, headers, server.rejectUnauthorized, progress);
+            } else if (response.statusCode === 400) {
+                // The request contained incorrect parameters (e.g. invalid subentry name)
+                const detail = this.extractZosmfError(response.body);
+                this.log(`HTTP 400 Bad Request. Response: ${response.body}`);
+                throw new Error(`HTTP 400 Bad Request: The request contained incorrect parameters. ${detail}`);
             } else if (response.statusCode === 401) {
                 this.log(`HTTP 401 Unauthorized. Response: ${response.body}`);
-                throw new Error('HTTP 401 Unauthorized: Authentication failed. Please check your z/OSMF credentials.');
+                throw new Error(`HTTP 401 Unauthorized: Authentication failed. Please check your z/OSMF credentials. ${this.extractZosmfError(response.body)}`);
             } else if (response.statusCode === 403) {
                 this.log(`HTTP 403 Forbidden. Response: ${response.body}`);
-                throw new Error('HTTP 403 Forbidden: Access denied. The user may not have permission to access this CSI data set.');
+                throw new Error(`HTTP 403 Forbidden: The server rejected the request. ${this.extractZosmfError(response.body)}`);
             } else if (response.statusCode === 404) {
                 this.log(`HTTP 404 Not Found. Response: ${response.body}`);
-                throw new Error(`HTTP 404 Not Found: The z/OSMF CSI query endpoint was not found. Please verify the host, port, and CSI data set name.`);
+                throw new Error(`HTTP 404 Not Found: The z/OSMF CSI query endpoint was not found. Please verify the host, port, and CSI data set name. ${this.extractZosmfError(response.body)}`);
+            } else if (response.statusCode === 409) {
+                this.log(`HTTP 409 Conflict. Response: ${response.body}`);
+                throw new Error(`HTTP 409 Conflict: The request could not be completed due to a conflict with the current state of the resource. ${this.extractZosmfError(response.body)}`);
+            } else if (response.statusCode === 500) {
+                this.log(`HTTP 500 Internal Server Error. Response: ${response.body}`);
+                throw new Error(`HTTP 500 Internal Server Error: The server encountered an error that prevented it from completing the request. ${this.extractZosmfError(response.body)}`);
+            } else if (response.statusCode === 503) {
+                this.log(`HTTP 503 Service Unavailable. Response: ${response.body}`);
+                throw new Error(`HTTP 503 Service Unavailable: The z/OSMF server is currently unavailable. Please try again later. ${this.extractZosmfError(response.body)}`);
             } else {
                 this.log(`HTTP ${response.statusCode}. Response: ${response.body}`);
-                let detail = response.body ? response.body.substring(0, 500) : '(no response body)';
-                try {
-                    const errorBody = JSON.parse(response.body);
-                    if (errorBody.message) {
-                        detail = errorBody.message;
-                    } else if (errorBody.error) {
-                        detail = errorBody.error;
-                    } else if (errorBody.reason) {
-                        detail = errorBody.reason;
-                    }
-                } catch { /* use raw body */ }
-                throw new Error(`HTTP ${response.statusCode}: ${detail}`);
+                throw new Error(`HTTP ${response.statusCode}: ${this.extractZosmfError(response.body)}`);
             }
         } catch (error) {
             if (error instanceof Error) {
@@ -376,9 +405,8 @@ export class ZosmfClient {
                         }
                         return { messages: ['Query completed but no results returned'] };
                     } else if (statusResponse.status === 'failed') {
-                        const reason = statusResponse.error || statusResponse.reason || statusResponse.message || '(no details provided)';
                         this.log(`Query failed. z/OSMF response: ${response.body}`);
-                        throw new Error(`Query failed: ${reason}`);
+                        throw new Error(`Query failed: ${this.extractZosmfError(response.body)}`);
                     }
                     // status === 'running', continue polling
                 } else if (response.statusCode === 202) {
@@ -395,20 +423,21 @@ export class ZosmfClient {
                     if (notFoundCount >= MAX_404_RETRIES) {
                         throw new Error(`HTTP 404 Not Found: The query status URL was not found after ${MAX_404_RETRIES} retries (${MAX_404_RETRIES * POLL_INTERVAL_MS / 1000}s). The z/OSMF server may be unavailable or the query expired.`);
                     }
+                } else if (response.statusCode === 409) {
+                    this.log(`HTTP 409 Conflict during poll. Response: ${response.body}`);
+                    throw new Error(`HTTP 409 Conflict: The request could not be completed due to a conflict with the current state of the resource. ${this.extractZosmfError(response.body)}`);
                 } else if (response.statusCode === 500) {
-                    this.log(`HTTP 500 during poll (attempt ${attempts}). Response: ${response.body}`);
+                    // May be transient - retry up to 3 times
+                    this.log(`HTTP 500 Internal Server Error during poll (attempt ${attempts}). Response: ${response.body}`);
                     if (attempts >= 3) {
-                        let detail = response.body ? response.body.substring(0, 500) : '(no response body)';
-                        try {
-                            const errorBody = JSON.parse(response.body);
-                            detail = errorBody.message || errorBody.reason || detail;
-                        } catch { /* use raw body */ }
-                        throw new Error(`HTTP 500 Internal Server Error: ${detail}`);
+                        throw new Error(`HTTP 500 Internal Server Error: The server encountered an error that prevented it from completing the request. ${this.extractZosmfError(response.body)}`);
                     }
-                    // Retry on first 2 occurrences
+                } else if (response.statusCode === 503) {
+                    this.log(`HTTP 503 Service Unavailable during poll. Response: ${response.body}`);
+                    throw new Error(`HTTP 503 Service Unavailable: The z/OSMF server is currently unavailable. Please try again later. ${this.extractZosmfError(response.body)}`);
                 } else {
                     this.log(`HTTP ${response.statusCode} during poll. Response: ${response.body}`);
-                    throw new Error(`HTTP ${response.statusCode}: Unexpected response while polling for query results.`);
+                    throw new Error(`HTTP ${response.statusCode}: ${this.extractZosmfError(response.body)}`);
                 }
             } catch (error) {
                 if (error instanceof Error && error.message.includes('ECONNRESET')) {
