@@ -218,7 +218,7 @@ func (p *Provider) analyzeStatementWithConfig(stmt *parser.Node, config *Config)
 			diagnostics = append(diagnostics, p.createDiagnosticFromNode(
 				paramNode,
 				lsp.SeverityWarning,
-				fmt.Sprintf("⚠️ Parameter '%s' exceeds maximum length (%d > %d)",
+				fmt.Sprintf("Parameter '%s' exceeds maximum length (%d > %d)",
 					stmt.StatementDef.Parameter, len(paramNode.Value), stmt.StatementDef.Length),
 			))
 		}
@@ -341,7 +341,7 @@ func (p *Provider) validateOperandsASTWithConfig(stmt *parser.Node, operands map
 											diagnostics = append(diagnostics, p.createDiagnosticFromNode(
 												listItem,
 												lsp.SeverityWarning,
-												fmt.Sprintf("⚠️ List element '%s' in operand '%s' exceeds maximum length (%d > %d)", itemValue, name, len(itemValue), op.Length),
+												fmt.Sprintf("List element '%s' in operand '%s' exceeds maximum length (%d > %d)", itemValue, name, len(itemValue), op.Length),
 											))
 										}
 									}
@@ -367,7 +367,7 @@ func (p *Provider) validateOperandsASTWithConfig(stmt *parser.Node, operands map
 									diagnostics = append(diagnostics, p.createDiagnosticFromNode(
 										child,
 										lsp.SeverityWarning,
-										fmt.Sprintf("⚠️ Operand '%s' parameter exceeds maximum length (%d > %d)", name, len(paramValue), op.Length),
+										fmt.Sprintf("Operand '%s' parameter exceeds maximum length (%d > %d)", name, len(paramValue), op.Length),
 									))
 								}
 							}

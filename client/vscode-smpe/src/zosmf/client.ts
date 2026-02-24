@@ -261,17 +261,23 @@ export class ZosmfClient {
         }
         try {
             const body = JSON.parse(rawBody);
-            // IBM documented format: { "error": { "reason": <int>, "messages": ["..."] } }
-            if (body.error) {
+            // IBM documented nested format: { "error": { "reason": <int>, "messages": ["..."] } }
+            if (body.error && typeof body.error === 'object') {
                 const reason = body.error.reason !== undefined ? ` (reason: ${body.error.reason})` : '';
                 const messages = Array.isArray(body.error.messages) && body.error.messages.length > 0
                     ? body.error.messages.join(' | ')
                     : '';
                 return messages ? `${messages}${reason}` : `z/OSMF error${reason}`;
             }
-            // Fallback for non-standard response fields
+            // SMP/E flat format: { "reason": "36", "messages": ["GIM32000W ..."] }
+            if (body.messages || body.reason) {
+                const reason = body.reason !== undefined ? ` (reason: ${body.reason})` : '';
+                const messages = Array.isArray(body.messages) && body.messages.length > 0
+                    ? body.messages.join(' | ')
+                    : '';
+                return messages ? `${messages}${reason}` : `z/OSMF error${reason}`;
+            }
             if (body.message) { return body.message; }
-            if (body.reason)  { return String(body.reason); }
         } catch { /* not JSON */ }
         return rawBody.substring(0, 500);
     }
@@ -427,10 +433,20 @@ export class ZosmfClient {
                     this.log(`HTTP 409 Conflict during poll. Response: ${response.body}`);
                     throw new Error(`HTTP 409 Conflict: The request could not be completed due to a conflict with the current state of the resource. ${this.extractZosmfError(response.body)}`);
                 } else if (response.statusCode === 500) {
-                    // May be transient - retry up to 3 times
                     this.log(`HTTP 500 Internal Server Error during poll (attempt ${attempts}). Response: ${response.body}`);
+                    // SMP/E application errors (e.g. RC 36 = no entries found) come as HTTP 500
+                    // with a flat { "reason": "...", "messages": [...] } body - not transient, throw immediately.
+                    try {
+                        const errBody = JSON.parse(response.body);
+                        if (errBody.reason !== undefined || Array.isArray(errBody.messages)) {
+                            throw new Error(this.extractZosmfError(response.body));
+                        }
+                    } catch (innerErr) {
+                        if (innerErr instanceof Error) { throw innerErr; }
+                    }
+                    // Truly transient server errors: retry up to 3 times
                     if (attempts >= 3) {
-                        throw new Error(`HTTP 500 Internal Server Error: The server encountered an error that prevented it from completing the request. ${this.extractZosmfError(response.body)}`);
+                        throw new Error(`HTTP 500 Internal Server Error: The server encountered an error. ${this.extractZosmfError(response.body)}`);
                     }
                 } else if (response.statusCode === 503) {
                     this.log(`HTTP 503 Service Unavailable during poll. Response: ${response.body}`);

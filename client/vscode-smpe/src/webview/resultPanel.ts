@@ -365,8 +365,8 @@ export class ResultPanel {
             </div>
         </div>
         <div class="toolbar">
-            <button onclick="exportJson()">Export JSON</button>
-            <button onclick="exportCsv()">Export CSV</button>
+            <button id="exportJsonBtn">Export JSON</button>
+            <button id="exportCsvBtn">Export CSV</button>
         </div>
     </div>
     <div id="cellTooltip" class="cell-tooltip"></div>
@@ -386,6 +386,10 @@ export class ResultPanel {
         function copyText(text) {
             vscode.postMessage({ command: 'copy', data: text });
         }
+
+        // Attach event listeners (onclick attributes are blocked by CSP)
+        document.getElementById('exportJsonBtn').addEventListener('click', exportJson);
+        document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
 
         // Custom tooltip for truncated cells
         const tooltip = document.getElementById('cellTooltip');
