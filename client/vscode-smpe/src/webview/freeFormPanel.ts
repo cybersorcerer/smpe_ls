@@ -419,6 +419,47 @@ export class FreeFormPanel {
         .cell-tooltip.visible {
             display: block;
         }
+        /* Entry Type Picker */
+        .entrytype-picker {
+            display: none;
+            margin-bottom: 8px;
+            padding: 8px;
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 2px;
+            background-color: var(--vscode-editor-background);
+        }
+        .entrytype-picker.visible {
+            display: block;
+        }
+        .entrytype-picker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .entrytype-picker-header span {
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        .entrytype-radio-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 2px 12px;
+        }
+        .entrytype-radio-grid label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            min-width: unset;
+            font-weight: normal;
+            font-size: 0.9em;
+            cursor: pointer;
+            padding: 2px 0;
+        }
+        .entrytype-radio-grid input[type="radio"] {
+            flex: none;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -437,19 +478,14 @@ export class FreeFormPanel {
         </div>
         <div class="form-row">
             <label for="entryType">Entry Type</label>
-            <select id="entryType">
-                <option value="SYSMOD">SYSMOD</option>
-                <option value="DDDEF">DDDEF</option>
-                <option value="TARGETZONE">TARGETZONE</option>
-                <option value="DLIB">DLIB</option>
-                <option value="GLOBALZONE">GLOBALZONE</option>
-                <option value="ASSEM">ASSEM</option>
-                <option value="DATA">DATA</option>
-                <option value="LMOD">LMOD</option>
-                <option value="MAC">MAC</option>
-                <option value="MOD">MOD</option>
-                <option value="SRC">SRC</option>
-            </select>
+            <input type="text" id="entryType" value="SYSMOD" placeholder="e.g. SYSMOD, MOD, UNIX1" autocomplete="off" />
+            <button id="toggleEntryTypePickerBtn" title="Pick entry type">Pick...</button>
+        </div>
+        <div id="entryTypePicker" class="entrytype-picker">
+            <div class="entrytype-picker-header">
+                <span>Select Entry Type</span>
+            </div>
+            <div id="entryTypePickerGroups"></div>
         </div>
         <div class="form-row">
             <label for="subentries">Subentries</label>
@@ -507,7 +543,46 @@ export class FreeFormPanel {
             LMOD: ['CALLLIBS','COPIED','ENAME','LASTUPD','LASTUPDTYPE','LEPARM','LECNTL','LMODALIAS','LMODSYMLINK','MODDEL','RC','SIDEDECKLIB','SYSLIB','UTIN','XZMOD','XZMODP'],
             MAC: ['DISTLIB','ENAME','FMID','GENASM','LASTUPD','LASTUPDTYPE','MALIAS','RMID','SYSLIB','UMID'],
             MOD: ['ASSEMBLE','CSECT','DALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','LEPARM','LMOD','RMID','RMIDASM','TALIAS','UMID','XZLMOD','XZLMODP'],
-            SRC: ['DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB','UMID']
+            SRC: ['DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB','UMID'],
+            // Additional element types
+            JAR: ['DISTLIB','ENAME','FMID','JARPARM','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB','TXLIB','UMID','VERSION'],
+            JARUPD: ['ENAME','JARPARM','LASTUPD','LASTUPDTYPE','LINK','SYMLINK','SYMPATH','TXLIB'],
+            PROGRAM: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','LKLIB','RMID','SYSLIB','VERSION'],
+            DLIBZONE: ['ACCJCLIN','ENAME','OPTIONS','RELATED','SREL','UPGLEVEL','ZDESC'],
+            FEATURE: ['DESCRIPTION','ENAME','FMID','PRODUCT','RECDATE','RECTIME','REWORK','UCLDATE','UCLTIME'],
+            FMIDSET: ['ENAME','FMID'],
+            HOLDDATA: ['ENAME','HOLDCLASS','HOLDDATA','HOLDDATE','HOLDFIXCAT','HOLDFMID','HOLDREASON','HOLDRESOLVER','HOLDTYPE'],
+            OPTIONS: ['AMS','ASM','CHANGEFILE','COMP','COMPACT','COPY','DSPREFIX','DSSPACE','ENAME','EXRTYDD','FIXCAT','HFSCOPY','IOSUP','LKED','MSGFILTER','MSGWIDTH','NOPURGE','NOREJECT','ORDERRET','PAGELEN','PEMAX','RECZGRP','RECEXCGRP','RETRY','RETRYDDN','SAVEMTS','SAVESTS','SUPPHOLD','UPDATE','ZAP'],
+            ORDER: ['APARS','CONTENT','DOWNLDATE','DOWNLTIME','ENAME','ORDERDATE','ORDERID','ORDERSERVER','ORDERTIME','PKGID','PTFS','STATUS','USERID','ZONES'],
+            PRODUCT: ['DESCRIPTION','PRODID','PRODSUP','RECDATE','RECTIME','REWORK','SREL','UCLDATE','UCLTIME','URL','VENDOR','VRM'],
+            UTILITY: ['ENAME','LIST','NAME','PRINT','RC','UTILPARM'],
+            ZONESET: ['ENAME','XZREQCHK','ZONENAME'],
+            // HFS (Hierarchical File System) element types share the same subentries
+            AIX1: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            AIX2: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            AIX3: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            AIX4: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            AIX5: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            CLIENT1: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            CLIENT2: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            CLIENT3: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            CLIENT4: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            CLIENT5: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            OS21: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            OS22: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            OS23: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            OS24: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            OS25: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            UNIX1: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            UNIX2: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            UNIX3: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            UNIX4: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            UNIX5: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            WIN1: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            WIN2: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            WIN3: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            WIN4: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            WIN5: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB']
         };
 
         // Handle messages from extension
@@ -754,7 +829,48 @@ export class FreeFormPanel {
             document.getElementById('subentryPicker').classList.remove('visible');
         });
 
-        document.getElementById('entryType').addEventListener('change', () => {
+        // ── Entry Type Picker ───────────────────────────────────────────────
+        const ALL_ENTRY_TYPES = Object.keys(SUBENTRIES_BY_TYPE).sort();
+
+        // Build the radio-button grid once
+        (function buildEntryTypePicker() {
+            const grid = document.createElement('div');
+            grid.className = 'entrytype-radio-grid';
+
+            for (const item of ALL_ENTRY_TYPES) {
+                const lbl = document.createElement('label');
+                const rb = document.createElement('input');
+                rb.type = 'radio';
+                rb.name = 'entryTypePick';
+                rb.value = item;
+                rb.addEventListener('change', () => {
+                    document.getElementById('entryType').value = item;
+                    document.getElementById('entryTypePicker').classList.remove('visible');
+                    updateSubentryGrid();
+                    document.getElementById('subentries').value = '';
+                    document.getElementById('filter').value = '';
+                    document.getElementById('subentryPicker').classList.remove('visible');
+                });
+                lbl.appendChild(rb);
+                lbl.appendChild(document.createTextNode(item));
+                grid.appendChild(lbl);
+            }
+
+            document.getElementById('entryTypePickerGroups').appendChild(grid);
+        })();
+
+        document.getElementById('toggleEntryTypePickerBtn').addEventListener('click', () => {
+            const picker = document.getElementById('entryTypePicker');
+            const isVisible = picker.classList.toggle('visible');
+            if (isVisible) {
+                // Pre-select the current value in the radio grid
+                const current = document.getElementById('entryType').value.trim().toUpperCase();
+                const radios = picker.querySelectorAll('input[type="radio"]');
+                radios.forEach(r => { r.checked = r.value === current; });
+            }
+        });
+
+        document.getElementById('entryType').addEventListener('input', () => {
             updateSubentryGrid();
             document.getElementById('subentries').value = '';
             document.getElementById('filter').value = '';
