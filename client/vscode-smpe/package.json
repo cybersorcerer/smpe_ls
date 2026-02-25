@@ -1,6 +1,6 @@
 {
-  "name": "vscode-smpe",
-  "displayName": "SMP/E Language Support",
+  "name": "smpe-mcs-language-server",
+  "displayName": "SMP/E MCS Language Server",
   "description": "Language support for SMP/E MCS statements",
   "version": "0.8.6",
   "publisher": "cybersorcerer",
