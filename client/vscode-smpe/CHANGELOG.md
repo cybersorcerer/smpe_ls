@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.8.6] - 2026-02-25
+
+### Added
+
+- **Extended CSI Entry Types in Free Form Query** - Added DLIBZONE, FEATURE, FMIDSET, HOLDDATA, JAR, JARUPD, OPTIONS, ORDER, PRODUCT, PROGRAM, UTILITY, ZONESET with their correct subentries
+
+### Fixed
+
+- **Duplicate Emoji in Diagnostics** - Parameter length exceeded diagnostics no longer show two warning emojis
+- **activationEvents** - Removed redundant `onLanguage:smpe` activation event (VSCode generates it automatically)
+
+## [0.8.5] - 2026-02-24
+
+### Added
+
+- **HFS Entry Types in Free Form Query** - Added AIX1-5, CLIENT1-5, OS21-5, UNIX1-5, WIN1-5 with their subentries to the Free Form CSI Query
+- **Entry Type Picker** - New radio button picker for Entry Type selection (alphabetically sorted, no groups)
+
+### Fixed
+
+- **Export JSON/CSV** - Export buttons in non-Free Form query panels (SYSMOD, DDDEF, Zone) now work correctly (CSP inline handler fix)
+
 ## [0.8.4-alpha] - 2026
 
 ### Added

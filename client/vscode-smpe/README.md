@@ -2,13 +2,13 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
-## What's New in 0.8.4
+## What's New in 0.8.6
 
-- **List Wrapping** - Comma-separated operand lists are automatically wrapped when exceeding a configurable threshold
-- **CodeLens for z/OSMF Queries** - Inline CodeLens actions for querying SYSMODs and DDDEFs via z/OSMF
-- **Formatting Stability** - Formatting is now fully idempotent; inline comments stay with their operands
-- **Parser Crash Fix** - Fixed panic when formatting files with certain comment patterns
-- **DELETE Mode Fix** - `++MOD DELETE`, `++SRC DELETE`, `++PROGRAM DELETE` no longer produce false DISTLIB warnings
+- **Extended CSI Entry Types** - Free Form CSI Query now supports DLIBZONE, FEATURE, FMIDSET, HOLDDATA, JAR, JARUPD, OPTIONS, ORDER, PRODUCT, PROGRAM, UTILITY, ZONESET with correct subentries
+- **Entry Type Picker** - New radio button picker for Entry Type selection (alphabetically sorted)
+- **HFS Entry Types** - AIX1-5, CLIENT1-5, OS21-5, UNIX1-5, WIN1-5 added to Free Form CSI Query
+- **Export Fix** - JSON/CSV export now works correctly in all query panels
+- **Diagnostic Fix** - Parameter length exceeded diagnostics no longer show duplicate warning emoji
 
 See the [CHANGELOG](CHANGELOG.md) for full details.
 
@@ -42,12 +42,12 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 
 | Platform | File |
 |----------|------|
-| Windows x64 | `vscode-smpe-win32-x64-0.8.4-alpha.vsix` |
-| Windows ARM64 | `vscode-smpe-win32-arm64-0.8.4-alpha.vsix` |
-| macOS Apple Silicon | `vscode-smpe-darwin-arm64-0.8.4-alpha.vsix` |
-| macOS Intel | `vscode-smpe-darwin-x64-0.8.4-alpha.vsix` |
-| Linux x64 | `vscode-smpe-linux-x64-0.8.4-alpha.vsix` |
-| Linux ARM64 | `vscode-smpe-linux-arm64-0.8.4-alpha.vsix` |
+| Windows x64 | `vscode-smpe-win32-x64-0.8.6.vsix` |
+| Windows ARM64 | `vscode-smpe-win32-arm64-0.8.6.vsix` |
+| macOS Apple Silicon | `vscode-smpe-darwin-arm64-0.8.6.vsix` |
+| macOS Intel | `vscode-smpe-darwin-x64-0.8.6.vsix` |
+| Linux x64 | `vscode-smpe-linux-x64-0.8.6.vsix` |
+| Linux ARM64 | `vscode-smpe-linux-arm64-0.8.6.vsix` |
 
 ### Installation in VS Code
 
@@ -59,7 +59,7 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 Alternatively via terminal:
 
 ```bash
-code --install-extension vscode-smpe-darwin-arm64-0.8.4-alpha.vsix
+code --install-extension vscode-smpe-darwin-arm64-0.8.6.vsix
 ```
 
 The Language Server is already included in the extension - no additional installation required.
