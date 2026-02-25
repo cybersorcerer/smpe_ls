@@ -2,7 +2,7 @@
   "name": "vscode-smpe",
   "displayName": "SMP/E Language Support",
   "description": "Language support for SMP/E MCS statements",
-  "version": "0.8.6-alpha",
+  "version": "0.8.6",
   "publisher": "cybersorcerer",
   "license": "AGPL-3.0",
   "repository": {
@@ -19,9 +19,7 @@
   "categories": [
     "Programming Languages"
   ],
-  "activationEvents": [
-    "onLanguage:smpe"
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "languages": [
