@@ -364,9 +364,11 @@ func (p *Provider) getStatementText(stmt *parser.Node, lines []string) string {
 // This includes any trailing comment after the terminator (even multi-line)
 func (p *Provider) getStatementEndLine(stmt *parser.Node, lines []string) int {
 	// Scan from statement start line to find the terminator
-	// Track multi-line comment state to avoid treating dots inside comments as terminators
+	// Track multi-line comment state and single-quoted string state to avoid
+	// treating dots inside comments or string literals as terminators
 	terminatorLine := -1
 	inMultiLineComment := false
+	inSingleQuote := false
 
 	for i := stmt.Position.Line; i < len(lines); i++ {
 		line := lines[i]
@@ -377,8 +379,8 @@ func (p *Provider) getStatementEndLine(stmt *parser.Node, lines []string) int {
 			break
 		}
 
-		// Process this line character by character to track comment state
-		// and find terminator dots that are outside comments
+		// Process this line character by character to track comment/string state
+		// and find terminator dots that are outside comments and string literals
 		foundTerminatorOnThisLine := false
 		pos := 0
 		for pos < len(line) {
@@ -391,17 +393,36 @@ func (p *Provider) getStatementEndLine(stmt *parser.Node, lines []string) int {
 				}
 				pos += endIdx + 2
 				inMultiLineComment = false
+			} else if inSingleQuote {
+				// Look for closing single quote
+				quoteIdx := strings.Index(line[pos:], "'")
+				if quoteIdx == -1 {
+					// Single-quoted string continues to next line (unusual but possible)
+					break
+				}
+				pos += quoteIdx + 1
+				inSingleQuote = false
 			} else {
-				// Look for comment start, single-line comment, or dot
+				// Look for comment start, single quote, or dot
 				remaining := line[pos:]
 
-				// Find next interesting character
+				// Find next interesting character positions
 				commentStartIdx := strings.Index(remaining, "/*")
 				dotIdx := strings.Index(remaining, ".")
+				quoteIdx := strings.Index(remaining, "'")
+
+				// Single quote comes first: enter string literal mode
+				if quoteIdx != -1 &&
+					(commentStartIdx == -1 || quoteIdx < commentStartIdx) &&
+					(dotIdx == -1 || quoteIdx < dotIdx) {
+					pos += quoteIdx + 1
+					inSingleQuote = true
+					continue
+				}
 
 				// If dot comes before comment start (or no comment), check if it's a terminator
 				if dotIdx != -1 && (commentStartIdx == -1 || dotIdx < commentStartIdx) {
-					// Found a dot outside of comment - this is a terminator
+					// Found a dot outside of comment or string - this is a terminator
 					foundTerminatorOnThisLine = true
 					terminatorLine = i
 					// Continue to check if a multi-line comment starts after this
