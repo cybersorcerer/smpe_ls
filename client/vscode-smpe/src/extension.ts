@@ -200,6 +200,23 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	};
 
+	// Auto-detect SMP/E language for files without extension (e.g. Zowe Explorer dataset members)
+	// Register BEFORE starting the client so detection runs before LSP activation
+	const detectSmpeLanguage = (doc: vscode.TextDocument) => {
+		if (doc.languageId === 'smpe') return;
+		for (let i = 0; i < Math.min(10, doc.lineCount); i++) {
+			const line = doc.lineAt(i).text.trim();
+			if (line.startsWith('++')) {
+				vscode.languages.setTextDocumentLanguage(doc, 'smpe');
+				break;
+			}
+			if (line.length > 0) break;
+		}
+	};
+	context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(detectSmpeLanguage));
+	// Also handle documents that are already open (e.g. opened before extension activated)
+	vscode.workspace.textDocuments.forEach(detectSmpeLanguage);
+
 	// Create the language client
 	client = new LanguageClient(
 		'smpe-ls',
@@ -216,25 +233,12 @@ export function activate(context: vscode.ExtensionContext) {
 		} else {
 			log('SMP/E Language Server client started successfully');
 		}
+		// Re-check already open documents after server is ready
+		vscode.workspace.textDocuments.forEach(detectSmpeLanguage);
 	}).catch((error) => {
 		log(`ERROR starting client: ${error}`);
 		vscode.window.showErrorMessage(`Failed to start SMP/E Language Server: ${error}`);
 	});
-
-	// Auto-detect SMP/E language for files without extension (e.g. Zowe Explorer dataset members)
-	const detectSmpeLanguage = (doc: vscode.TextDocument) => {
-		if (doc.languageId === 'smpe') return;
-		for (let i = 0; i < Math.min(10, doc.lineCount); i++) {
-			const line = doc.lineAt(i).text.trim();
-			if (line.startsWith('++')) {
-				vscode.languages.setTextDocumentLanguage(doc, 'smpe');
-				break;
-			}
-			if (line.length > 0) break;
-		}
-	};
-	context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(detectSmpeLanguage));
-	vscode.workspace.textDocuments.forEach(detectSmpeLanguage);
 
 	// Register format on save handler
 	context.subscriptions.push(

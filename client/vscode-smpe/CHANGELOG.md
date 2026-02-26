@@ -7,13 +7,15 @@ All notable changes to this project are documented in this file.
 ### Added
 
 - **Zowe Explorer Integration** - Language Server now activates for dataset members opened via Zowe Explorer (`zowe-ds://`, `zowe-uss://`, `zowe-jobs://` URI schemes)
-- **Auto Language Detection** - Files without extension are automatically detected as SMP/E when the first non-empty line starts with `++`
+- **Auto Language Detection** - Files without extension are automatically detected as SMP/E when the first non-empty line starts with `++`; detection runs before and after Language Server startup to also catch already-open documents
 - **firstLine Detection** - `firstLine` pattern added for fast language detection without file extension
 - **Server Version in Output** - Language Server version and commit hash are now shown in the VSCode Output panel on startup
 
 ### Fixed
 
 - **Nested Parentheses in List Wrapping** - `PARM(PATHMODE(0,7,5,5))` no longer gets incorrectly split at commas inside nested parentheses, preventing duplicate output after formatting
+- **Dot in Single-Quoted String** - `LINK('../path')` no longer causes the formatter to treat `.` inside the string literal as a statement terminator, preventing duplicate operand output
+- **Dot in Inline Comment** - A `.` inside an inline comment (e.g. `/* version 12.7 */`) no longer terminates the statement prematurely, fixing broken syntax highlighting for subsequent comment lines
 
 ## [0.8.6] - 2026-02-25
 

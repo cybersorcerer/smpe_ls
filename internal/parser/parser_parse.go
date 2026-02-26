@@ -38,8 +38,9 @@ func (p *Parser) Parse(text string) *Document {
 		// Only process comments if we're in a statement region
 		// Comments outside statements (e.g., in inline data) are ignored
 		if inStatement {
-			// Inline comment (/* ... */ on same line)
-			if hasCommentStart && hasCommentEnd {
+			// Inline comment (/* ... */ on same line) - only when not already inside a block comment
+			// (a line like /*** 12.7 ***/ inside a block comment must fall through to block-end handling)
+			if hasCommentStart && hasCommentEnd && !inBlockComment {
 				commentStart := strings.Index(line, "/*")
 				commentEnd := strings.Index(line, "*/")
 				// If */ appears before /* (e.g., end of block comment on same line as new comment),
@@ -79,8 +80,8 @@ func (p *Parser) Parse(text string) *Document {
 				}
 				cleanLines[lineNum] = before + " " + after
 
-				// If statement ends on this line, reset inStatement
-				if hasTerminatorOutsideParens(trimmed) {
+				// If statement ends on this line, check only text outside the comment
+				if hasTerminatorOutsideParens(before + " " + after) {
 					inStatement = false
 				}
 				continue
@@ -132,8 +133,8 @@ func (p *Parser) Parse(text string) *Document {
 				}
 				cleanLines[lineNum] = after
 
-				// If statement ends on this line, reset inStatement
-				if hasTerminatorOutsideParens(trimmed) {
+				// If statement ends on this line, check only text after the comment end
+				if hasTerminatorOutsideParens(after) {
 					inStatement = false
 				}
 				continue
