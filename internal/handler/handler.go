@@ -65,6 +65,7 @@ func DefaultDiagnosticsConfig() *DiagnosticsConfig {
 // Handler implements the LSP handler interface
 type Handler struct {
 	version             string
+	commit              string
 	documents           map[string]string
 	parsedDocuments     map[string]*parser.Document // AST cache
 	documentsMutex      sync.RWMutex
@@ -82,7 +83,7 @@ type Handler struct {
 }
 
 // New creates a new handler
-func New(version string, dataPath string) (*Handler, error) {
+func New(version string, commit string, dataPath string) (*Handler, error) {
 	// Load MCS data once and share it among all providers
 	logger.Info("Loading MCS data from %s", dataPath)
 	store, err := data.Load(dataPath)
@@ -106,6 +107,7 @@ func New(version string, dataPath string) (*Handler, error) {
 
 	return &Handler{
 		version:             version,
+		commit:              commit,
 		documents:           make(map[string]string),
 		parsedDocuments:     make(map[string]*parser.Document),
 		parser:              parserInstance,
@@ -128,7 +130,7 @@ func (h *Handler) SetServer(server *lsp.Server) {
 
 // Initialize handles the initialize request
 func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult, error) {
-	logger.Info("Initializing LSP server")
+	logger.Info("smpe_ls %s (commit: %s) initializing", h.version, h.commit)
 
 	// Process initialization options for diagnostics configuration
 	if params.InitializationOptions != nil && params.InitializationOptions.Diagnostics != nil {
@@ -211,7 +213,7 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 		},
 		ServerInfo: &lsp.ServerInfo{
 			Name:    "smpe_ls",
-			Version: h.version,
+			Version: h.version + " (commit: " + h.commit + ")",
 		},
 	}, nil
 }
