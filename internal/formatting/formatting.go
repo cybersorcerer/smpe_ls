@@ -1079,21 +1079,45 @@ func (p *Provider) formatOperand(op *parser.Node) string {
 	return sb.String()
 }
 
+// splitTopLevelCommas splits a string by commas at the top level (depth 0),
+// ignoring commas inside parentheses.
+func splitTopLevelCommas(s string) []string {
+	var items []string
+	depth := 0
+	start := 0
+	for i, ch := range s {
+		switch ch {
+		case '(':
+			depth++
+		case ')':
+			depth--
+		case ',':
+			if depth == 0 {
+				items = append(items, s[start:i])
+				start = i + 1
+			}
+		}
+	}
+	items = append(items, s[start:])
+	return items
+}
+
 // formatOperandParameter formats the parameter value of an operand
 func (p *Provider) formatOperandParameter(param *parser.Node) string {
 	if param == nil {
 		return ""
 	}
 
-	// Check if this is a comma-separated list that should be wrapped
+	// Check if this is a comma-separated list that should be wrapped.
+	// Only split at top-level commas (not inside nested parentheses).
 	if p.config.WrapListsAfterN > 0 && strings.Contains(param.Value, ",") {
-		items := strings.Split(param.Value, ",")
+		items := splitTopLevelCommas(param.Value)
 		// Trim spaces from each item
 		for i := range items {
 			items[i] = strings.TrimSpace(items[i])
 		}
 
-		// Only wrap if we have more than WrapListsAfterN items
+		// Only wrap if we have more than WrapListsAfterN top-level items
 		if len(items) > p.config.WrapListsAfterN {
 			// Return special marker that formatOperand will detect
 			return "\n" + strings.Join(items, ",\n") + "\n"

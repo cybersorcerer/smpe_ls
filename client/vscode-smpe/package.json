@@ -2,7 +2,7 @@
   "name": "smpe-mcs-language-server",
   "displayName": "SMP/E MCS Language Server",
   "description": "Language support for SMP/E MCS statements",
-  "version": "0.8.6",
+  "version": "0.8.7",
   "publisher": "cybersorcerer",
   "license": "AGPL-3.0",
   "repository": {
@@ -34,6 +34,7 @@
           ".mcs",
           ".smp"
         ],
+        "firstLine": "^\\+\\+(PTF|APAR|USERMOD|FUNCTION|VER|ZAP|MAC|MACUPD|MOD|SRC|SRCUPD|DELETE|HOLD|IF|ASSIGN|HFS|JCLIN|JAR|JARUPD|MOVE|PROGRAM|SHELLSCR|COPE|DISTLIB|ENDMOD|FUNCTION|PACKLIST|RELEASE)",
         "configuration": "./language-configuration.json"
       }
     ],

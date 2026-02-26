@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	version  = "0.8.6"
+	version  = "0.8.7"
 	commit   = "unknown" // Set via ldflags: -X main.commit=...
 	debug    = flag.Bool("debug", false, "Enable debug logging")
 	showVer  = flag.Bool("version", false, "Show version")
@@ -77,7 +77,7 @@ func main() {
 	logger.Info("Data file: %s", finalDataPath)
 
 	// Create handler
-	h, err := handler.New(version, finalDataPath)
+	h, err := handler.New(version, commit, finalDataPath)
 	if err != nil {
 		logger.Fatal("Failed to create handler: %v", err)
 	}

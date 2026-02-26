@@ -184,7 +184,11 @@ export function activate(context: vscode.ExtensionContext) {
 	// Client options
 	const clientOptions: LanguageClientOptions = {
 		documentSelector: [
-			{ scheme: 'file', language: 'smpe' }
+			{ scheme: 'file', language: 'smpe' },
+			{ scheme: 'zowe-ds', language: 'smpe' },
+			{ scheme: 'zowe-uss', language: 'smpe' },
+			{ scheme: 'zowe-jobs', language: 'smpe' },
+			{ scheme: 'untitled', language: 'smpe' }
 		],
 		synchronize: {
 			fileEvents: vscode.workspace.createFileSystemWatcher('**/*.{smpe,mcs,smp}')
@@ -206,11 +210,31 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Start the client (and server)
 	client.start().then(() => {
-		log('SMP/E Language Server client started successfully');
+		const info = client.initializeResult?.serverInfo;
+		if (info) {
+			log(`SMP/E Language Server ready: ${info.name} ${info.version}`);
+		} else {
+			log('SMP/E Language Server client started successfully');
+		}
 	}).catch((error) => {
 		log(`ERROR starting client: ${error}`);
 		vscode.window.showErrorMessage(`Failed to start SMP/E Language Server: ${error}`);
 	});
+
+	// Auto-detect SMP/E language for files without extension (e.g. Zowe Explorer dataset members)
+	const detectSmpeLanguage = (doc: vscode.TextDocument) => {
+		if (doc.languageId === 'smpe') return;
+		for (let i = 0; i < Math.min(10, doc.lineCount); i++) {
+			const line = doc.lineAt(i).text.trim();
+			if (line.startsWith('++')) {
+				vscode.languages.setTextDocumentLanguage(doc, 'smpe');
+				break;
+			}
+			if (line.length > 0) break;
+		}
+	};
+	context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(detectSmpeLanguage));
+	vscode.workspace.textDocuments.forEach(detectSmpeLanguage);
 
 	// Register format on save handler
 	context.subscriptions.push(
