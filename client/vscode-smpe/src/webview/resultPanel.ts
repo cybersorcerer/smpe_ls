@@ -478,6 +478,8 @@ export class ResultPanel {
                 <td>${this.escapeHtml(entry.zonename)}</td>
                 <td class="entry-dddef">${this.escapeHtml(entry.entryname)}</td>
                 <td>${this.escapeHtml(subData['DATASET'] || '')}</td>
+                <td>${this.escapeHtml(subData['PATH'] || '')}</td>
+                <td>${this.escapeHtml(subData['INITDISP'] || '')}</td>
                 <td>${this.escapeHtml(subData['DISP'] || '')}</td>
                 <td>${this.escapeHtml(subData['DATACLAS'] || '')}</td>
                 <td>${this.escapeHtml(subData['MGMTCLAS'] || '')}</td>
@@ -491,6 +493,8 @@ export class ResultPanel {
                     <th>Zone</th>
                     <th>DDNAME</th>
                     <th>DATASET</th>
+                    <th>PATH</th>
+                    <th>INITDISP</th>
                     <th>DISP</th>
                     <th>DATACLAS</th>
                     <th>MGMTCLAS</th>

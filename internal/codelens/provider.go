@@ -44,7 +44,7 @@ func (p *Provider) GetCodeLenses(doc *parser.Document) []lsp.CodeLens {
 			if isSYSMODReferenceOperand(child.Name) {
 				for _, param := range child.Children {
 					if param.Type == parser.NodeTypeParameter {
-						refs := parseCommaSeparated(param.Value)
+						refs := parseList(param.Value)
 						for _, ref := range refs {
 							if ref != "" {
 								lenses = append(lenses, makeSysmodLensForRef(param, ref))
@@ -104,14 +104,15 @@ func isDDDEFReferenceOperand(name string) bool {
 	return false
 }
 
-// parseCommaSeparated splits a comma-separated value into trimmed parts
-func parseCommaSeparated(value string) []string {
-	parts := strings.Split(value, ",")
+// parseList splits a list value into trimmed parts.
+// In SMP/E, list items can be separated by commas or spaces (both are valid).
+func parseList(value string) []string {
 	var refs []string
-	for _, part := range parts {
-		trimmed := strings.TrimSpace(part)
-		if trimmed != "" {
-			refs = append(refs, trimmed)
+	for _, part := range strings.FieldsFunc(value, func(r rune) bool {
+		return r == ',' || r == ' ' || r == '\t' || r == '\n' || r == '\r'
+	}) {
+		if part != "" {
+			refs = append(refs, part)
 		}
 	}
 	return refs

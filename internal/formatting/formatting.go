@@ -363,12 +363,14 @@ func (p *Provider) getStatementText(stmt *parser.Node, lines []string) string {
 // getStatementEndLine finds the last line of a statement
 // This includes any trailing comment after the terminator (even multi-line)
 func (p *Provider) getStatementEndLine(stmt *parser.Node, lines []string) int {
-	// Scan from statement start line to find the terminator
-	// Track multi-line comment state and single-quoted string state to avoid
-	// treating dots inside comments or string literals as terminators
+	// Scan from statement start line to find the terminator.
+	// Track parenthesis depth, multi-line comment state, and single-quoted
+	// string state to avoid treating dots inside those contexts as terminators.
+	// A valid SMP/E terminator is a '.' at depth==0, outside comments and strings.
 	terminatorLine := -1
 	inMultiLineComment := false
 	inSingleQuote := false
+	parenDepth := 0
 
 	for i := stmt.Position.Line; i < len(lines); i++ {
 		line := lines[i]
@@ -379,72 +381,62 @@ func (p *Provider) getStatementEndLine(stmt *parser.Node, lines []string) int {
 			break
 		}
 
-		// Process this line character by character to track comment/string state
-		// and find terminator dots that are outside comments and string literals
+		// Process this line character by character to track state
+		// and find terminator dots outside comments, strings, and parentheses
 		foundTerminatorOnThisLine := false
-		pos := 0
-		for pos < len(line) {
+		for pos := 0; pos < len(line); {
 			if inMultiLineComment {
-				// Look for comment end
 				endIdx := strings.Index(line[pos:], "*/")
 				if endIdx == -1 {
-					// Comment continues to next line
-					break
+					break // comment continues to next line
 				}
 				pos += endIdx + 2
 				inMultiLineComment = false
-			} else if inSingleQuote {
-				// Look for closing single quote
+				continue
+			}
+			if inSingleQuote {
 				quoteIdx := strings.Index(line[pos:], "'")
 				if quoteIdx == -1 {
-					// Single-quoted string continues to next line (unusual but possible)
-					break
+					break // string continues to next line
 				}
 				pos += quoteIdx + 1
 				inSingleQuote = false
-			} else {
-				// Look for comment start, single quote, or dot
-				remaining := line[pos:]
+				continue
+			}
 
-				// Find next interesting character positions
-				commentStartIdx := strings.Index(remaining, "/*")
-				dotIdx := strings.Index(remaining, ".")
-				quoteIdx := strings.Index(remaining, "'")
-
-				// Single quote comes first: enter string literal mode
-				if quoteIdx != -1 &&
-					(commentStartIdx == -1 || quoteIdx < commentStartIdx) &&
-					(dotIdx == -1 || quoteIdx < dotIdx) {
-					pos += quoteIdx + 1
-					inSingleQuote = true
-					continue
+			ch := line[pos]
+			switch {
+			case ch == '(' :
+				parenDepth++
+				pos++
+			case ch == ')':
+				if parenDepth > 0 {
+					parenDepth--
 				}
-
-				// If dot comes before comment start (or no comment), check if it's a terminator
-				if dotIdx != -1 && (commentStartIdx == -1 || dotIdx < commentStartIdx) {
-					// Found a dot outside of comment or string - this is a terminator
-					foundTerminatorOnThisLine = true
-					terminatorLine = i
-					// Continue to check if a multi-line comment starts after this
-					pos += dotIdx + 1
-					continue
-				}
-
-				if commentStartIdx == -1 {
-					// No more comments on this line
-					break
-				}
-
-				// Found comment start
-				pos += commentStartIdx + 2
-				// Check if it closes on the same line
+				pos++
+			case ch == '\'' && parenDepth == 0:
+				// Only track single-quoted strings outside parens
+				// (inside parens the parser handles values)
+				inSingleQuote = true
+				pos++
+			case ch == '/' && pos+1 < len(line) && line[pos+1] == '*':
+				pos += 2
 				endIdx := strings.Index(line[pos:], "*/")
 				if endIdx == -1 {
-					// Multi-line comment starts here
 					inMultiLineComment = true
 					break
 				}
 				pos += endIdx + 2
+			case ch == '.' && parenDepth == 0:
+				// Dot at depth 0, outside comment and string — terminator
+				foundTerminatorOnThisLine = true
+				terminatorLine = i
+				pos++
+			default:
+				pos++
+			}
+			if inMultiLineComment {
+				break
 			}
 		}
 
@@ -1037,9 +1029,19 @@ func (p *Provider) wrapMultiLineCommentAt72(commentLines []string) []string {
 	return result
 }
 
-// formatOperand formats a single operand
-// Returns the formatted operand, which may contain newlines if lists are wrapped
+// formatOperand formats a single operand with the given indentation.
+// Returns the formatted operand, which may contain newlines if lists are wrapped.
 func (p *Provider) formatOperand(op *parser.Node) string {
+	return p.formatOperandIndented(op, strings.Repeat(" ", p.config.IndentContinuation))
+}
+
+// formatOperandIndented formats a single operand, using indent for wrapped list layout:
+//
+//	OPERAND(
+//	    item1
+//	    item2
+//	)
+func (p *Provider) formatOperandIndented(op *parser.Node, indent string) string {
 	if op == nil {
 		return ""
 	}
@@ -1053,23 +1055,22 @@ func (p *Provider) formatOperand(op *parser.Node) string {
 		if child.Type == parser.NodeTypeParameter {
 			paramValue := p.formatOperandParameter(child)
 
-			// Check if parameter contains wrapped list (starts and ends with newline)
+			// Wrapped list: formatOperandParameter signals this with leading+trailing \n
 			if strings.HasPrefix(paramValue, "\n") && strings.HasSuffix(paramValue, "\n") {
-				// Multi-line list format:
-				// OPERAND(
-				//    item1,
-				//    item2,
-				//    item3
-				// )
+				// Format:
+				//   OPERAND(
+				//       item1
+				//       item2
+				//   )
+				itemIndent := indent + strings.Repeat(" ", p.config.IndentContinuation)
 				sb.WriteString("(\n")
-				// Remove leading and trailing newlines
 				trimmed := strings.Trim(paramValue, "\n")
-				lines := strings.Split(trimmed, "\n")
-				for _, line := range lines {
-					sb.WriteString("   ") // 3 spaces indent for list items
-					sb.WriteString(line)
+				for _, item := range strings.Split(trimmed, "\n") {
+					sb.WriteString(itemIndent)
+					sb.WriteString(item)
 					sb.WriteString("\n")
 				}
+				sb.WriteString(indent)
 				sb.WriteString(")")
 			} else {
 				// Regular single-line parameter
@@ -1087,7 +1088,7 @@ func (p *Provider) formatOperand(op *parser.Node) string {
 		var subOps []string
 		for _, child := range op.Children {
 			if child.Type == parser.NodeTypeOperand {
-				subOps = append(subOps, p.formatOperand(child))
+				subOps = append(subOps, p.formatOperandIndented(child, indent))
 			}
 		}
 		if len(subOps) > 0 {
@@ -1123,25 +1124,76 @@ func splitTopLevelCommas(s string) []string {
 	return items
 }
 
+// splitTopLevelSpaces splits a string by whitespace at the top level (depth 0),
+// ignoring spaces inside parentheses. Returns nil if no top-level spaces found.
+func splitTopLevelSpaces(s string) []string {
+	var items []string
+	depth := 0
+	start := 0
+	inItem := false
+	for i, ch := range s {
+		switch ch {
+		case '(':
+			depth++
+			inItem = true
+		case ')':
+			depth--
+			inItem = true
+		case ' ', '\t':
+			if depth == 0 && inItem {
+				items = append(items, s[start:i])
+				start = i + 1
+				inItem = false
+			} else if depth == 0 && !inItem {
+				start = i + 1
+			}
+		default:
+			inItem = true
+		}
+	}
+	if start < len(s) {
+		last := strings.TrimSpace(s[start:])
+		if last != "" {
+			items = append(items, last)
+		}
+	}
+	if len(items) <= 1 {
+		return nil
+	}
+	return items
+}
+
 // formatOperandParameter formats the parameter value of an operand
 func (p *Provider) formatOperandParameter(param *parser.Node) string {
 	if param == nil {
 		return ""
 	}
 
-	// Check if this is a comma-separated list that should be wrapped.
-	// Only split at top-level commas (not inside nested parentheses).
-	if p.config.WrapListsAfterN > 0 && strings.Contains(param.Value, ",") {
-		items := splitTopLevelCommas(param.Value)
-		// Trim spaces from each item
-		for i := range items {
-			items[i] = strings.TrimSpace(items[i])
-		}
+	// Check if this is a list that should be wrapped.
+	// Only wrap when the operand is defined as type "list" in smpe.json.
+	// Free-text operands like DESC may contain spaces but must not be split.
+	if p.config.WrapListsAfterN > 0 {
+		isList := param.Parent != nil &&
+			param.Parent.OperandDef != nil &&
+			param.Parent.OperandDef.Type == "list"
 
-		// Only wrap if we have more than WrapListsAfterN top-level items
-		if len(items) > p.config.WrapListsAfterN {
-			// Return special marker that formatOperand will detect
-			return "\n" + strings.Join(items, ",\n") + "\n"
+		if isList {
+			if strings.Contains(param.Value, ",") {
+				// Comma-separated list
+				items := splitTopLevelCommas(param.Value)
+				for i := range items {
+					items[i] = strings.TrimSpace(items[i])
+				}
+				if len(items) > p.config.WrapListsAfterN {
+					return "\n" + strings.Join(items, ",\n") + "\n"
+				}
+			} else {
+				// Space-separated list (e.g. PRE(U001 U002 U003))
+				items := splitTopLevelSpaces(param.Value)
+				if items != nil && len(items) > p.config.WrapListsAfterN {
+					return "\n" + strings.Join(items, "\n") + "\n"
+				}
+			}
 		}
 	}
 
