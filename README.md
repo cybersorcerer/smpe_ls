@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-0.8.7-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-0.8.8-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -130,7 +130,7 @@ See [cmd/smpe_lint/README.md](cmd/smpe_lint/README.md) for full documentation.
 
 ## 🎯 Supported MCS Statements
 
-### Version 0.8.7 (Current)
+### Version 0.8.8 (Current)
 
 **Control MCS (25 statements with full diagnostics):**
 
@@ -222,16 +222,19 @@ make release
 
 ## 📋 What's New
 
-### Version 0.8.7 (Latest)
+### Version 0.8.8 (Latest)
 
 **New Features:**
 
-- 🔌 **Zowe Explorer Integration** - Language Server now activates for dataset members opened via Zowe Explorer (`zowe-ds://`, `zowe-uss://`, `zowe-jobs://` URI schemes)
-- 🔍 **Auto Language Detection** - Files without extension are automatically detected as SMP/E when the first non-empty line starts with `++`
+- 📦 **smpe.json Template System** - `$ref` template mechanism reduces smpe.json size by ~42%; resolved at load time with zero consumer impact
+- 📋 **PATH and INITDISP in DDDEF Query** - DDDEF query result table now shows PATH (after DATASET) and INITDISP columns
 
 **Bug Fixes:**
 
-- 🐛 **Nested Parentheses in List Wrapping** - `PARM(PATHMODE(0,7,5,5))` and similar operands no longer produce duplicate output after formatting
+- 🐛 **List Operand Parsing in CodeLens** - SMP/E list items separated by spaces or commas are now correctly split into individual CodeLens entries
+- 🐛 **DESC Operand Formatting** - `DESC(This is a long description)` no longer incorrectly splits at spaces
+- 🐛 **List Display Format** - List operands (PRE, REQ, SUP) now render items on separate lines with correct indentation
+- 🐛 **Dot in Statement Parameter** - `++PRODUCT(PROD001,01.00.00)` no longer duplicates output after formatting
 
 ### Version 0.8.6
 

@@ -2,11 +2,12 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
-## What's New in 0.8.7
+## What's New in 0.8.8
 
-- **Zowe Explorer Integration** - Language Server now activates for dataset members opened via Zowe Explorer
-- **Auto Language Detection** - Files without extension are automatically detected as SMP/E when the first non-empty line starts with `++`
-- **Formatting Fix** - `PARM(PATHMODE(0,7,5,5))` and similar nested operands no longer produce duplicate output after formatting
+- **smpe.json Template System** - `$ref` template mechanism reduces smpe.json size by ~42%
+- **PATH and INITDISP in DDDEF Query** - DDDEF query results now include PATH and INITDISP columns
+- **List Operand Parsing** - SMP/E list items separated by spaces or commas are correctly handled in CodeLens
+- **Formatting Fixes** - DESC operands, list display format, and dot in statement parameters all fixed
 
 See the [CHANGELOG](CHANGELOG.md) for full details.
 
@@ -40,12 +41,12 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 
 | Platform | File |
 |----------|------|
-| Windows x64 | `smpe-mcs-language-server-win32-x64-0.8.7.vsix` |
-| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-0.8.7.vsix` |
-| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-0.8.7.vsix` |
-| macOS Intel | `smpe-mcs-language-server-darwin-x64-0.8.7.vsix` |
-| Linux x64 | `smpe-mcs-language-server-linux-x64-0.8.7.vsix` |
-| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-0.8.7.vsix` |
+| Windows x64 | `smpe-mcs-language-server-win32-x64-0.8.8.vsix` |
+| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-0.8.8.vsix` |
+| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-0.8.8.vsix` |
+| macOS Intel | `smpe-mcs-language-server-darwin-x64-0.8.8.vsix` |
+| Linux x64 | `smpe-mcs-language-server-linux-x64-0.8.8.vsix` |
+| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-0.8.8.vsix` |
 
 ### Installation in VS Code
 
@@ -57,7 +58,7 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 Alternatively via terminal:
 
 ```bash
-code --install-extension smpe-mcs-language-server-darwin-arm64-0.8.7.vsix
+code --install-extension smpe-mcs-language-server-darwin-arm64-0.8.8.vsix
 ```
 
 The Language Server is already included in the extension - no additional installation required.

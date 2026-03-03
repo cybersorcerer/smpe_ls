@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.8.8] - 2026-03-03
+
+### Added
+
+- **smpe.json Template System** - Introduced `$ref` template mechanism reducing smpe.json size by ~42% while resolving all references at load time (zero consumer impact)
+- **PATH and INITDISP in DDDEF Query** - DDDEF query result table now shows PATH (after DATASET) and INITDISP columns
+
+### Fixed
+
+- **SYSMOD Query Filter** - Filter now correctly generates `ENAME='SM1'|ENAME='SM2'|...` for all SYSMODs in list operands (PRE, REQ, SUP)
+- **List Operand Parsing in CodeLens** - SMP/E list items separated by spaces (not only commas) are now correctly split into individual CodeLens entries
+- **DESC Operand Formatting** - `DESC(This is a long description)` no longer incorrectly splits at spaces; only `list`-typed operands are split
+- **List Display Format** - List operands (e.g. PRE, REQ, SUP) now render items on separate lines with correct indentation and closing `)` aligned to operand indent
+- **Dot in Statement Parameter** - `++PRODUCT(PROD001,01.00.00)` no longer duplicates output; dots inside parenthesized statement parameters are no longer treated as terminators
+
 ## [0.8.7] - 2026-02-26
 
 ### Added
