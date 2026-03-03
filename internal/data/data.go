@@ -2,6 +2,7 @@ package data
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 )
 
@@ -48,27 +49,135 @@ type Store struct {
 	List       []MCSStatement
 }
 
-// Load reads and parses the smpe.json file once
+// --- private types for new-format parsing ---
+
+// smpeFileNew is the top-level structure of the new smpe.json format:
+// { "templates": { ... }, "statements": [ ... ] }
+type smpeFileNew struct {
+	Templates  map[string][]Operand `json:"templates"`
+	Statements []mcsStatementRaw    `json:"statements"`
+}
+
+// mcsStatementRaw mirrors MCSStatement but keeps Operands as raw JSON
+// so $ref entries can be detected before full decoding.
+type mcsStatementRaw struct {
+	Name             string            `json:"name"`
+	LanguageVariants bool              `json:"language_variants,omitempty"`
+	Description      string            `json:"description"`
+	Parameter        string            `json:"parameter,omitempty"`
+	Length           int               `json:"length,omitempty"`
+	Type             string            `json:"type"`
+	InlineData       bool              `json:"inline_data,omitempty"`
+	OperandsRaw      []json.RawMessage `json:"operands,omitempty"`
+}
+
+// refEntry is used to detect {"$ref": "template_name"} entries.
+type refEntry struct {
+	Ref string `json:"$ref"`
+}
+
+// Load reads and parses the smpe.json file, resolving any $ref template
+// references at load time. Supports both the new object format and the
+// legacy plain-array format for backwards compatibility.
 func Load(dataPath string) (*Store, error) {
-	// Load MCS definitions from smpe.json
-	data, err := os.ReadFile(dataPath)
+	fileBytes, err := os.ReadFile(dataPath)
 	if err != nil {
 		return nil, err
 	}
 
-	var statements []MCSStatement
-	if err := json.Unmarshal(data, &statements); err != nil {
-		return nil, err
+	// Detect format by first non-whitespace character:
+	// '{' => new format  |  '[' => legacy format
+	for _, b := range fileBytes {
+		if b == ' ' || b == '\t' || b == '\r' || b == '\n' {
+			continue
+		}
+		if b == '{' {
+			return loadNewFormat(fileBytes)
+		}
+		break
+	}
+	return loadLegacyFormat(fileBytes)
+}
+
+func loadNewFormat(fileBytes []byte) (*Store, error) {
+	var wrapper smpeFileNew
+	if err := json.Unmarshal(fileBytes, &wrapper); err != nil {
+		return nil, fmt.Errorf("parsing smpe.json (new format): %w", err)
 	}
 
-	// Build lookup map
+	statements := make([]MCSStatement, 0, len(wrapper.Statements))
+	for _, raw := range wrapper.Statements {
+		stmt := MCSStatement{
+			Name:             raw.Name,
+			LanguageVariants: raw.LanguageVariants,
+			Description:      raw.Description,
+			Parameter:        raw.Parameter,
+			Length:           raw.Length,
+			Type:             raw.Type,
+			InlineData:       raw.InlineData,
+		}
+
+		resolved, err := resolveOperands(raw.OperandsRaw, wrapper.Templates)
+		if err != nil {
+			return nil, fmt.Errorf("statement %q: %w", raw.Name, err)
+		}
+		stmt.Operands = resolved
+		statements = append(statements, stmt)
+	}
+
+	return buildStore(statements), nil
+}
+
+func loadLegacyFormat(fileBytes []byte) (*Store, error) {
+	var statements []MCSStatement
+	if err := json.Unmarshal(fileBytes, &statements); err != nil {
+		return nil, fmt.Errorf("parsing smpe.json: %w", err)
+	}
+	return buildStore(statements), nil
+}
+
+// resolveOperands processes a slice of raw JSON operand entries.
+// If the slice has exactly one entry and it is a {"$ref": "name"}, the
+// operands from the named template are returned. Otherwise each entry
+// is decoded as a full Operand.
+func resolveOperands(raw []json.RawMessage, templates map[string][]Operand) ([]Operand, error) {
+	if len(raw) == 0 {
+		return nil, nil
+	}
+
+	// Single-entry $ref pattern: [{"$ref": "template_name"}]
+	if len(raw) == 1 {
+		var ref refEntry
+		if err := json.Unmarshal(raw[0], &ref); err == nil && ref.Ref != "" {
+			tpl, ok := templates[ref.Ref]
+			if !ok {
+				return nil, fmt.Errorf("unknown $ref %q (not defined in templates)", ref.Ref)
+			}
+			result := make([]Operand, len(tpl))
+			copy(result, tpl)
+			return result, nil
+		}
+	}
+
+	// Normal case: decode each entry as a full Operand
+	operands := make([]Operand, 0, len(raw))
+	for _, r := range raw {
+		var op Operand
+		if err := json.Unmarshal(r, &op); err != nil {
+			return nil, fmt.Errorf("parsing operand: %w", err)
+		}
+		operands = append(operands, op)
+	}
+	return operands, nil
+}
+
+func buildStore(statements []MCSStatement) *Store {
 	stmtMap := make(map[string]MCSStatement, len(statements))
 	for _, stmt := range statements {
 		stmtMap[stmt.Name] = stmt
 	}
-
 	return &Store{
 		Statements: stmtMap,
 		List:       statements,
-	}, nil
+	}
 }

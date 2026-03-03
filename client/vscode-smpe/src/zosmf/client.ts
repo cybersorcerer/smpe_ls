@@ -196,7 +196,7 @@ export class ZosmfClient {
         const body = {
             zones: zones,
             entries: ['DDDEF'],
-            subentries: ['ENAME,DATASET,DATACLAS,MGMTCLAS,STORCLAS,DIR,DISP,INITDISP,DSNTYPE,SPACE,UNITS,UNIT,VOLUME'],
+            subentries: ['ENAME,DATASET,PATH,DATACLAS,MGMTCLAS,STORCLAS,DIR,DISP,INITDISP,DSNTYPE,SPACE,UNITS,UNIT,VOLUME'],
             filter: filterString
         };
 
