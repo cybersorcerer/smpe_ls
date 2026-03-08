@@ -75,6 +75,8 @@ export class FreeFormPanel {
             const servers = config.servers.map(s => ({
                 name: s.name,
                 host: s.host,
+                csiList: Array.isArray(s.csi) ? s.csi : [s.csi],
+                defaultCsi: s.defaultCsi || '',
                 defaultZones: s.defaultZones || [],
                 hasZonePatterns: !!(s.zones && s.zones.length > 0)
             }));
@@ -98,9 +100,9 @@ export class FreeFormPanel {
     }
 
     private async executeQuery(message: any): Promise<void> {
-        const { serverName, zones, entryType, subentries, filter } = message;
+        const { serverName, selectedCsi, zones, entryType, subentries, filter } = message;
 
-        this.log(`Free form query: server=${serverName}, zones=${zones}, entry=${entryType}, subentries=${subentries}, filter=${filter}`);
+        this.log(`Free form query: server=${serverName}, csi=${selectedCsi}, zones=${zones}, entry=${entryType}, subentries=${subentries}, filter=${filter}`);
 
         const configManager = this.queryProvider.getConfigManager();
         const config = configManager.loadConfig();
@@ -115,7 +117,9 @@ export class FreeFormPanel {
             return;
         }
 
-        const credentials = await configManager.getCredentials(server);
+        const resolvedServer = { ...server, csi: selectedCsi || (Array.isArray(server.csi) ? server.csi[0] : server.csi) };
+
+        const credentials = await configManager.getCredentials(resolvedServer);
         if (!credentials) {
             this.panel.webview.postMessage({ command: 'error', message: 'Authentication cancelled' });
             return;
@@ -123,7 +127,7 @@ export class FreeFormPanel {
 
         // Parse zone input and resolve patterns
         const zoneList = (zones as string).split(',').map((z: string) => z.trim().toUpperCase()).filter((z: string) => z.length > 0);
-        const resolvedZones = this.queryProvider.resolveZonePatterns(server, zoneList);
+        const resolvedZones = this.queryProvider.resolveZonePatterns(resolvedServer, zoneList);
 
         if (resolvedZones.length === 0) {
             this.panel.webview.postMessage({ command: 'error', message: 'No zones resolved from input' });
@@ -138,7 +142,7 @@ export class FreeFormPanel {
         try {
             const client = this.queryProvider.getClient();
             const result = await client.queryFreeForm(
-                server,
+                resolvedServer,
                 credentials,
                 resolvedZones,
                 entryType.toUpperCase(),
@@ -473,6 +477,12 @@ export class FreeFormPanel {
             </select>
         </div>
         <div class="form-row">
+            <label for="csi">CSI</label>
+            <select id="csi">
+                <option value="">Loading...</option>
+            </select>
+        </div>
+        <div class="form-row">
             <label for="zones">Zones</label>
             <input type="text" id="zones" placeholder="GLOBAL, MVS* (comma-separated, * and ? wildcards)" />
         </div>
@@ -606,6 +616,7 @@ export class FreeFormPanel {
 
         function populateServers(servers) {
             const select = document.getElementById('server');
+            const csiSelect = document.getElementById('csi');
             select.innerHTML = '';
             for (const s of servers) {
                 const opt = document.createElement('option');
@@ -613,22 +624,39 @@ export class FreeFormPanel {
                 opt.textContent = s.name + ' (' + s.host + ')';
                 select.appendChild(opt);
             }
-            // Set default zones from first server
-            if (servers.length > 0 && servers[0].defaultZones.length > 0) {
-                document.getElementById('zones').value = servers[0].defaultZones.join(', ');
-            }
 
-            // Update zones when server changes
-            select.addEventListener('change', () => {
-                const selected = servers.find(s => s.name === select.value);
-                if (selected && selected.defaultZones.length > 0) {
+            function updateServerDetails(serverName) {
+                const selected = servers.find(s => s.name === serverName);
+                if (!selected) return;
+                // Update CSI dropdown
+                csiSelect.innerHTML = '';
+                for (const csi of selected.csiList) {
+                    const opt = document.createElement('option');
+                    opt.value = csi;
+                    opt.textContent = csi;
+                    if (csi === selected.defaultCsi) opt.selected = true;
+                    csiSelect.appendChild(opt);
+                }
+                // Update default zones
+                if (selected.defaultZones.length > 0) {
                     document.getElementById('zones').value = selected.defaultZones.join(', ');
                 }
+            }
+
+            // Initialize with first server
+            if (servers.length > 0) {
+                updateServerDetails(servers[0].name);
+            }
+
+            // Update when server changes
+            select.addEventListener('change', () => {
+                updateServerDetails(select.value);
             });
         }
 
         function executeQuery() {
             const serverName = document.getElementById('server').value;
+            const selectedCsi = document.getElementById('csi').value;
             const zones = document.getElementById('zones').value;
             const entryType = document.getElementById('entryType').value;
             const subentries = document.getElementById('subentries').value;
@@ -654,6 +682,7 @@ export class FreeFormPanel {
             vscode.postMessage({
                 command: 'executeQuery',
                 serverName: serverName,
+                selectedCsi: selectedCsi,
                 zones: zones,
                 entryType: entryType,
                 subentries: subentries,

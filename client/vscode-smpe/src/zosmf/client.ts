@@ -55,7 +55,8 @@ export class ZosmfClient {
      */
     private buildQueryUrl(server: ZosmfServer): string {
         const host = server.host.replace(/\/$/, '');
-        const encodedCsi = encodeURIComponent(server.csi);
+        const csi = Array.isArray(server.csi) ? server.csi[0] : server.csi;
+        const encodedCsi = encodeURIComponent(csi);
         return `${host}/zosmf/swmgmt/csi/csiquery/${encodedCsi}`;
     }
 
@@ -154,10 +155,11 @@ export class ZosmfClient {
         sysmods: string[],
         progress?: ProgressCallback
     ): Promise<QueryResult> {
-        // Build filter string like xgim.py
+        // Build filter: split each entry at spaces/commas to handle list values
+        const ids = sysmods.flatMap(sm => sm.split(/[\s,]+/).filter(s => s.length > 0));
         let filterString = "RELATED!=''";
-        for (const sm of sysmods) {
-            filterString += `|ENAME='${sm}'`;
+        for (const id of ids) {
+            filterString += `|ENAME='${id}'`;
         }
 
         const body = {

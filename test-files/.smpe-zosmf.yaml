@@ -5,7 +5,9 @@ servers:
   - name: Maint
     host: https://192.168.9.39
     port: 443
-    csi: ZOS31.SMPE.GLOBAL.CSI
+    csi:
+      - ZOS31.SMPE.GLOBAL.CSI
+      - ZOS32.SMPE.GLOBAL.CSI
     user: SVARFUN
     rejectUnauthorized: false
     zones:
@@ -23,4 +25,4 @@ servers:
   #   rejectUnauthorized: false
 
 # Optional: Default server name (if not set, user is always prompted)
-# defaultServer: Production
+defaultServer: Maint

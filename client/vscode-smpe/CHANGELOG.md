@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.8.9] - 2026-03-08
+
+### Added
+
+- **Unified SYSMOD List Queries** - CodeLens now generates one query per operand covering all SYSMODs in a list, instead of one query per list element
+- **Extended SYSMOD Reference Operands** - All 11 operands that accept SYSMOD lists are now recognized: DELETE, FMID, NPRE, PRE, REQ, RESOLVER, RMID, SUP, TO, UMID, VERSION
+- **CSI List Support** - `.smpe-zosmf.yaml` now supports multiple CSIs per server with optional `defaultCsi`
+- **CSI Selection in Free Form Query** - New dropdown to select the CSI in the Free Form Query panel
+- **Missing Entry Display** - SYSMODs and DDDEFs not found by a query are shown in the result table with `.` in all columns
+
+### Fixed
+
+- **SYSMOD Query Filter** - Filter correctly generates `ENAME='SM1'|ENAME='SM2'|...` format for multiple SYSMODs
+- **Space and Comma Separated Lists** - Both separators are now handled identically in CodeLens and query input
+
 ## [0.8.8] - 2026-03-03
 
 ### Added

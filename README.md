@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-0.8.8-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-0.8.9-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -130,7 +130,7 @@ See [cmd/smpe_lint/README.md](cmd/smpe_lint/README.md) for full documentation.
 
 ## 🎯 Supported MCS Statements
 
-### Version 0.8.8 (Current)
+### Version 0.8.9 (Current)
 
 **Control MCS (25 statements with full diagnostics):**
 
@@ -222,7 +222,22 @@ make release
 
 ## 📋 What's New
 
-### Version 0.8.8 (Latest)
+### Version 0.8.9 (Latest)
+
+**New Features:**
+
+- 🔍 **Unified SYSMOD List Queries** - CodeLens generates one query per operand covering all SYSMODs in a list
+- 📋 **Extended SYSMOD Reference Operands** - All 11 operands that accept SYSMOD lists are now recognized (DELETE, FMID, NPRE, PRE, REQ, RESOLVER, RMID, SUP, TO, UMID, VERSION)
+- 🗄️ **CSI List Support** - `.smpe-zosmf.yaml` supports multiple CSIs per server with optional `defaultCsi`
+- 🔽 **CSI Selection in Free Form Query** - Dropdown to select the CSI in the Free Form Query panel
+- ❓ **Missing Entry Display** - SYSMODs/DDDEFs not found by a query are shown with `.` in all columns
+
+**Bug Fixes:**
+
+- 🐛 **SYSMOD Query Filter** - Filter correctly generates `ENAME='SM1'|ENAME='SM2'|...` format for multiple SYSMODs
+- 🐛 **Space and Comma Separated Lists** - Both separators are now handled identically in CodeLens and query input
+
+### Version 0.8.8
 
 **New Features:**
 

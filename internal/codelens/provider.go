@@ -40,26 +40,29 @@ func (p *Provider) GetCodeLenses(doc *parser.Document) []lsp.CodeLens {
 				continue
 			}
 
-			// SYSMOD references: PRE, REQ, SUP
+			// SYSMOD references — one CodeLens per operand covering all SYSMODs in the list
 			if isSYSMODReferenceOperand(child.Name) {
+				var allRefs []string
+				var firstParam *parser.Node
 				for _, param := range child.Children {
 					if param.Type == parser.NodeTypeParameter {
-						refs := parseList(param.Value)
-						for _, ref := range refs {
-							if ref != "" {
-								lenses = append(lenses, makeSysmodLensForRef(param, ref))
+						if firstParam == nil {
+							firstParam = param
+						}
+						// Use children (individual items) if available, else split Value
+						if len(param.Children) > 0 {
+							for _, item := range param.Children {
+								if item.Type == parser.NodeTypeParameter && item.Value != "" {
+									allRefs = append(allRefs, item.Value)
+								}
 							}
+						} else {
+							allRefs = append(allRefs, parseList(param.Value)...)
 						}
 					}
 				}
-			}
-
-			// FMID reference
-			if child.Name == "FMID" {
-				for _, param := range child.Children {
-					if param.Type == parser.NodeTypeParameter && param.Value != "" {
-						lenses = append(lenses, makeSysmodLensForRef(param, param.Value))
-					}
+				if len(allRefs) > 0 && firstParam != nil {
+					lenses = append(lenses, makeSysmodListLens(child, firstParam, allRefs))
 				}
 			}
 
@@ -86,10 +89,10 @@ func isSYSMODStatement(name string) bool {
 	return false
 }
 
-// isSYSMODReferenceOperand checks if the operand references a SYSMOD
+// isSYSMODReferenceOperand checks if the operand references one or more SYSMODs
 func isSYSMODReferenceOperand(name string) bool {
 	switch name {
-	case "PRE", "REQ", "SUP":
+	case "DELETE", "FMID", "NPRE", "PRE", "REQ", "RESOLVER", "RMID", "SUP", "TO", "UMID", "VERSION":
 		return true
 	}
 	return false
@@ -133,17 +136,29 @@ func makeSysmodLens(node *parser.Node) lsp.CodeLens {
 	}
 }
 
-// makeSysmodLensForRef creates a CodeLens for a SYSMOD reference in an operand
-func makeSysmodLensForRef(param *parser.Node, ref string) lsp.CodeLens {
+// makeSysmodListLens creates a single CodeLens for all SYSMODs in a list operand.
+// The SYSMOD IDs are passed as a string array; the filter is built by the extension.
+func makeSysmodListLens(operand *parser.Node, firstParam *parser.Node, refs []string) lsp.CodeLens {
+	title := fmt.Sprintf("🔍 Query %s (%d SYSMODs)", operand.Name, len(refs))
+	if len(refs) == 1 {
+		title = fmt.Sprintf("🔍 Query %s %s", operand.Name, refs[0])
+	}
+
+	// Pass each SYSMOD as a separate argument so VSCode spreads them correctly
+	args := make([]interface{}, len(refs))
+	for i, ref := range refs {
+		args[i] = ref
+	}
+
 	return lsp.CodeLens{
 		Range: lsp.Range{
-			Start: lsp.Position{Line: param.Position.Line, Character: param.Position.Character},
-			End:   lsp.Position{Line: param.Position.Line, Character: param.Position.Character + len(param.Value)},
+			Start: lsp.Position{Line: firstParam.Position.Line, Character: firstParam.Position.Character},
+			End:   lsp.Position{Line: firstParam.Position.Line, Character: firstParam.Position.Character + len(firstParam.Value)},
 		},
 		Command: &lsp.Command{
-			Title:     fmt.Sprintf("🔍 Query SYSMOD %s", ref),
+			Title:     title,
 			Command:   "smpe.codelens.querySysmod",
-			Arguments: []interface{}{ref},
+			Arguments: args,
 		},
 	}
 }

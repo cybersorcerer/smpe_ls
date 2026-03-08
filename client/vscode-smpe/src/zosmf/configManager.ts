@@ -22,7 +22,10 @@ servers:
   - name: Production
     host: https://zosmf.mainframe.example.com
     port: 443
-    csi: SMPE.GLOBAL.CSI
+    csi:
+      - SMPE.GLOBAL.CSI
+      - SMPE.DEV.CSI
+    defaultCsi: SMPE.GLOBAL.CSI
     user: USERID
     rejectUnauthorized: true
     zones:
@@ -36,7 +39,8 @@ servers:
   # - name: Development
   #   host: https://dev.zosmf.example.com
   #   port: 443
-  #   csi: SMPE.DEV.CSI
+  #   csi:
+  #     - SMPE.DEV.CSI
   #   user: DEVUSER
   #   rejectUnauthorized: false
 
@@ -153,6 +157,10 @@ export class ConfigManager {
                     vscode.window.showErrorMessage(`Server "${server.name || 'unnamed'}" is missing required fields (name, host, csi, user).`);
                     return undefined;
                 }
+                // Normalize csi to array
+                if (typeof server.csi === 'string') {
+                    server.csi = [server.csi];
+                }
                 // Set default port if not specified
                 if (!server.port) {
                     server.port = 443;
@@ -192,7 +200,7 @@ export class ConfigManager {
         // Build QuickPick items
         const items: vscode.QuickPickItem[] = config.servers.map(server => ({
             label: server.name,
-            description: `${server.host} - ${server.csi}`,
+            description: `${server.host} - ${Array.isArray(server.csi) ? server.csi.length + ' CSIs' : server.csi}`,
             detail: server.defaultZones?.length
                 ? `Default zones: ${server.defaultZones.join(', ')}`
                 : undefined,
@@ -211,6 +219,41 @@ export class ConfigManager {
         const server = config.servers.find(s => s.name === selected.label);
         this.log(`Selected server: ${server?.name}`);
         return server;
+    }
+
+    /**
+     * Select a CSI from the server's CSI list.
+     * Returns the selected CSI string, or undefined if user cancels.
+     */
+    async selectCsi(server: ZosmfServer): Promise<string | undefined> {
+        const csiList = Array.isArray(server.csi) ? server.csi : [server.csi];
+
+        if (csiList.length === 1) {
+            this.log(`Using single CSI: ${csiList[0]}`);
+            return csiList[0];
+        }
+
+        // If defaultCsi is set and exists in the list, use it without prompting
+        if (server.defaultCsi && csiList.includes(server.defaultCsi)) {
+            this.log(`Using default CSI: ${server.defaultCsi}`);
+            return server.defaultCsi;
+        }
+
+        const items: vscode.QuickPickItem[] = csiList.map(csi => ({
+            label: csi
+        }));
+
+        const selected = await vscode.window.showQuickPick(items, {
+            placeHolder: 'Select CSI dataset',
+            title: 'CSI Selection'
+        });
+
+        if (!selected) {
+            return undefined;
+        }
+
+        this.log(`Selected CSI: ${selected.label}`);
+        return selected.label;
     }
 
     /**

@@ -13,7 +13,8 @@ export interface ZosmfServer {
     name: string;
     host: string;
     port: number;
-    csi: string;
+    csi: string | string[];
+    defaultCsi?: string;
     user: string;
     rejectUnauthorized: boolean;
     zones?: string[];
@@ -149,4 +150,5 @@ export interface DisplayResult {
     timestamp: Date;
     result: QueryResult;
     error?: string;
+    requestedIds?: string[];
 }
