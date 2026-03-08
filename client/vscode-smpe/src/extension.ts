@@ -342,8 +342,8 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand('smpe.zosmf.freeFormQuery', () => {
 			FreeFormPanel.createOrShow(queryProvider, outputChannel);
 		}),
-		vscode.commands.registerCommand('smpe.codelens.querySysmod', (sysmodId: string) => {
-			queryProvider.querySysmodDirect([sysmodId]);
+		vscode.commands.registerCommand('smpe.codelens.querySysmod', (...sysmods: string[]) => {
+			queryProvider.querySysmodDirect(sysmods);
 		}),
 		vscode.commands.registerCommand('smpe.codelens.queryDddef', (dddefName: string) => {
 			queryProvider.queryDddefDirect([dddefName]);

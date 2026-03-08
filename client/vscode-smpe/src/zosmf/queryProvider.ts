@@ -99,12 +99,20 @@ export class QueryProvider {
             return undefined;
         }
 
-        const credentials = await this.configManager.getCredentials(server);
+        // Resolve CSI selection
+        const selectedCsi = await this.configManager.selectCsi(server);
+        if (!selectedCsi) {
+            return undefined;
+        }
+        // Set resolved CSI as string for client usage
+        const resolvedServer = { ...server, csi: selectedCsi };
+
+        const credentials = await this.configManager.getCredentials(resolvedServer);
         if (!credentials) {
             return undefined;
         }
 
-        return { server, credentials };
+        return { server: resolvedServer, credentials };
     }
 
     /**
@@ -234,7 +242,7 @@ export class QueryProvider {
             return undefined;
         }
 
-        return input.split(',').map(s => s.trim().toUpperCase()).filter(s => s.length > 0);
+        return input.split(/[\s,]+/).map(s => s.trim().toUpperCase()).filter(s => s.length > 0);
     }
 
     /**
@@ -322,7 +330,7 @@ export class QueryProvider {
         );
 
         if (result) {
-            this.handleResult(ctx.server.name, 'sysmod', result);
+            this.handleResult(ctx.server.name, 'sysmod', result, sysmods);
         }
     }
 
@@ -359,7 +367,7 @@ export class QueryProvider {
         );
 
         if (result) {
-            this.handleResult(ctx.server.name, 'dddef', result);
+            this.handleResult(ctx.server.name, 'dddef', result, dddefs);
         }
     }
 
@@ -416,7 +424,7 @@ export class QueryProvider {
         );
 
         if (result) {
-            this.handleResult(ctx.server.name, 'sysmod', result);
+            this.handleResult(ctx.server.name, 'sysmod', result, sysmods);
         }
     }
 
@@ -448,19 +456,20 @@ export class QueryProvider {
         );
 
         if (result) {
-            this.handleResult(ctx.server.name, 'dddef', result);
+            this.handleResult(ctx.server.name, 'dddef', result, dddefs);
         }
     }
 
     /**
      * Handle query result
      */
-    private handleResult(serverName: string, queryType: QueryType, result: QueryResult): void {
+    private handleResult(serverName: string, queryType: QueryType, result: QueryResult, requestedIds?: string[]): void {
         const displayResult: DisplayResult = {
             serverName,
             queryType,
             timestamp: new Date(),
-            result
+            result,
+            requestedIds
         };
 
         this.log(`Query completed: ${JSON.stringify(result).substring(0, 500)}...`);

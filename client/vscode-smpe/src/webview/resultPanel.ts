@@ -202,7 +202,7 @@ export class ResultPanel {
         if (entries.length === 0) {
             tableHtml = '<p class="no-results">No results found</p>';
         } else {
-            tableHtml = this.renderEntriesTable(entries, result.queryType);
+            tableHtml = this.renderEntriesTable(entries, result.queryType, result.requestedIds);
         }
 
         const messagesHtml = result.result.messages && result.result.messages.length > 0
@@ -417,21 +417,26 @@ export class ResultPanel {
 </html>`;
     }
 
-    private renderEntriesTable(entries: ZosmfEntry[], queryType: string): string {
+    private renderEntriesTable(entries: ZosmfEntry[], queryType: string, requestedIds?: string[]): string {
         // Determine columns based on query type and entry types
         if (queryType === 'zone') {
             return this.renderZoneIndexTable(entries);
         } else if (queryType === 'dddef') {
-            return this.renderDddefTable(entries);
+            return this.renderDddefTable(entries, requestedIds);
         } else {
-            return this.renderSysmodTable(entries);
+            return this.renderSysmodTable(entries, requestedIds);
         }
     }
 
-    private renderSysmodTable(entries: ZosmfEntry[]): string {
+    private renderSysmodTable(entries: ZosmfEntry[], requestedIds?: string[]): string {
         const sorted = [...entries].sort((a, b) =>
             a.zonename.localeCompare(b.zonename) || a.entryname.localeCompare(b.entryname)
         );
+
+        // Find SYSMODs that were requested but not found in results
+        const foundNames = new Set(sorted.filter(e => e.entrytype === 'SYSMOD').map(e => e.entryname));
+        const dot = '.';
+
         const rows = sorted.map(entry => {
             const subData = this.extractSubentryData(entry.subentries);
             const entryClass = `entry-${entry.entrytype.toLowerCase()}`;
@@ -450,6 +455,25 @@ export class ResultPanel {
             </tr>`;
         }).join('');
 
+        // Add rows for requested SYSMODs not found in results
+        const zones = [...new Set(sorted.map(e => e.zonename))].sort();
+        const zoneName = zones.length > 0 ? zones.join(', ') : dot;
+        const missingRows = (requestedIds || [])
+            .filter(id => !foundNames.has(id))
+            .sort()
+            .map(id => `<tr>
+                <td>${this.escapeHtml(zoneName)}</td>
+                <td>${this.escapeHtml(id)}</td>
+                <td>${dot}</td>
+                <td>${dot}</td>
+                <td>${dot}</td>
+                <td>${dot}</td>
+                <td>${dot}</td>
+                <td>${dot}</td>
+                <td>${dot}</td>
+            </tr>`)
+            .join('');
+
         return `<table>
             <thead>
                 <tr>
@@ -464,14 +488,15 @@ export class ResultPanel {
                     <th>REWORK</th>
                 </tr>
             </thead>
-            <tbody>${rows}</tbody>
+            <tbody>${rows}${missingRows}</tbody>
         </table>`;
     }
 
-    private renderDddefTable(entries: ZosmfEntry[]): string {
-        const rows = entries.filter(e => e.entrytype === 'DDDEF').sort((a, b) =>
+    private renderDddefTable(entries: ZosmfEntry[], requestedIds?: string[]): string {
+        const filtered = entries.filter(e => e.entrytype === 'DDDEF').sort((a, b) =>
             a.zonename.localeCompare(b.zonename) || a.entryname.localeCompare(b.entryname)
-        ).map(entry => {
+        );
+        const rows = filtered.map(entry => {
             const subData = this.extractSubentryData(entry.subentries);
 
             return `<tr>
@@ -487,6 +512,26 @@ export class ResultPanel {
             </tr>`;
         }).join('');
 
+        const foundNames = new Set(filtered.map(e => e.entryname));
+        const dot = '.';
+        const zones = [...new Set(filtered.map(e => e.zonename))].sort();
+        const zoneName = zones.length > 0 ? zones.join(', ') : dot;
+        const missingRows = (requestedIds || [])
+            .filter(id => !foundNames.has(id))
+            .sort()
+            .map(id => `<tr>
+                <td>${this.escapeHtml(zoneName)}</td>
+                <td>${this.escapeHtml(id)}</td>
+                <td>${dot}</td>
+                <td>${dot}</td>
+                <td>${dot}</td>
+                <td>${dot}</td>
+                <td>${dot}</td>
+                <td>${dot}</td>
+                <td>${dot}</td>
+            </tr>`)
+            .join('');
+
         return `<table>
             <thead>
                 <tr>
@@ -501,7 +546,7 @@ export class ResultPanel {
                     <th>STORCLAS</th>
                 </tr>
             </thead>
-            <tbody>${rows}</tbody>
+            <tbody>${rows}${missingRows}</tbody>
         </table>`;
     }
 

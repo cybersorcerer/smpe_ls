@@ -2,12 +2,14 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
-## What's New in 0.8.8
+## What's New in 0.8.9
 
-- **smpe.json Template System** - `$ref` template mechanism reduces smpe.json size by ~42%
-- **PATH and INITDISP in DDDEF Query** - DDDEF query results now include PATH and INITDISP columns
-- **List Operand Parsing** - SMP/E list items separated by spaces or commas are correctly handled in CodeLens
-- **Formatting Fixes** - DESC operands, list display format, and dot in statement parameters all fixed
+- **Unified SYSMOD List Queries** - CodeLens generates one query per operand covering all SYSMODs in a list
+- **Extended SYSMOD Reference Operands** - All 11 operands that accept SYSMOD lists are recognized
+- **CSI List Support** - `.smpe-zosmf.yaml` supports multiple CSIs per server with `defaultCsi`
+- **CSI Selection in Free Form Query** - Dropdown to select the CSI in the Free Form Query panel
+- **Missing Entry Display** - SYSMODs/DDDEFs not found by a query are shown with `.` in all columns
+- **SYSMOD Query Filter** - Filter correctly generates `ENAME='SM1'|ENAME='SM2'|...` format
 
 See the [CHANGELOG](CHANGELOG.md) for full details.
 
@@ -41,12 +43,12 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 
 | Platform | File |
 |----------|------|
-| Windows x64 | `smpe-mcs-language-server-win32-x64-0.8.8.vsix` |
-| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-0.8.8.vsix` |
-| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-0.8.8.vsix` |
-| macOS Intel | `smpe-mcs-language-server-darwin-x64-0.8.8.vsix` |
-| Linux x64 | `smpe-mcs-language-server-linux-x64-0.8.8.vsix` |
-| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-0.8.8.vsix` |
+| Windows x64 | `smpe-mcs-language-server-win32-x64-0.8.9.vsix` |
+| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-0.8.9.vsix` |
+| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-0.8.9.vsix` |
+| macOS Intel | `smpe-mcs-language-server-darwin-x64-0.8.9.vsix` |
+| Linux x64 | `smpe-mcs-language-server-linux-x64-0.8.9.vsix` |
+| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-0.8.9.vsix` |
 
 ### Installation in VS Code
 
@@ -58,7 +60,7 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 Alternatively via terminal:
 
 ```bash
-code --install-extension smpe-mcs-language-server-darwin-arm64-0.8.8.vsix
+code --install-extension smpe-mcs-language-server-darwin-arm64-0.8.9.vsix
 ```
 
 The Language Server is already included in the extension - no additional installation required.
