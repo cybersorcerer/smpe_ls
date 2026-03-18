@@ -2,7 +2,7 @@
   "name": "smpe-mcs-language-server",
   "displayName": "SMP/E MCS Language Server",
   "description": "Language support for SMP/E MCS statements",
-  "version": "0.8.9",
+  "version": "0.9.0",
   "publisher": "cybersorcerer",
   "license": "AGPL-3.0",
   "repository": {

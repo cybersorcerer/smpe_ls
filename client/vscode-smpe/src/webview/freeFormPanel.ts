@@ -5,7 +5,10 @@
 
 import * as vscode from 'vscode';
 import { QueryProvider } from '../zosmf/queryProvider';
-import { ZosmfServer, ZosmfEntry, ZosmfSubentry } from '../zosmf/types';
+import { ZosmfServer, Credentials } from '../zosmf/types';
+import { ZosmfClient } from '../zosmf/client';
+import { UssPanel } from './ussPanel';
+import { DatasetPanel } from './datasetPanel';
 
 export class FreeFormPanel {
     public static currentPanel: FreeFormPanel | undefined;
@@ -13,6 +16,9 @@ export class FreeFormPanel {
     private readonly queryProvider: QueryProvider;
     private readonly outputChannel: vscode.OutputChannel;
     private disposables: vscode.Disposable[] = [];
+    private lastClient: ZosmfClient | undefined;
+    private lastServer: ZosmfServer | undefined;
+    private lastCredentials: Credentials | undefined;
 
     private constructor(
         panel: vscode.WebviewPanel,
@@ -96,6 +102,12 @@ export class FreeFormPanel {
                 await vscode.env.clipboard.writeText(message.data);
                 vscode.window.showInformationMessage('Copied to clipboard');
                 break;
+            case 'openUssPath':
+                await this.openUssPath(message.path);
+                break;
+            case 'openDataset':
+                await this.openDataset(message.dataset);
+                break;
         }
     }
 
@@ -139,8 +151,13 @@ export class FreeFormPanel {
 
         this.panel.webview.postMessage({ command: 'progress', message: 'Sending query to z/OSMF...' });
 
+        // Store context for USS/Dataset browsing
+        this.lastClient = this.queryProvider.getClient();
+        this.lastServer = resolvedServer;
+        this.lastCredentials = credentials;
+
         try {
-            const client = this.queryProvider.getClient();
+            const client = this.lastClient;
             const result = await client.queryFreeForm(
                 resolvedServer,
                 credentials,
@@ -164,6 +181,22 @@ export class FreeFormPanel {
             this.log(`Query error: ${msg}`);
             this.panel.webview.postMessage({ command: 'error', message: msg });
         }
+    }
+
+    private async openUssPath(ussPath: string): Promise<void> {
+        if (!this.lastClient || !this.lastServer || !this.lastCredentials) {
+            vscode.window.showWarningMessage('No z/OSMF connection available. Please execute a query first.');
+            return;
+        }
+        await UssPanel.open(this.lastClient, this.lastServer, this.lastCredentials, ussPath);
+    }
+
+    private async openDataset(datasetName: string): Promise<void> {
+        if (!this.lastClient || !this.lastServer || !this.lastCredentials) {
+            vscode.window.showWarningMessage('No z/OSMF connection available. Please execute a query first.');
+            return;
+        }
+        await DatasetPanel.open(this.lastClient, this.lastServer, this.lastCredentials, datasetName);
     }
 
     private async exportResults(format: 'json' | 'csv', data: any): Promise<void> {
@@ -404,6 +437,15 @@ export class FreeFormPanel {
         .toggle-link:hover {
             color: var(--vscode-textLink-activeForeground);
         }
+        .uss-link, .ds-link {
+            color: var(--vscode-textLink-foreground);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .uss-link:hover, .ds-link:hover {
+            text-decoration: underline;
+            color: var(--vscode-textLink-activeForeground);
+        }
         .cell-tooltip {
             display: none;
             position: fixed;
@@ -540,6 +582,7 @@ export class FreeFormPanel {
         const vscode = acquireVsCodeApi();
         let currentResult = null;
         let currentSubentries = [];
+        let currentEntryType = '';
 
         // Valid subentries per entry type (IBM z/OS 3.1 SMP/E Reference)
         const SUBENTRIES_BY_TYPE = {
@@ -688,6 +731,9 @@ export class FreeFormPanel {
                 subentries: subentries,
                 filter: filter
             });
+
+            // Store entry type for link rendering in results
+            currentEntryType = entryType.trim().toUpperCase();
         }
 
         function showResult(result, subentries) {
@@ -731,7 +777,14 @@ export class FreeFormPanel {
 
                 const subData = extractSubentryData(entry.subentries || []);
                 for (const sub of subentries) {
-                    html += '<td>' + escapeHtml(subData[sub] || '') + '</td>';
+                    const val = subData[sub] || '';
+                    if (currentEntryType === 'DDDEF' && sub === 'PATH' && val.startsWith('/')) {
+                        html += '<td><a href="#" class="uss-link" data-path="' + escapeHtml(val) + '">' + escapeHtml(val) + '</a></td>';
+                    } else if (currentEntryType === 'DDDEF' && sub === 'DATASET' && val.length > 0) {
+                        html += '<td><a href="#" class="ds-link" data-dataset="' + escapeHtml(val) + '">' + escapeHtml(val) + '</a></td>';
+                    } else {
+                        html += '<td>' + escapeHtml(val) + '</td>';
+                    }
                 }
                 html += '</tr>';
             }
@@ -913,6 +966,21 @@ export class FreeFormPanel {
         document.getElementById('executeBtn').addEventListener('click', executeQuery);
         document.getElementById('exportJsonBtn').addEventListener('click', exportJson);
         document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
+
+        // Handle USS path and dataset links
+        document.addEventListener('click', (e) => {
+            const ussLink = e.target.closest('.uss-link');
+            if (ussLink) {
+                e.preventDefault();
+                vscode.postMessage({ command: 'openUssPath', path: ussLink.dataset.path });
+                return;
+            }
+            const dsLink = e.target.closest('.ds-link');
+            if (dsLink) {
+                e.preventDefault();
+                vscode.postMessage({ command: 'openDataset', dataset: dsLink.dataset.dataset });
+            }
+        });
 
         // Custom tooltip for truncated cells (title attr doesn't work in VSCode webviews)
         const tooltip = document.getElementById('cellTooltip');

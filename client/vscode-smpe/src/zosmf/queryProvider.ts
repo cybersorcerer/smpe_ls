@@ -13,6 +13,8 @@ export class QueryProvider {
     private client: ZosmfClient;
     private outputChannel: vscode.OutputChannel;
     private onResultCallback?: (result: DisplayResult) => void;
+    private lastServer: ZosmfServer | undefined;
+    private lastCredentials: { user: string; password: string } | undefined;
 
     constructor(
         context: vscode.ExtensionContext,
@@ -196,6 +198,20 @@ export class QueryProvider {
     }
 
     /**
+     * Get last used server (for USS browsing from result panel)
+     */
+    getLastServer(): ZosmfServer | undefined {
+        return this.lastServer;
+    }
+
+    /**
+     * Get last used credentials (for USS browsing from result panel)
+     */
+    getLastCredentials(): { user: string; password: string } | undefined {
+        return this.lastCredentials;
+    }
+
+    /**
      * Resolve zone patterns against server's configured zones
      */
     resolveZonePatterns(server: ZosmfServer, zoneInput: string[]): string[] {
@@ -330,7 +346,7 @@ export class QueryProvider {
         );
 
         if (result) {
-            this.handleResult(ctx.server.name, 'sysmod', result, sysmods);
+            this.handleResult(ctx.server.name, 'sysmod', result, sysmods, ctx.server, ctx.credentials);
         }
     }
 
@@ -357,17 +373,11 @@ export class QueryProvider {
 
         const result = await this.executeWithProgress(
             `Querying DDDEFs on ${ctx.server.name}`,
-            (progress) => this.client.queryDddef(
-                ctx.server,
-                ctx.credentials,
-                zones,
-                dddefs,
-                progress
-            )
+            (progress) => this.client.queryDddef(ctx.server, ctx.credentials, zones, dddefs, progress)
         );
 
         if (result) {
-            this.handleResult(ctx.server.name, 'dddef', result, dddefs);
+            this.handleResult(ctx.server.name, 'dddef', result, dddefs, ctx.server, ctx.credentials);
         }
     }
 
@@ -392,7 +402,7 @@ export class QueryProvider {
         );
 
         if (result) {
-            this.handleResult(ctx.server.name, 'zone', result);
+            this.handleResult(ctx.server.name, 'zone', result, undefined, ctx.server, ctx.credentials);
         }
     }
 
@@ -424,7 +434,7 @@ export class QueryProvider {
         );
 
         if (result) {
-            this.handleResult(ctx.server.name, 'sysmod', result, sysmods);
+            this.handleResult(ctx.server.name, 'sysmod', result, sysmods, ctx.server, ctx.credentials);
         }
     }
 
@@ -446,24 +456,20 @@ export class QueryProvider {
 
         const result = await this.executeWithProgress(
             `Querying DDDEFs on ${ctx.server.name}`,
-            (progress) => this.client.queryDddef(
-                ctx.server,
-                ctx.credentials,
-                zones,
-                dddefs,
-                progress
-            )
+            (progress) => this.client.queryDddef(ctx.server, ctx.credentials, zones, dddefs, progress)
         );
 
         if (result) {
-            this.handleResult(ctx.server.name, 'dddef', result, dddefs);
+            this.handleResult(ctx.server.name, 'dddef', result, dddefs, ctx.server, ctx.credentials);
         }
     }
 
     /**
      * Handle query result
      */
-    private handleResult(serverName: string, queryType: QueryType, result: QueryResult, requestedIds?: string[]): void {
+    private handleResult(serverName: string, queryType: QueryType, result: QueryResult, requestedIds?: string[], server?: ZosmfServer, credentials?: { user: string; password: string }): void {
+        if (server) { this.lastServer = server; }
+        if (credentials) { this.lastCredentials = credentials; }
         const displayResult: DisplayResult = {
             serverName,
             queryType,

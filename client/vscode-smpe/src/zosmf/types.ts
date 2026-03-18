@@ -152,3 +152,67 @@ export interface DisplayResult {
     error?: string;
     requestedIds?: string[];
 }
+
+// ============================================================================
+// USS File Types (z/OSMF Files REST API)
+// ============================================================================
+
+/**
+ * Single USS directory entry from z/OSMF Files REST API
+ * GET /zosmf/restfiles/fs?path=...
+ */
+export interface UssEntry {
+    name: string;
+    mode: string;
+    size: number;
+    uid: number;
+    user: string;
+    gid: number;
+    group: string;
+    mtime: string;
+}
+
+/**
+ * USS directory listing response
+ */
+export interface UssDirectoryListing {
+    items: UssEntry[];
+    returnedRows: number;
+    totalRows: number;
+    JSONversion: number;
+    /** The actual resolved path (after PATHPREFIX stripping) */
+    resolvedPath?: string;
+}
+
+// ============================================================================
+// MVS Dataset Types (z/OSMF Files REST API)
+// ============================================================================
+
+/**
+ * Single PDS member entry from z/OSMF Dataset REST API
+ * GET /zosmf/restfiles/ds/<dataset>/member
+ */
+export interface DatasetMember {
+    member: string;
+    vers?: number;
+    mod?: number;
+    c4date?: string;
+    m4date?: string;
+    cnorc?: number;
+    inorc?: number;
+    mnorc?: number;
+    mtime?: string;
+    msec?: string;
+    user?: string;
+    sclm?: string;
+}
+
+/**
+ * PDS member listing response
+ */
+export interface DatasetMemberListing {
+    items: DatasetMember[];
+    returnedRows: number;
+    totalRows: number;
+    JSONversion: number;
+}
