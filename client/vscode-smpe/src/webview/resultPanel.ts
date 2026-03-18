@@ -3,7 +3,10 @@
  */
 
 import * as vscode from 'vscode';
-import { DisplayResult, ZosmfEntry, ZosmfSubentry } from '../zosmf/types';
+import { DisplayResult, ZosmfEntry, ZosmfSubentry, ZosmfServer, Credentials } from '../zosmf/types';
+import { ZosmfClient } from '../zosmf/client';
+import { UssPanel } from './ussPanel';
+import { DatasetPanel } from './datasetPanel';
 
 export class ResultPanel {
     public static currentPanel: ResultPanel | undefined;
@@ -11,6 +14,9 @@ export class ResultPanel {
     private readonly extensionUri: vscode.Uri;
     private disposables: vscode.Disposable[] = [];
     private currentResult: DisplayResult | undefined;
+    private zosmfClient: ZosmfClient | undefined;
+    private zosmfServer: ZosmfServer | undefined;
+    private zosmfCredentials: Credentials | undefined;
 
     private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
         this.panel = panel;
@@ -28,6 +34,12 @@ export class ResultPanel {
                     case 'copy':
                         this.copyToClipboard(message.data);
                         break;
+                    case 'openUssPath':
+                        this.openUssPath(message.path);
+                        break;
+                    case 'openDataset':
+                        this.openDataset(message.dataset);
+                        break;
                 }
             },
             null,
@@ -36,7 +48,7 @@ export class ResultPanel {
     }
 
     public static createOrShow(extensionUri: vscode.Uri): ResultPanel {
-        const column = vscode.ViewColumn.Beside;
+        const column = vscode.ViewColumn.One;
 
         if (ResultPanel.currentPanel) {
             ResultPanel.currentPanel.panel.reveal(column);
@@ -56,6 +68,15 @@ export class ResultPanel {
 
         ResultPanel.currentPanel = new ResultPanel(panel, extensionUri);
         return ResultPanel.currentPanel;
+    }
+
+    /**
+     * Set z/OSMF connection context for USS browsing
+     */
+    public setZosmfContext(client: ZosmfClient, server: ZosmfServer, credentials: Credentials): void {
+        this.zosmfClient = client;
+        this.zosmfServer = server;
+        this.zosmfCredentials = credentials;
     }
 
     public showResult(result: DisplayResult): void {
@@ -192,6 +213,22 @@ export class ResultPanel {
     private async copyToClipboard(data: string): Promise<void> {
         await vscode.env.clipboard.writeText(data);
         vscode.window.showInformationMessage('Copied to clipboard');
+    }
+
+    private async openUssPath(ussPath: string): Promise<void> {
+        if (!this.zosmfClient || !this.zosmfServer || !this.zosmfCredentials) {
+            vscode.window.showWarningMessage('No z/OSMF connection available. Please run a query first.');
+            return;
+        }
+        await UssPanel.open(this.zosmfClient, this.zosmfServer, this.zosmfCredentials, ussPath);
+    }
+
+    private async openDataset(datasetName: string): Promise<void> {
+        if (!this.zosmfClient || !this.zosmfServer || !this.zosmfCredentials) {
+            vscode.window.showWarningMessage('No z/OSMF connection available. Please run a query first.');
+            return;
+        }
+        await DatasetPanel.open(this.zosmfClient, this.zosmfServer, this.zosmfCredentials, datasetName);
     }
 
     private getHtmlContent(result: DisplayResult): string {
@@ -353,6 +390,15 @@ export class ResultPanel {
         .cell-tooltip.visible {
             display: block;
         }
+        .uss-link, .ds-link {
+            color: var(--vscode-textLink-foreground);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .uss-link:hover, .ds-link:hover {
+            text-decoration: underline;
+            color: var(--vscode-textLink-activeForeground);
+        }
     </style>
 </head>
 <body>
@@ -390,6 +436,21 @@ export class ResultPanel {
         // Attach event listeners (onclick attributes are blocked by CSP)
         document.getElementById('exportJsonBtn').addEventListener('click', exportJson);
         document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
+
+        // Handle USS path and dataset links
+        document.addEventListener('click', (e) => {
+            const ussLink = e.target.closest('.uss-link');
+            if (ussLink) {
+                e.preventDefault();
+                vscode.postMessage({ command: 'openUssPath', path: ussLink.dataset.path });
+                return;
+            }
+            const dsLink = e.target.closest('.ds-link');
+            if (dsLink) {
+                e.preventDefault();
+                vscode.postMessage({ command: 'openDataset', dataset: dsLink.dataset.dataset });
+            }
+        });
 
         // Custom tooltip for truncated cells
         const tooltip = document.getElementById('cellTooltip');
@@ -496,14 +557,25 @@ export class ResultPanel {
         const filtered = entries.filter(e => e.entrytype === 'DDDEF').sort((a, b) =>
             a.zonename.localeCompare(b.zonename) || a.entryname.localeCompare(b.entryname)
         );
+        const hasZosmf = !!(this.zosmfClient && this.zosmfServer && this.zosmfCredentials);
         const rows = filtered.map(entry => {
             const subData = this.extractSubentryData(entry.subentries);
+            const ussPath = subData['PATH'] || '';
+            const datasetName = subData['DATASET'] || '';
+            const isUssPath = hasZosmf && ussPath.startsWith('/');
+            const isDataset = hasZosmf && datasetName.length > 0;
+            const pathCell = isUssPath
+                ? `<td><a href="#" class="uss-link" data-path="${this.escapeHtml(ussPath)}">${this.escapeHtml(ussPath)}</a></td>`
+                : `<td>${this.escapeHtml(ussPath)}</td>`;
+            const datasetCell = isDataset
+                ? `<td><a href="#" class="ds-link" data-dataset="${this.escapeHtml(datasetName)}">${this.escapeHtml(datasetName)}</a></td>`
+                : `<td>${this.escapeHtml(datasetName)}</td>`;
 
             return `<tr>
                 <td>${this.escapeHtml(entry.zonename)}</td>
                 <td class="entry-dddef">${this.escapeHtml(entry.entryname)}</td>
-                <td>${this.escapeHtml(subData['DATASET'] || '')}</td>
-                <td>${this.escapeHtml(subData['PATH'] || '')}</td>
+                ${datasetCell}
+                ${pathCell}
                 <td>${this.escapeHtml(subData['INITDISP'] || '')}</td>
                 <td>${this.escapeHtml(subData['DISP'] || '')}</td>
                 <td>${this.escapeHtml(subData['DATACLAS'] || '')}</td>

@@ -9,6 +9,8 @@ import {
 } from 'vscode-languageclient/node';
 import { QueryProvider } from './zosmf/queryProvider';
 import { ResultPanel } from './webview/resultPanel';
+import { UssPanel, UssFileContentProvider } from './webview/ussPanel';
+import { DatasetPanel, DatasetContentProvider } from './webview/datasetPanel';
 import { FreeFormPanel } from './webview/freeFormPanel';
 
 let client: LanguageClient;
@@ -315,10 +317,29 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
+	// Register USS file content provider (read-only virtual documents)
+	const ussContentProvider = new UssFileContentProvider();
+	context.subscriptions.push(
+		vscode.workspace.registerTextDocumentContentProvider(UssFileContentProvider.scheme, ussContentProvider)
+	);
+	UssPanel.contentProvider = ussContentProvider;
+
+	// Register MVS dataset content provider (read-only virtual documents)
+	const datasetContentProvider = new DatasetContentProvider();
+	context.subscriptions.push(
+		vscode.workspace.registerTextDocumentContentProvider(DatasetContentProvider.scheme, datasetContentProvider)
+	);
+	DatasetPanel.contentProvider = datasetContentProvider;
+
 	// Initialize z/OSMF Query Provider
 	queryProvider = new QueryProvider(context, outputChannel);
 	queryProvider.onResult((result) => {
 		const panel = ResultPanel.createOrShow(context.extensionUri);
+		const lastServer = queryProvider.getLastServer();
+		const lastCreds = queryProvider.getLastCredentials();
+		if (lastServer && lastCreds) {
+			panel.setZosmfContext(queryProvider.getClient(), lastServer, lastCreds);
+		}
 		panel.showResult(result);
 	});
 

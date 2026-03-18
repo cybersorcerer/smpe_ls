@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-0.8.9-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-0.9.0-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -130,7 +130,7 @@ See [cmd/smpe_lint/README.md](cmd/smpe_lint/README.md) for full documentation.
 
 ## 🎯 Supported MCS Statements
 
-### Version 0.8.9 (Current)
+### Version 0.9.0 (Current)
 
 **Control MCS (25 statements with full diagnostics):**
 
@@ -222,7 +222,20 @@ make release
 
 ## 📋 What's New
 
-### Version 0.8.9 (Latest)
+### Version 0.9.0 (Latest)
+
+**New Features:**
+
+- 📂 **USS Directory Browsing** - Clickable PATH links in DDDEF query results open a USS directory browser via z/OSMF Files REST API with breadcrumb navigation and file viewing
+- 📦 **MVS Dataset Browsing** - Clickable DATASET links in DDDEF query results open PDS member listings or sequential datasets via z/OSMF Dataset REST API
+- 📄 **Read-Only File Viewing** - USS files and dataset members open as read-only virtual documents (`smpe-uss://` and `smpe-ds://` schemes)
+- 🔗 **Automatic PATHPREFIX Resolution** - USS paths with SMP/E PATHPREFIX segments are automatically resolved by stripping prefix segments on 404
+
+**Improvements:**
+
+- 🖥️ **Webview Layout** - All result panels now open in the main editor area instead of beside
+
+### Version 0.8.9
 
 **New Features:**
 

@@ -14,7 +14,9 @@ import {
     AsyncResponse,
     StatusResponse,
     QueryResult,
-    ProgressCallback
+    ProgressCallback,
+    UssDirectoryListing,
+    DatasetMemberListing
 } from './types';
 
 const POLL_INTERVAL_MS = 2000;
@@ -109,7 +111,7 @@ export class ZosmfClient {
                 rejectUnauthorized: rejectUnauthorized
             };
 
-            this.log(`Request to ${parsedUrl.hostname}:${options.port}, rejectUnauthorized=${rejectUnauthorized}`);
+            this.log(`Request to ${parsedUrl.hostname}:${options.port}, path=${options.path}, rejectUnauthorized=${rejectUnauthorized}`);
 
             const requester = isHttps ? https : http;
             const req = requester.request(options, (res) => {
@@ -468,6 +470,164 @@ export class ZosmfClient {
         }
 
         throw new Error(`Query timed out: no result received after ${this.maxPollAttempts} poll attempts (${this.maxPollAttempts * POLL_INTERVAL_MS / 1000}s).`);
+    }
+
+    /**
+     * Build the base URL for z/OSMF REST requests (without endpoint path)
+     */
+    private buildBaseUrl(server: ZosmfServer): string {
+        return server.host.replace(/\/$/, '');
+    }
+
+    /**
+     * List a USS directory via z/OSMF Files REST API
+     * GET /zosmf/restfiles/fs?path=<ussPath>
+     */
+    async listUssDirectory(
+        server: ZosmfServer,
+        credentials: Credentials,
+        ussPath: string
+    ): Promise<UssDirectoryListing> {
+        const baseUrl = this.buildBaseUrl(server);
+        const headers: Record<string, string> = {
+            'X-CSRF-ZOSMF-HEADER': '',
+            'Authorization': this.createAuthHeader(credentials)
+        };
+
+        // Try the full path first; on 404 (reason 8 = path not found),
+        // strip the first path segment (likely a PATHPREFIX like /Z31TGT) and retry
+        let tryPath = ussPath;
+        while (tryPath.length > 1) {
+            const url = `${baseUrl}/zosmf/restfiles/fs?path=${tryPath}`;
+            this.log(`USS list directory: ${tryPath}`);
+            this.log(`USS list URL: ${url}`);
+
+            const response = await this.request(url, 'GET', headers, null, server.rejectUnauthorized);
+            this.log(`USS list response status: ${response.statusCode}`);
+
+            if (response.statusCode === 200) {
+                const listing = JSON.parse(response.body) as UssDirectoryListing;
+                listing.resolvedPath = tryPath;
+                return listing;
+            }
+
+            this.log(`USS list response body: ${response.body}`);
+
+            // Check if it's a "path not found" error — strip first segment and retry
+            if (response.statusCode === 404) {
+                try {
+                    const errBody = JSON.parse(response.body);
+                    if (errBody.reason === 8 || errBody.reason === '8') {
+                        // Strip first path segment: /Z31TGT/usr/include → /usr/include
+                        const nextSlash = tryPath.indexOf('/', 1);
+                        if (nextSlash > 0) {
+                            const stripped = tryPath.substring(nextSlash);
+                            this.log(`Path not found, stripping prefix: ${tryPath} → ${stripped}`);
+                            tryPath = stripped;
+                            continue;
+                        }
+                    }
+                } catch { /* not JSON, fall through */ }
+            }
+
+            // Non-retryable error
+            const detail = this.extractZosmfError(response.body);
+            throw new Error(`HTTP ${response.statusCode}: ${detail}`);
+        }
+
+        throw new Error(`USS path not found after stripping all segments: ${ussPath}`);
+    }
+
+    /**
+     * Read a USS file via z/OSMF Files REST API
+     * GET /zosmf/restfiles/fs/<ussFilePath>
+     */
+    async readUssFile(
+        server: ZosmfServer,
+        credentials: Credentials,
+        ussFilePath: string
+    ): Promise<string> {
+        const baseUrl = this.buildBaseUrl(server);
+        const headers: Record<string, string> = {
+            'X-CSRF-ZOSMF-HEADER': '',
+            'Authorization': this.createAuthHeader(credentials)
+        };
+
+        const url = `${baseUrl}/zosmf/restfiles/fs${ussFilePath}`;
+        this.log(`USS read file: ${ussFilePath}`);
+
+        const response = await this.request(url, 'GET', headers, null, server.rejectUnauthorized);
+        this.log(`USS read response status: ${response.statusCode}`);
+
+        if (response.statusCode === 200) {
+            return response.body;
+        } else {
+            const detail = this.extractZosmfError(response.body);
+            throw new Error(`HTTP ${response.statusCode}: ${detail}`);
+        }
+    }
+
+    /**
+     * List PDS members via z/OSMF Dataset REST API
+     * GET /zosmf/restfiles/ds/<dataset>/member
+     */
+    async listDatasetMembers(
+        server: ZosmfServer,
+        credentials: Credentials,
+        datasetName: string
+    ): Promise<DatasetMemberListing> {
+        const baseUrl = this.buildBaseUrl(server);
+        const headers: Record<string, string> = {
+            'X-CSRF-ZOSMF-HEADER': '',
+            'Authorization': this.createAuthHeader(credentials)
+        };
+
+        const url = `${baseUrl}/zosmf/restfiles/ds/${encodeURIComponent(datasetName)}/member`;
+        this.log(`Dataset list members: ${datasetName}`);
+
+        const response = await this.request(url, 'GET', headers, null, server.rejectUnauthorized);
+        this.log(`Dataset list response status: ${response.statusCode}`);
+
+        if (response.statusCode === 200) {
+            return JSON.parse(response.body) as DatasetMemberListing;
+        } else {
+            const detail = this.extractZosmfError(response.body);
+            throw new Error(`HTTP ${response.statusCode}: ${detail}`);
+        }
+    }
+
+    /**
+     * Read a dataset (sequential) or PDS member via z/OSMF Dataset REST API
+     * GET /zosmf/restfiles/ds/<dataset>
+     * GET /zosmf/restfiles/ds/<dataset>(<member>)
+     */
+    async readDataset(
+        server: ZosmfServer,
+        credentials: Credentials,
+        datasetName: string,
+        memberName?: string
+    ): Promise<string> {
+        const baseUrl = this.buildBaseUrl(server);
+        const headers: Record<string, string> = {
+            'X-CSRF-ZOSMF-HEADER': '',
+            'Authorization': this.createAuthHeader(credentials)
+        };
+
+        const dsn = memberName
+            ? `${datasetName}(${memberName})`
+            : datasetName;
+        const url = `${baseUrl}/zosmf/restfiles/ds/${encodeURIComponent(dsn)}`;
+        this.log(`Dataset read: ${dsn}`);
+
+        const response = await this.request(url, 'GET', headers, null, server.rejectUnauthorized);
+        this.log(`Dataset read response status: ${response.statusCode}`);
+
+        if (response.statusCode === 200) {
+            return response.body;
+        } else {
+            const detail = this.extractZosmfError(response.body);
+            throw new Error(`HTTP ${response.statusCode}: ${detail}`);
+        }
     }
 
     /**

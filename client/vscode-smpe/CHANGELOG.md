@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.9.0] - 2026-03-18
+
+### Added
+
+- **USS Directory Browsing** - Clickable PATH links in DDDEF query results open a USS directory browser via z/OSMF Files REST API with breadcrumb navigation, file viewing, and automatic PATHPREFIX stripping
+- **MVS Dataset Browsing** - Clickable DATASET links in DDDEF query results open PDS member listings or sequential datasets via z/OSMF Dataset REST API
+- **Read-Only File Viewing** - USS files and dataset members open as read-only virtual documents (`smpe-uss://` and `smpe-ds://` schemes)
+- **Automatic PATHPREFIX Resolution** - USS paths with SMP/E PATHPREFIX segments (e.g. `/Z31TGT/usr/include`) are automatically resolved by stripping prefix segments on 404
+
+### Changed
+
+- **Webview Layout** - All result panels (SYSMOD, DDDEF, Zone, USS, Dataset) now open in the main editor area instead of beside
+
 ## [0.8.9] - 2026-03-08
 
 ### Added
