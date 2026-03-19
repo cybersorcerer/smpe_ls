@@ -195,7 +195,14 @@ export class ResultPanel {
                 if (key !== 'VER' && sub[key]) {
                     const value = sub[key];
                     if (Array.isArray(value)) {
-                        data[key] = value.join('|');
+                        // Handle nested objects in arrays (e.g. SUPBY: [{"SYSMOD": "HBB77E0"}])
+                        const flat = value.map(item => {
+                            if (typeof item === 'object' && item !== null) {
+                                return Object.values(item).flat().join(',');
+                            }
+                            return String(item);
+                        });
+                        data[key] = flat.join('|');
                     }
                 }
             }

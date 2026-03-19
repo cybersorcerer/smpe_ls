@@ -33,6 +33,7 @@ type Handler interface {
 	TextDocumentDefinition(params DefinitionParams) (*Location, error)
 	TextDocumentReferences(params ReferenceParams) ([]Location, error)
 	TextDocumentCodeLens(params CodeLensParams) ([]CodeLens, error)
+	TextDocumentFoldingRange(params FoldingRangeParams) ([]FoldingRange, error)
 	WorkspaceDidChangeConfiguration(params DidChangeConfigurationParams) error
 }
 
@@ -265,6 +266,19 @@ func (s *Server) handleRequest(req *Request) error {
 		}
 
 		result, err := s.handler.TextDocumentCodeLens(params)
+		if err != nil {
+			return s.sendErrorResponse(req.ID, InternalError, err.Error())
+		}
+
+		return s.sendResponse(req.ID, result)
+
+	case "textDocument/foldingRange":
+		var params FoldingRangeParams
+		if err := json.Unmarshal(req.Params, &params); err != nil {
+			return s.sendErrorResponse(req.ID, InvalidParams, "Invalid params")
+		}
+
+		result, err := s.handler.TextDocumentFoldingRange(params)
 		if err != nil {
 			return s.sendErrorResponse(req.ID, InternalError, err.Error())
 		}

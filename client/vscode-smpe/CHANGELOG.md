@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.9.1] - 2026-03-19
+
+### Added
+
+- **Folding Ranges** - MCS statements and multi-line comments can be collapsed/expanded in the editor
+- **Debug Logging Control** - All extension logging now respects the `smpe.debug` setting (default: on)
+- **Global Zone SYSMOD Subentries** - Free Form Query SYSMOD subentry picker now includes Global Zone subentries (ACCID, APPID, DELETE, HOLDDATA, NPRE, PRE, REQ, SREL, TLIBPREFIX)
+
+### Fixed
+
+- **Free Form Query Subentries** - CSI queries now include TARGETZONE in entries array, fixing empty subentry results for SYSMOD and other entry types
+- **SYSMOD Subentry DELETE2** - Corrected invalid subentry name `DELETE2` to `DELETE`
+- **CHANGELOG Link** - Fixed broken relative link in extension README (now absolute GitHub URL)
+
 ## [0.9.0] - 2026-03-18
 
 ### Added

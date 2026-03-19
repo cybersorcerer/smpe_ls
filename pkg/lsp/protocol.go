@@ -137,6 +137,7 @@ type ServerCapabilities struct {
 	DefinitionProvider              bool                   `json:"definitionProvider,omitempty"`
 	ReferencesProvider              bool                   `json:"referencesProvider,omitempty"`
 	CodeLensProvider                *CodeLensOptions       `json:"codeLensProvider,omitempty"`
+	FoldingRangeProvider            bool                   `json:"foldingRangeProvider,omitempty"`
 }
 
 // TextDocumentSyncKind values
@@ -345,6 +346,20 @@ const (
 	SymbolKindOperator      SymbolKind = 25
 	SymbolKindTypeParameter SymbolKind = 26
 )
+
+// FoldingRangeParams represents textDocument/foldingRange request params
+type FoldingRangeParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+}
+
+// FoldingRange represents a folding range in a document
+type FoldingRange struct {
+	StartLine      int    `json:"startLine"`
+	StartCharacter int    `json:"startCharacter,omitempty"`
+	EndLine        int    `json:"endLine"`
+	EndCharacter   int    `json:"endCharacter,omitempty"`
+	Kind           string `json:"kind,omitempty"` // "comment", "imports", "region"
+}
 
 // CodeLensParams represents textDocument/codeLens request params
 type CodeLensParams struct {

@@ -8,6 +8,7 @@ import (
 	"github.com/cybersorcerer/smpe_ls/internal/completion"
 	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/diagnostics"
+	"github.com/cybersorcerer/smpe_ls/internal/folding"
 	"github.com/cybersorcerer/smpe_ls/internal/formatting"
 	"github.com/cybersorcerer/smpe_ls/internal/hover"
 	"github.com/cybersorcerer/smpe_ls/internal/logger"
@@ -78,6 +79,7 @@ type Handler struct {
 	symbolProvider      *symbols.Provider
 	referencesProvider  *references.Provider
 	codeLensProvider    *codelens.Provider
+	foldingProvider     *folding.Provider
 	server              *lsp.Server
 	diagnosticsConfig   *DiagnosticsConfig
 }
@@ -104,6 +106,7 @@ func New(version string, commit string, dataPath string) (*Handler, error) {
 	symbolProvider := symbols.NewProvider()
 	referencesProvider := references.NewProvider()
 	codeLensProvider := codelens.NewProvider()
+	foldingProvider := folding.NewProvider()
 
 	return &Handler{
 		version:             version,
@@ -119,6 +122,7 @@ func New(version string, commit string, dataPath string) (*Handler, error) {
 		symbolProvider:      symbolProvider,
 		referencesProvider:  referencesProvider,
 		codeLensProvider:    codeLensProvider,
+		foldingProvider:     foldingProvider,
 		diagnosticsConfig:   DefaultDiagnosticsConfig(),
 	}, nil
 }
@@ -195,6 +199,7 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 			DefinitionProvider:              true,
 			ReferencesProvider:              true,
 			CodeLensProvider:                &lsp.CodeLensOptions{},
+			FoldingRangeProvider:            true,
 			SemanticTokensProvider: &lsp.SemanticTokensOptions{
 				Legend: lsp.SemanticTokensLegend{
 					TokenTypes: []string{
@@ -684,4 +689,34 @@ func (h *Handler) TextDocumentCodeLens(params lsp.CodeLensParams) ([]lsp.CodeLen
 	logger.Debug("CodeLens returned %d lenses", len(lenses))
 
 	return lenses, nil
+}
+
+// TextDocumentFoldingRange handles folding range request
+func (h *Handler) TextDocumentFoldingRange(params lsp.FoldingRangeParams) ([]lsp.FoldingRange, error) {
+	logger.Debug("Folding ranges requested for: %s", params.TextDocument.URI)
+
+	h.documentsMutex.RLock()
+	text, textExists := h.documents[params.TextDocument.URI]
+	doc, hasDoc := h.parsedDocuments[params.TextDocument.URI]
+	h.documentsMutex.RUnlock()
+
+	if !textExists {
+		logger.Debug("Document not found: %s", params.TextDocument.URI)
+		return nil, nil
+	}
+
+	// Ensure we have a parsed document
+	if !hasDoc {
+		logger.Debug("No parsed document found for folding, parsing now: %s", params.TextDocument.URI)
+		h.documentsMutex.Lock()
+		doc = h.parser.Parse(text)
+		h.parsedDocuments[params.TextDocument.URI] = doc
+		h.documentsMutex.Unlock()
+	}
+
+	lines := strings.Split(text, "\n")
+	ranges := h.foldingProvider.GetFoldingRanges(doc, lines)
+	logger.Debug("Folding ranges returned %d ranges", len(ranges))
+
+	return ranges, nil
 }

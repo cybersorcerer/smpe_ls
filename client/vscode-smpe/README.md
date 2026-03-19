@@ -2,15 +2,14 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
-## What's New in 0.9.0
+## What's New in 0.9.1
 
-- **USS Directory Browsing** - Clickable PATH links in DDDEF results open a USS directory browser via z/OSMF Files REST API
-- **MVS Dataset Browsing** - Clickable DATASET links in DDDEF results open PDS member listings or sequential datasets
-- **Read-Only File Viewing** - USS files and dataset members open as read-only virtual documents
-- **Automatic PATHPREFIX Resolution** - USS paths with SMP/E PATHPREFIX are automatically resolved
-- **Improved Layout** - All result panels now open in the main editor area
+- **Folding Ranges** - MCS statements and multi-line comments can be collapsed/expanded in the editor
+- **Debug Logging Control** - All extension logging now respects the `smpe.debug` setting
+- **Free Form Query Fix** - CSI queries now return subentry data correctly for all entry types
+- **Global Zone SYSMOD Subentries** - Subentry picker now includes Global Zone subentries
 
-See the [CHANGELOG](CHANGELOG.md) for full details.
+See the [CHANGELOG](https://github.com/cybersorcerer/smpe_ls/blob/main/client/vscode-smpe/CHANGELOG.md) for full details.
 
 ## Features
 
@@ -59,7 +58,7 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 Alternatively via terminal:
 
 ```bash
-code --install-extension smpe-mcs-language-server-darwin-arm64-0.9.0.vsix
+code --install-extension smpe-mcs-language-server-darwin-arm64-0.9.1.vsix
 ```
 
 The Language Server is already included in the extension - no additional installation required.
