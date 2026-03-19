@@ -18,6 +18,8 @@ let outputChannel: vscode.OutputChannel;
 let queryProvider: QueryProvider;
 
 function log(message: string) {
+	const debug = vscode.workspace.getConfiguration('smpe').get<boolean>('debug', true);
+	if (!debug) { return; }
 	const timestamp = new Date().toISOString();
 	outputChannel.appendLine(`[${timestamp}] ${message}`);
 	console.log(message);

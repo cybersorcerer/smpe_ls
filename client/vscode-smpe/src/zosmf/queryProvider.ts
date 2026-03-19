@@ -27,6 +27,8 @@ export class QueryProvider {
     }
 
     private log(message: string): void {
+        const debug = vscode.workspace.getConfiguration('smpe').get<boolean>('debug', true);
+        if (!debug) { return; }
         const timestamp = new Date().toISOString();
         this.outputChannel.appendLine(`[${timestamp}] [QueryProvider] ${message}`);
     }

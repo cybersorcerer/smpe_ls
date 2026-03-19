@@ -39,6 +39,8 @@ export class ZosmfClient {
     }
 
     private log(message: string): void {
+        const debug = vscode.workspace.getConfiguration('smpe').get<boolean>('debug', true);
+        if (!debug) { return; }
         const timestamp = new Date().toISOString();
         this.outputChannel.appendLine(`[${timestamp}] [ZosmfClient] ${message}`);
     }
@@ -244,9 +246,18 @@ export class ZosmfClient {
         filter: string,
         progress?: ProgressCallback
     ): Promise<QueryResult> {
+        // z/OSMF CSI API requires the zone entry type alongside the data entry type
+        // to return subentry data. Without it, entries are found but subentries are empty.
+        const entries: string[] = [entryType];
+        const upperType = entryType.toUpperCase();
+        if (upperType !== 'GLOBALZONE' && upperType !== 'TARGETZONE' && upperType !== 'DZONE') {
+            // For non-zone entry types, add TARGETZONE so subentries are populated
+            entries.push('TARGETZONE');
+        }
+
         const body = {
             zones: zones,
-            entries: [entryType],
+            entries: entries,
             subentries: [subentries.join(',')],
             filter: filter
         };
@@ -331,6 +342,14 @@ export class ZosmfClient {
                 // Synchronous response
                 const result = JSON.parse(response.body) as QueryResult;
                 this.log('Received synchronous response');
+                if (result.entries && result.entries.length > 0) {
+                    const firstEntry = result.entries[0];
+                    this.log(`First entry keys: ${Object.keys(firstEntry).join(', ')}`);
+                    this.log(`First entry subentries type: ${typeof firstEntry.subentries}, isArray: ${Array.isArray(firstEntry.subentries)}, length: ${firstEntry.subentries?.length ?? 'N/A'}`);
+                    if (firstEntry.subentries && firstEntry.subentries.length > 0) {
+                        this.log(`First subentry sample: ${JSON.stringify(firstEntry.subentries[0])}`);
+                    }
+                }
                 return result;
             } else if (response.statusCode === 202) {
                 // Async response - need to poll
@@ -407,7 +426,17 @@ export class ZosmfClient {
                     this.log(`Poll response body: ${response.body.substring(0, 500)}...`);
 
                     if (statusResponse.status === 'complete') {
-                        this.log('Query completed');
+                        this.log('Query completed (async poll)');
+                        this.log(`Full async response keys: ${Object.keys(statusResponse).join(', ')}`);
+                        // Log first entry's structure for debugging
+                        if (statusResponse.entries && statusResponse.entries.length > 0) {
+                            const firstEntry = statusResponse.entries[0];
+                            this.log(`First entry keys: ${Object.keys(firstEntry).join(', ')}`);
+                            this.log(`First entry subentries type: ${typeof firstEntry.subentries}, isArray: ${Array.isArray(firstEntry.subentries)}, length: ${firstEntry.subentries?.length ?? 'N/A'}`);
+                            if (firstEntry.subentries && firstEntry.subentries.length > 0) {
+                                this.log(`First subentry sample: ${JSON.stringify(firstEntry.subentries[0])}`);
+                            }
+                        }
                         // z/OSMF returns entries directly in the response, not in a 'result' field
                         // Format: { "status": "complete", "entries": [...] }
                         if (statusResponse.entries) {

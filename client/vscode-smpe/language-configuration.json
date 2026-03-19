@@ -13,11 +13,5 @@
     ["(", ")"],
     ["'", "'"]
   ],
-  "wordPattern": "[A-Z0-9]+",
-  "folding": {
-    "markers": {
-      "start": "^\\+\\+",
-      "end": "^\\s*$"
-    }
-  }
+  "wordPattern": "[A-Z0-9]+"
 }

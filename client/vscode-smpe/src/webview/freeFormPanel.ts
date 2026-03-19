@@ -39,6 +39,8 @@ export class FreeFormPanel {
     }
 
     private log(message: string): void {
+        const debug = vscode.workspace.getConfiguration('smpe').get<boolean>('debug', true);
+        if (!debug) { return; }
         const timestamp = new Date().toISOString();
         this.outputChannel.appendLine(`[${timestamp}] [FreeFormPanel] ${message}`);
     }
@@ -149,6 +151,8 @@ export class FreeFormPanel {
         // Parse subentries
         const subentryList = (subentries as string).split(',').map((s: string) => s.trim().toUpperCase()).filter((s: string) => s.length > 0);
 
+        this.log(`Free Form Query - EntryType: ${entryType.toUpperCase()}, Zones: ${resolvedZones.join(',')}, Subentries: [${subentryList.join(',')}], Filter: "${filter || ''}"`);
+
         this.panel.webview.postMessage({ command: 'progress', message: 'Sending query to z/OSMF...' });
 
         // Store context for USS/Dataset browsing
@@ -171,6 +175,10 @@ export class FreeFormPanel {
             );
 
             this.log(`Query completed: ${(result.entries || []).length} entries`);
+            // Log raw subentry data for debugging
+            for (const entry of (result.entries || []).slice(0, 3)) {
+                this.log(`Raw subentries for ${entry.entryname}: ${JSON.stringify(entry.subentries)}`);
+            }
             this.panel.webview.postMessage({
                 command: 'result',
                 data: result,
@@ -586,7 +594,7 @@ export class FreeFormPanel {
 
         // Valid subentries per entry type (IBM z/OS 3.1 SMP/E Reference)
         const SUBENTRIES_BY_TYPE = {
-            SYSMOD: ['ACCEPT','APPLY','ASSEM','BYPASS','CIFREQ','DELBY','DELETE2','DELLMOD','DESCRIPTION','DLMOD','ELEMENT','ELEMMOV','EMOVE','ENAME','ERROR','FEATURE','FESN','FMID','IFREQ','INSTALLDATE','INSTALLTIME','JAR','JARUPD','JCLIN','LASTSUP','LASTUPD','LASTUPDTYPE','MAC','MACUPD','MOD','NPRE2','PRE2','PROGRAM','RECDATE','RECTIME','REGEN','RENLMOD','REQ2','RESDATE','RESTIME','RESTORE','REWORK','RLMOD','SMODTYPE','SOURCEID','SRC','SRCUPD','SUPBY','SUPING','SZAP','UCLDATE','UCLTIME','VERSION','XZAP'],
+            SYSMOD: ['ACCEPT','ACCID','APPID','APPLY','ASSEM','BYPASS','CIFREQ','DELBY','DELETE','DELLMOD','DESCRIPTION','DLMOD','ELEMENT','ELEMMOV','EMOVE','ENAME','ERROR','FEATURE','FESN','FMID','HOLDDATA','IFREQ','INSTALLDATE','INSTALLTIME','JAR','JARUPD','JCLIN','LASTSUP','LASTUPD','LASTUPDTYPE','MAC','MACUPD','MOD','NPRE','NPRE2','PRE','PRE2','PROGRAM','RECDATE','RECTIME','REGEN','RENLMOD','REQ','REQ2','RESDATE','RESTIME','RESTORE','REWORK','RLMOD','SMODTYPE','SOURCEID','SRC','SRCUPD','SREL','SUPBY','SUPING','SZAP','TLIBPREFIX','UCLDATE','UCLTIME','VERSION','XZAP'],
             DDDEF: ['CONCAT','DATACLAS','DATASET','DIR','DISP','DSNTYPE','DSPREFIX','ENAME','INITDISP','MGMTCLAS','PATH','PROTECT','SPACE','STORCLAS','SYSOUT','UNIT','UNITS','VOLUME','WAITFORDSN'],
             TARGETZONE: ['ENAME','OPTIONS','RELATED','SREL','TIEDTO','UPGLEVEL','XZLINK','ZDESC'],
             DLIB: ['ENAME','LASTUPD','LASTUPDTYPE','SYSLIB'],
@@ -800,7 +808,13 @@ export class FreeFormPanel {
                     if (key !== 'VER' && sub[key]) {
                         const value = sub[key];
                         if (Array.isArray(value)) {
-                            data[key] = value.join(', ');
+                            const flat = value.map(item => {
+                                if (typeof item === 'object' && item !== null) {
+                                    return Object.values(item).flat().join(',');
+                                }
+                                return String(item);
+                            });
+                            data[key] = flat.join(', ');
                         }
                     }
                 }

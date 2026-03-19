@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-0.9.0-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-0.9.1-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -130,7 +130,7 @@ See [cmd/smpe_lint/README.md](cmd/smpe_lint/README.md) for full documentation.
 
 ## 🎯 Supported MCS Statements
 
-### Version 0.9.0 (Current)
+### Version 0.9.1 (Current)
 
 **Control MCS (25 statements with full diagnostics):**
 
@@ -222,7 +222,20 @@ make release
 
 ## 📋 What's New
 
-### Version 0.9.0 (Latest)
+### Version 0.9.1 (Latest)
+
+**New Features:**
+
+- 📐 **Folding Ranges** - MCS statements and multi-line comments can be collapsed/expanded in the editor
+- 🔧 **Debug Logging Control** - All extension logging now respects the `smpe.debug` setting
+- 🌐 **Global Zone SYSMOD Subentries** - Free Form Query subentry picker includes Global Zone subentries (ACCID, APPID, DELETE, HOLDDATA, NPRE, PRE, REQ, SREL, TLIBPREFIX)
+
+**Bug Fixes:**
+
+- 🔍 **Free Form Query Subentries** - CSI queries now include TARGETZONE in entries array, fixing empty subentry results
+- 🏷️ **SYSMOD Subentry DELETE2** - Corrected invalid subentry name to `DELETE`
+
+### Version 0.9.0
 
 **New Features:**
 
