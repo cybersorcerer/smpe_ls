@@ -34,6 +34,7 @@ type Handler interface {
 	TextDocumentReferences(params ReferenceParams) ([]Location, error)
 	TextDocumentCodeLens(params CodeLensParams) ([]CodeLens, error)
 	TextDocumentFoldingRange(params FoldingRangeParams) ([]FoldingRange, error)
+	WorkspaceSymbol(params WorkspaceSymbolParams) ([]SymbolInformation, error)
 	WorkspaceDidChangeConfiguration(params DidChangeConfigurationParams) error
 }
 
@@ -285,13 +286,25 @@ func (s *Server) handleRequest(req *Request) error {
 
 		return s.sendResponse(req.ID, result)
 
+	case "workspace/symbol":
+		var params WorkspaceSymbolParams
+		if err := json.Unmarshal(req.Params, &params); err != nil {
+			return s.sendErrorResponse(req.ID, InvalidParams, "Invalid params")
+		}
+
+		result, err := s.handler.WorkspaceSymbol(params)
+		if err != nil {
+			return s.sendErrorResponse(req.ID, InternalError, err.Error())
+		}
+
+		return s.sendResponse(req.ID, result)
+
 	// Optional capabilities - respond with null to indicate not supported
 	case "textDocument/onTypeFormatting",
 		"textDocument/codeAction",
 		"textDocument/rename",
 		"textDocument/signatureHelp",
 		"textDocument/documentHighlight",
-		"workspace/symbol",
 		"workspace/executeCommand":
 		logger.Debug("Unsupported method: %s", req.Method)
 		return s.sendResponse(req.ID, nil)

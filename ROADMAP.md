@@ -11,15 +11,11 @@ prioritized by benefit and implementation effort.
 Rename SYSMOD IDs and FMIDs across the entire document. All occurrences in `PRE`, `REQ`,
 `SUP`, `FMID`, and `IF` operands are updated simultaneously. Very useful for large MCS files.
 
-### 2. Folding Ranges (`textDocument/foldingRange`)
-Collapse MCS statements to a single line. Files with dozens of statements become much easier
-to navigate.
-
-### 3. Inlay Hints (`textDocument/inlayHint`)
+### 2. Inlay Hints (`textDocument/inlayHint`)
 Show parameter labels directly in the editor, e.g. `FROMDS(` displays `DSN=` before the
 value. Makes nested sub-operands significantly more readable.
 
-### 4. Workspace Symbols (`workspace/symbol`)
+### 3. Workspace Symbols (`workspace/symbol`)
 Search for SYSMOD definitions across multiple `.smpe` files in a workspace. Useful for
 projects that span many MCS files.
 

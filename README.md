@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-0.9.2-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-0.9.3-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -15,8 +15,12 @@ A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Mod
 - **📖 Hover Documentation** - Inline documentation from IBM SMP/E Reference
 - **🔗 Go to Definition** - Navigate to SYSMOD/FMID definitions
 - **🔎 Find References** - Find all references to a SYSMOD or FMID
-- **📄 Document Symbols** - Outline view and quick navigation
+- **📄 Document Symbols** - Outline view and quick navigation (`Cmd+Shift+O`)
+- **🔍 Workspace Symbols** - Search for SYSMOD definitions across all `.smpe` files (`Cmd+T`)
+- **📐 Folding Ranges** - Collapse/expand MCS statements and multi-line comments
 - **📝 Document Formatting** - Auto-format SMP/E statements
+- **🔭 CodeLens** - Inline z/OSMF CSI queries for SYSMODs and DDDEFs
+- **🌐 z/OSMF Integration** - Query CSI, browse USS directories and MVS datasets via z/OSMF REST API
 - **🌍 Multi-platform** - Native binaries for Linux, macOS, and Windows (AMD64 & ARM64)
 - **⚡ Fast & Lightweight** - Written in Go with zero external dependencies
 
@@ -130,7 +134,7 @@ See [cmd/smpe_lint/README.md](cmd/smpe_lint/README.md) for full documentation.
 
 ## 🎯 Supported MCS Statements
 
-### Version 0.9.2 (Current)
+### Version 0.9.3 (Current)
 
 **Control MCS (25 statements with full diagnostics):**
 
@@ -222,7 +226,14 @@ make release
 
 ## 📋 What's New
 
-### Version 0.9.2 (Latest)
+### Version 0.9.3 (Latest)
+
+**New Features:**
+
+- 🔍 **Workspace Symbols** - Search for SYSMOD definitions across all `.smpe` files in the workspace (`Cmd+T`)
+- 📦 **Dataset Member Attributes** - PDS member listing now shows full ISPF-style attributes (User, Created, Modified, Ver, Mod) via `X-IBM-Attributes: base` header
+
+### Version 0.9.2
 
 **Improvements:**
 

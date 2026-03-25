@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.9.3] - 2026-03-25
+
+### Added
+
+- **Workspace Symbols** - Search for SYSMOD definitions across all `.smpe` files in the workspace (`Cmd+T` or `workspace/symbol`)
+- **Dataset Member Attributes** - PDS member listing via z/OSMF now requests `X-IBM-Attributes: base`, returning full ISPF-style attributes (User, Created, Modified, Ver, Mod)
+
 ## [0.9.2] - 2026-03-25
 
 ### Changed
