@@ -465,9 +465,10 @@ export class ResultPanel {
         document.addEventListener('mouseover', (e) => {
             const td = e.target.closest('td');
             if (!td) { return; }
-            if (td.scrollWidth <= td.clientWidth) { return; }
+            const text = td.textContent || '';
+            if (td.scrollWidth <= td.clientWidth && text.length <= 40) { return; }
             clearTimeout(tooltipTimeout);
-            tooltip.textContent = td.textContent;
+            tooltip.textContent = text;
             tooltip.classList.add('visible');
             const rect = td.getBoundingClientRect();
             tooltip.style.left = rect.left + 'px';

@@ -2,12 +2,11 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
-## What's New in 0.9.1
+## What's New in 0.9.2
 
-- **Folding Ranges** - MCS statements and multi-line comments can be collapsed/expanded in the editor
-- **Debug Logging Control** - All extension logging now respects the `smpe.debug` setting
-- **Free Form Query Fix** - CSI queries now return subentry data correctly for all entry types
-- **Global Zone SYSMOD Subentries** - Subentry picker now includes Global Zone subentries
+- **Debug Logging Levels** - Separated normal and debug logging; startup and error messages always visible, verbose details only with `smpe.debug` enabled
+- **Improved Cell Tooltips** - Tooltips in result tables now reliably show full content for long values
+- **Subentry Picker Cleanup** - Removed invalid SYSMOD subentry names (NPRE2, REQ2)
 
 See the [CHANGELOG](https://github.com/cybersorcerer/smpe_ls/blob/main/client/vscode-smpe/CHANGELOG.md) for full details.
 
@@ -58,7 +57,7 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 Alternatively via terminal:
 
 ```bash
-code --install-extension smpe-mcs-language-server-darwin-arm64-0.9.1.vsix
+code --install-extension smpe-mcs-language-server-darwin-arm64-0.9.2.vsix
 ```
 
 The Language Server is already included in the extension - no additional installation required.

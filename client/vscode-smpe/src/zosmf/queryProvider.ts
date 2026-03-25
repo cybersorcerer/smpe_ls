@@ -27,10 +27,14 @@ export class QueryProvider {
     }
 
     private log(message: string): void {
-        const debug = vscode.workspace.getConfiguration('smpe').get<boolean>('debug', true);
-        if (!debug) { return; }
         const timestamp = new Date().toISOString();
         this.outputChannel.appendLine(`[${timestamp}] [QueryProvider] ${message}`);
+    }
+
+    private debugLog(message: string): void {
+        const debug = vscode.workspace.getConfiguration('smpe').get<boolean>('debug', true);
+        if (!debug) { return; }
+        this.log(message);
     }
 
     /**
@@ -169,7 +173,7 @@ export class QueryProvider {
                 if (matched.length === 0) {
                     vscode.window.showWarningMessage(`No zones match pattern '${entry}'`);
                 } else {
-                    this.log(`Pattern '${entry}' matched zones: ${matched.join(', ')}`);
+                    this.debugLog(`Pattern '${entry}' matched zones: ${matched.join(', ')}`);
                     resolvedZones.push(...matched);
                 }
             } else {
@@ -227,9 +231,9 @@ export class QueryProvider {
             if (entry.includes('*') || entry.includes('?')) {
                 const matched = this.matchZonePattern(entry, server.zones!);
                 if (matched.length === 0) {
-                    this.log(`No zones match pattern '${entry}'`);
+                    this.debugLog(`No zones match pattern '${entry}'`);
                 } else {
-                    this.log(`Pattern '${entry}' matched zones: ${matched.join(', ')}`);
+                    this.debugLog(`Pattern '${entry}' matched zones: ${matched.join(', ')}`);
                     resolvedZones.push(...matched);
                 }
             } else {
@@ -480,7 +484,7 @@ export class QueryProvider {
             requestedIds
         };
 
-        this.log(`Query completed: ${JSON.stringify(result).substring(0, 500)}...`);
+        this.debugLog(`Query completed: ${JSON.stringify(result).substring(0, 500)}...`);
 
         if (this.onResultCallback) {
             this.onResultCallback(displayResult);

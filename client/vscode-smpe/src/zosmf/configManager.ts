@@ -58,10 +58,14 @@ export class ConfigManager {
     }
 
     private log(message: string): void {
-        const debug = vscode.workspace.getConfiguration('smpe').get<boolean>('debug', true);
-        if (!debug) { return; }
         const timestamp = new Date().toISOString();
         this.outputChannel.appendLine(`[${timestamp}] [ConfigManager] ${message}`);
+    }
+
+    private debugLog(message: string): void {
+        const debug = vscode.workspace.getConfiguration('smpe').get<boolean>('debug', true);
+        if (!debug) { return; }
+        this.log(message);
     }
 
     /**
@@ -105,7 +109,7 @@ export class ConfigManager {
 
         try {
             fs.writeFileSync(configPath, CONFIG_TEMPLATE, 'utf8');
-            this.log(`Created config file: ${configPath}`);
+            this.debugLog(`Created config file: ${configPath}`);
 
             // Open the file in editor
             const doc = await vscode.workspace.openTextDocument(configPath);
@@ -190,7 +194,7 @@ export class ConfigManager {
     async selectServer(config: ZosmfConfig): Promise<ZosmfServer | undefined> {
         // If only one server, use it directly
         if (config.servers.length === 1) {
-            this.log(`Using single server: ${config.servers[0].name}`);
+            this.debugLog(`Using single server: ${config.servers[0].name}`);
             return config.servers[0];
         }
 
@@ -219,7 +223,7 @@ export class ConfigManager {
         }
 
         const server = config.servers.find(s => s.name === selected.label);
-        this.log(`Selected server: ${server?.name}`);
+        this.debugLog(`Selected server: ${server?.name}`);
         return server;
     }
 
@@ -231,13 +235,13 @@ export class ConfigManager {
         const csiList = Array.isArray(server.csi) ? server.csi : [server.csi];
 
         if (csiList.length === 1) {
-            this.log(`Using single CSI: ${csiList[0]}`);
+            this.debugLog(`Using single CSI: ${csiList[0]}`);
             return csiList[0];
         }
 
         // If defaultCsi is set and exists in the list, use it without prompting
         if (server.defaultCsi && csiList.includes(server.defaultCsi)) {
-            this.log(`Using default CSI: ${server.defaultCsi}`);
+            this.debugLog(`Using default CSI: ${server.defaultCsi}`);
             return server.defaultCsi;
         }
 
@@ -254,7 +258,7 @@ export class ConfigManager {
             return undefined;
         }
 
-        this.log(`Selected CSI: ${selected.label}`);
+        this.debugLog(`Selected CSI: ${selected.label}`);
         return selected.label;
     }
 
@@ -272,7 +276,7 @@ export class ConfigManager {
         const key = this.getSecretKey(server);
         const password = await this.secretStorage.get(key);
         if (password) {
-            this.log(`Retrieved stored password for ${server.user}@${server.host}`);
+            this.debugLog(`Retrieved stored password for ${server.user}@${server.host}`);
         }
         return password;
     }
@@ -283,7 +287,7 @@ export class ConfigManager {
     async storePassword(server: ZosmfServer, password: string): Promise<void> {
         const key = this.getSecretKey(server);
         await this.secretStorage.store(key, password);
-        this.log(`Stored password for ${server.user}@${server.host}`);
+        this.debugLog(`Stored password for ${server.user}@${server.host}`);
     }
 
     /**
@@ -292,7 +296,7 @@ export class ConfigManager {
     async deletePassword(server: ZosmfServer): Promise<void> {
         const key = this.getSecretKey(server);
         await this.secretStorage.delete(key);
-        this.log(`Deleted password for ${server.user}@${server.host}`);
+        this.debugLog(`Deleted password for ${server.user}@${server.host}`);
     }
 
     /**
@@ -307,7 +311,7 @@ export class ConfigManager {
         for (const server of config.servers) {
             await this.deletePassword(server);
         }
-        this.log('Cleared all stored passwords');
+        this.debugLog('Cleared all stored passwords');
         vscode.window.showInformationMessage('All stored z/OSMF passwords have been cleared.');
     }
 
