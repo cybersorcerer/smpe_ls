@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	version = "v0.9.2"
+	version = "v0.9.3"
 	commit  = "unknown"
 )
 
@@ -93,7 +93,7 @@ func main() {
 	if *versionFlag || *shortVersionFlag {
 		fmt.Printf("smpe_lint %s\n", version)
 		fmt.Printf("Commit: %s\n", commit)
-		fmt.Printf("Copyright (c) 2025 Sir Tobi aka Cybersorcerer\n")
+		fmt.Printf("Copyright (c) 2025, 2026 Sir Tobi aka Cybersorcerer\n")
 		os.Exit(0)
 	}
 

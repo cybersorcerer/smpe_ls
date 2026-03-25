@@ -81,6 +81,7 @@ type Handler struct {
 	codeLensProvider    *codelens.Provider
 	foldingProvider     *folding.Provider
 	server              *lsp.Server
+	rootURI             string
 	diagnosticsConfig   *DiagnosticsConfig
 }
 
@@ -135,6 +136,10 @@ func (h *Handler) SetServer(server *lsp.Server) {
 // Initialize handles the initialize request
 func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult, error) {
 	logger.Info("smpe_ls %s (commit: %s) initializing", h.version, h.commit)
+
+	// Store workspace root URI for workspace/symbol
+	h.rootURI = params.RootURI
+	logger.Info("Workspace root: %s", h.rootURI)
 
 	// Process initialization options for diagnostics configuration
 	if params.InitializationOptions != nil && params.InitializationOptions.Diagnostics != nil {
@@ -200,6 +205,7 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 			ReferencesProvider:              true,
 			CodeLensProvider:                &lsp.CodeLensOptions{},
 			FoldingRangeProvider:            true,
+			WorkspaceSymbolProvider:         true,
 			SemanticTokensProvider: &lsp.SemanticTokensOptions{
 				Legend: lsp.SemanticTokensLegend{
 					TokenTypes: []string{
@@ -719,4 +725,26 @@ func (h *Handler) TextDocumentFoldingRange(params lsp.FoldingRangeParams) ([]lsp
 	logger.Debug("Folding ranges returned %d ranges", len(ranges))
 
 	return ranges, nil
+}
+
+// WorkspaceSymbol handles workspace/symbol requests
+func (h *Handler) WorkspaceSymbol(params lsp.WorkspaceSymbolParams) ([]lsp.SymbolInformation, error) {
+	logger.Debug("Workspace symbol query: %q", params.Query)
+
+	h.documentsMutex.RLock()
+	// Copy maps under lock so the provider can iterate safely
+	docs := make(map[string]*parser.Document, len(h.parsedDocuments))
+	texts := make(map[string]string, len(h.documents))
+	for k, v := range h.parsedDocuments {
+		docs[k] = v
+	}
+	for k, v := range h.documents {
+		texts[k] = v
+	}
+	h.documentsMutex.RUnlock()
+
+	results := h.symbolProvider.GetWorkspaceSymbols(params.Query, docs, texts, h.rootURI, h.parser)
+	logger.Debug("Workspace symbol returned %d results", len(results))
+
+	return results, nil
 }

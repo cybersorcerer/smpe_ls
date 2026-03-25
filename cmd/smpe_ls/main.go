@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	version  = "0.9.2"
+	version  = "0.9.3"
 	commit   = "unknown" // Set via ldflags: -X main.commit=...
 	debug    = flag.Bool("debug", false, "Enable debug logging")
 	showVer  = flag.Bool("version", false, "Show version")
@@ -56,7 +56,9 @@ func main() {
 	flag.Parse()
 
 	if *showVer {
-		fmt.Printf("smpe_ls version %s (commit: %s)\n", version, commit)
+		fmt.Printf("smpe_ls %s\n", version)
+		fmt.Printf("Commit: %s\n", commit)
+		fmt.Printf("Copyright (c) 2025, 2026 Sir Tobi aka Cybersorcerer\n")
 		os.Exit(0)
 	}
 

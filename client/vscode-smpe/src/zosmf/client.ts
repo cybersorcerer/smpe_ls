@@ -612,6 +612,7 @@ export class ZosmfClient {
         const baseUrl = this.buildBaseUrl(server);
         const headers: Record<string, string> = {
             'X-CSRF-ZOSMF-HEADER': '',
+            'X-IBM-Attributes': 'base',
             'Authorization': this.createAuthHeader(credentials)
         };
 

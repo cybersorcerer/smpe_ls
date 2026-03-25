@@ -2,11 +2,10 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
-## What's New in 0.9.2
+## What's New in 0.9.3
 
-- **Debug Logging Levels** - Separated normal and debug logging; startup and error messages always visible, verbose details only with `smpe.debug` enabled
-- **Improved Cell Tooltips** - Tooltips in result tables now reliably show full content for long values
-- **Subentry Picker Cleanup** - Removed invalid SYSMOD subentry names (NPRE2, REQ2)
+- **Workspace Symbols** - Search for SYSMOD definitions across all `.smpe` files (`Cmd+T`)
+- **Dataset Member Attributes** - PDS member listing now shows full ISPF-style attributes (User, Created, Modified, Ver, Mod)
 
 See the [CHANGELOG](https://github.com/cybersorcerer/smpe_ls/blob/main/client/vscode-smpe/CHANGELOG.md) for full details.
 
@@ -19,6 +18,10 @@ See the [CHANGELOG](https://github.com/cybersorcerer/smpe_ls/blob/main/client/vs
 - **Go to Definition** - Navigate to SYSMOD/FMID definitions (`F12` or `Cmd+Click`)
 - **Find References** - Find all references to a SYSMOD or FMID (`Shift+F12`)
 - **Document Symbols** - Outline view and quick navigation (`Cmd+Shift+O`)
+- **Workspace Symbols** - Search for SYSMOD definitions across all `.smpe` files (`Cmd+T`)
+- **Folding Ranges** - Collapse/expand MCS statements and multi-line comments
+- **CodeLens** - Inline z/OSMF CSI queries for SYSMODs and DDDEFs
+- **z/OSMF Integration** - Query CSI, browse USS directories and MVS datasets
 - **Column Rulers** - Visual guides at columns 72 and 80 (mainframe card boundaries)
 - **Document Formatting** - Auto-format SMP/E statements
 

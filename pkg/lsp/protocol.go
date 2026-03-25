@@ -138,6 +138,7 @@ type ServerCapabilities struct {
 	ReferencesProvider              bool                   `json:"referencesProvider,omitempty"`
 	CodeLensProvider                *CodeLensOptions       `json:"codeLensProvider,omitempty"`
 	FoldingRangeProvider            bool                   `json:"foldingRangeProvider,omitempty"`
+	WorkspaceSymbolProvider         bool                   `json:"workspaceSymbolProvider,omitempty"`
 }
 
 // TextDocumentSyncKind values
@@ -359,6 +360,19 @@ type FoldingRange struct {
 	EndLine        int    `json:"endLine"`
 	EndCharacter   int    `json:"endCharacter,omitempty"`
 	Kind           string `json:"kind,omitempty"` // "comment", "imports", "region"
+}
+
+// WorkspaceSymbolParams represents workspace/symbol request params
+type WorkspaceSymbolParams struct {
+	Query string `json:"query"`
+}
+
+// SymbolInformation represents a symbol in the workspace (flat, with location)
+type SymbolInformation struct {
+	Name          string     `json:"name"`
+	Kind          SymbolKind `json:"kind"`
+	Location      Location   `json:"location"`
+	ContainerName string     `json:"containerName,omitempty"`
 }
 
 // CodeLensParams represents textDocument/codeLens request params
