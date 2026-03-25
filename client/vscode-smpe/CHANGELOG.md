@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.9.2] - 2026-03-25
+
+### Changed
+
+- **Debug Logging Levels** - Separated `log()` (always visible) and `debugLog()` (only with `smpe.debug` enabled) across all extension modules (extension, client, configManager, queryProvider, freeFormPanel)
+
+### Fixed
+
+- **Logging When Debug Disabled** - Normal messages (startup, errors, query status) are now always shown in the output channel; only verbose debug details require `smpe.debug` to be enabled
+- **Cell Tooltip in Result Tables** - Tooltip now also appears for cells with text longer than 40 characters, fixing cases where `scrollWidth` check alone missed truncated content
+- **SYSMOD Subentry NPRE2/REQ2** - Removed invalid subentry names `NPRE2` and `REQ2` from the Free Form Query picker
+
 ## [0.9.1] - 2026-03-19
 
 ### Added

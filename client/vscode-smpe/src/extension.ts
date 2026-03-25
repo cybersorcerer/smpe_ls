@@ -18,11 +18,15 @@ let outputChannel: vscode.OutputChannel;
 let queryProvider: QueryProvider;
 
 function log(message: string) {
-	const debug = vscode.workspace.getConfiguration('smpe').get<boolean>('debug', true);
-	if (!debug) { return; }
 	const timestamp = new Date().toISOString();
 	outputChannel.appendLine(`[${timestamp}] ${message}`);
 	console.log(message);
+}
+
+function debugLog(message: string) {
+	const debug = vscode.workspace.getConfiguration('smpe').get<boolean>('debug', true);
+	if (!debug) { return; }
+	log(message);
 }
 
 export function activate(context: vscode.ExtensionContext) {
@@ -41,8 +45,8 @@ export function activate(context: vscode.ExtensionContext) {
 	const configuredDataPath = config.get<string>('dataPath') || '';
 	const debug = config.get<boolean>('debug') || false;
 
-	log(`Configured serverPath: "${configuredServerPath}"`);
-	log(`Configured dataPath: "${configuredDataPath}"`);
+	debugLog(`Configured serverPath: "${configuredServerPath}"`);
+	debugLog(`Configured dataPath: "${configuredDataPath}"`);
 	log(`Debug mode: ${debug}`);
 
 	// Bundled paths
@@ -56,7 +60,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Priority 1: User configured server path (takes precedence over bundled)
 	if (configuredServerPath) {
-		log(`Checking configured server path: ${configuredServerPath}`);
+		debugLog(`Checking configured server path: ${configuredServerPath}`);
 		if (fs.existsSync(configuredServerPath)) {
 			log(`Using configured server path`);
 			executable = configuredServerPath;
@@ -67,12 +71,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Priority 2: Bundled binary
 	if (!executable) {
-		log(`Looking for bundled binary at: ${bundledBinaryPath}`);
+		debugLog(`Looking for bundled binary at: ${bundledBinaryPath}`);
 		if (fs.existsSync(bundledBinaryPath)) {
-			log(`Found bundled binary`);
+			debugLog(`Found bundled binary`);
 			executable = bundledBinaryPath;
 		} else {
-			log(`Bundled binary NOT found`);
+			debugLog(`Bundled binary NOT found`);
 		}
 	}
 
@@ -81,12 +85,12 @@ export function activate(context: vscode.ExtensionContext) {
 		const homeDir = process.env.HOME || process.env.USERPROFILE;
 		if (homeDir) {
 			const localBinPath = path.join(homeDir, '.local', 'bin', 'smpe_ls');
-			log(`Trying fallback path: ${localBinPath}`);
+			debugLog(`Trying fallback path: ${localBinPath}`);
 			if (fs.existsSync(localBinPath)) {
-				log(`Found server at fallback path`);
+				debugLog(`Found server at fallback path`);
 				executable = localBinPath;
 			} else {
-				log(`Server NOT found at fallback path`);
+				debugLog(`Server NOT found at fallback path`);
 			}
 		}
 	}
@@ -94,9 +98,9 @@ export function activate(context: vscode.ExtensionContext) {
 	// Determine data path
 	// Priority 1: User configured data path
 	if (configuredDataPath) {
-		log(`Checking configured data path: ${configuredDataPath}`);
+		debugLog(`Checking configured data path: ${configuredDataPath}`);
 		if (fs.existsSync(configuredDataPath)) {
-			log(`Using configured data path`);
+			debugLog(`Using configured data path`);
 			dataPath = configuredDataPath;
 		} else {
 			log(`WARNING: Configured dataPath does not exist`);
@@ -105,12 +109,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Priority 2: Bundled data file
 	if (!dataPath) {
-		log(`Looking for bundled data at: ${bundledDataPath}`);
+		debugLog(`Looking for bundled data at: ${bundledDataPath}`);
 		if (fs.existsSync(bundledDataPath)) {
-			log(`Found bundled data`);
+			debugLog(`Found bundled data`);
 			dataPath = bundledDataPath;
 		} else {
-			log(`Bundled data NOT found`);
+			debugLog(`Bundled data NOT found`);
 		}
 	}
 
@@ -182,8 +186,8 @@ export function activate(context: vscode.ExtensionContext) {
 		moveLeadingComments: config.get<boolean>('formatting.moveLeadingComments', false)
 	};
 
-	log(`Diagnostics config: ${JSON.stringify(diagnosticsConfig)}`);
-	log(`Formatting config: ${JSON.stringify(formattingConfig)}`);
+	debugLog(`Diagnostics config: ${JSON.stringify(diagnosticsConfig)}`);
+	debugLog(`Formatting config: ${JSON.stringify(formattingConfig)}`);
 
 	// Client options
 	const clientOptions: LanguageClientOptions = {

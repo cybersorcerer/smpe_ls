@@ -39,10 +39,14 @@ export class ZosmfClient {
     }
 
     private log(message: string): void {
-        const debug = vscode.workspace.getConfiguration('smpe').get<boolean>('debug', true);
-        if (!debug) { return; }
         const timestamp = new Date().toISOString();
         this.outputChannel.appendLine(`[${timestamp}] [ZosmfClient] ${message}`);
+    }
+
+    private debugLog(message: string): void {
+        const debug = vscode.workspace.getConfiguration('smpe').get<boolean>('debug', true);
+        if (!debug) { return; }
+        this.log(message);
     }
 
     /**
@@ -90,7 +94,7 @@ export class ZosmfClient {
                     // Disable all certificate verification
                     checkServerIdentity: () => undefined
                 });
-                this.log(`Using insecure agent (certificate validation disabled, NODE_TLS_REJECT_UNAUTHORIZED=0)`);
+                this.debugLog(`Using insecure agent (certificate validation disabled, NODE_TLS_REJECT_UNAUTHORIZED=0)`);
 
                 // Restore after a short delay (request will have started)
                 setTimeout(() => {
@@ -113,7 +117,7 @@ export class ZosmfClient {
                 rejectUnauthorized: rejectUnauthorized
             };
 
-            this.log(`Request to ${parsedUrl.hostname}:${options.port}, path=${options.path}, rejectUnauthorized=${rejectUnauthorized}`);
+            this.debugLog(`Request to ${parsedUrl.hostname}:${options.port}, path=${options.path}, rejectUnauthorized=${rejectUnauthorized}`);
 
             const requester = isHttps ? https : http;
             const req = requester.request(options, (res) => {
@@ -307,15 +311,15 @@ export class ZosmfClient {
         progress?: ProgressCallback
     ): Promise<QueryResult> {
         const url = this.buildQueryUrl(server);
-        this.log(`=== Starting Query ===`);
-        this.log(`Server: ${server.name}`);
-        this.log(`Host: ${server.host}`);
-        this.log(`Port: ${server.port}`);
-        this.log(`CSI: ${server.csi}`);
-        this.log(`User: ${credentials.user}`);
-        this.log(`rejectUnauthorized: ${server.rejectUnauthorized}`);
-        this.log(`URL: ${url}`);
-        this.log(`Request body: ${JSON.stringify(requestBody)}`);
+        this.debugLog(`=== Starting Query ===`);
+        this.debugLog(`Server: ${server.name}`);
+        this.debugLog(`Host: ${server.host}`);
+        this.debugLog(`Port: ${server.port}`);
+        this.debugLog(`CSI: ${server.csi}`);
+        this.debugLog(`User: ${credentials.user}`);
+        this.debugLog(`rejectUnauthorized: ${server.rejectUnauthorized}`);
+        this.debugLog(`URL: ${url}`);
+        this.debugLog(`Request body: ${JSON.stringify(requestBody)}`);
 
         const bodyString = JSON.stringify(requestBody);
         const headers: Record<string, string> = {
@@ -336,25 +340,25 @@ export class ZosmfClient {
                 server.rejectUnauthorized
             );
 
-            this.log(`Response status: ${response.statusCode}`);
+            this.debugLog(`Response status: ${response.statusCode}`);
 
             if (response.statusCode === 200) {
                 // Synchronous response
                 const result = JSON.parse(response.body) as QueryResult;
-                this.log('Received synchronous response');
+                this.debugLog('Received synchronous response');
                 if (result.entries && result.entries.length > 0) {
                     const firstEntry = result.entries[0];
-                    this.log(`First entry keys: ${Object.keys(firstEntry).join(', ')}`);
-                    this.log(`First entry subentries type: ${typeof firstEntry.subentries}, isArray: ${Array.isArray(firstEntry.subentries)}, length: ${firstEntry.subentries?.length ?? 'N/A'}`);
+                    this.debugLog(`First entry keys: ${Object.keys(firstEntry).join(', ')}`);
+                    this.debugLog(`First entry subentries type: ${typeof firstEntry.subentries}, isArray: ${Array.isArray(firstEntry.subentries)}, length: ${firstEntry.subentries?.length ?? 'N/A'}`);
                     if (firstEntry.subentries && firstEntry.subentries.length > 0) {
-                        this.log(`First subentry sample: ${JSON.stringify(firstEntry.subentries[0])}`);
+                        this.debugLog(`First subentry sample: ${JSON.stringify(firstEntry.subentries[0])}`);
                     }
                 }
                 return result;
             } else if (response.statusCode === 202) {
                 // Async response - need to poll
                 const asyncResponse = JSON.parse(response.body) as AsyncResponse;
-                this.log(`Async response, polling: ${asyncResponse.statusurl}`);
+                this.debugLog(`Async response, polling: ${asyncResponse.statusurl}`);
                 return this.pollForResult(asyncResponse.statusurl, headers, server.rejectUnauthorized, progress);
             } else if (response.statusCode === 400) {
                 // The request contained incorrect parameters (e.g. invalid subentry name)
@@ -419,22 +423,22 @@ export class ZosmfClient {
                     rejectUnauthorized
                 );
 
-                this.log(`Poll response status: ${response.statusCode}`);
+                this.debugLog(`Poll response status: ${response.statusCode}`);
 
                 if (response.statusCode === 200) {
                     const statusResponse = JSON.parse(response.body);
-                    this.log(`Poll response body: ${response.body.substring(0, 500)}...`);
+                    this.debugLog(`Poll response body: ${response.body.substring(0, 500)}...`);
 
                     if (statusResponse.status === 'complete') {
-                        this.log('Query completed (async poll)');
-                        this.log(`Full async response keys: ${Object.keys(statusResponse).join(', ')}`);
+                        this.debugLog('Query completed (async poll)');
+                        this.debugLog(`Full async response keys: ${Object.keys(statusResponse).join(', ')}`);
                         // Log first entry's structure for debugging
                         if (statusResponse.entries && statusResponse.entries.length > 0) {
                             const firstEntry = statusResponse.entries[0];
-                            this.log(`First entry keys: ${Object.keys(firstEntry).join(', ')}`);
-                            this.log(`First entry subentries type: ${typeof firstEntry.subentries}, isArray: ${Array.isArray(firstEntry.subentries)}, length: ${firstEntry.subentries?.length ?? 'N/A'}`);
+                            this.debugLog(`First entry keys: ${Object.keys(firstEntry).join(', ')}`);
+                            this.debugLog(`First entry subentries type: ${typeof firstEntry.subentries}, isArray: ${Array.isArray(firstEntry.subentries)}, length: ${firstEntry.subentries?.length ?? 'N/A'}`);
                             if (firstEntry.subentries && firstEntry.subentries.length > 0) {
-                                this.log(`First subentry sample: ${JSON.stringify(firstEntry.subentries[0])}`);
+                                this.debugLog(`First subentry sample: ${JSON.stringify(firstEntry.subentries[0])}`);
                             }
                         }
                         // z/OSMF returns entries directly in the response, not in a 'result' field
@@ -452,7 +456,7 @@ export class ZosmfClient {
                     // Still processing, continue
                     const asyncResponse = JSON.parse(response.body);
                     if (asyncResponse.statusurl && asyncResponse.statusurl !== statusUrl) {
-                        this.log(`Status URL changed to: ${asyncResponse.statusurl}`);
+                        this.debugLog(`Status URL changed to: ${asyncResponse.statusurl}`);
                         return this.pollForResult(asyncResponse.statusurl, headers, rejectUnauthorized, progress);
                     }
                 } else if (response.statusCode === 404) {
@@ -491,7 +495,7 @@ export class ZosmfClient {
             } catch (error) {
                 if (error instanceof Error && error.message.includes('ECONNRESET')) {
                     // Connection reset, retry
-                    this.log('Connection reset, retrying...');
+                    this.debugLog('Connection reset, retrying...');
                     continue;
                 }
                 throw error;
@@ -528,11 +532,11 @@ export class ZosmfClient {
         let tryPath = ussPath;
         while (tryPath.length > 1) {
             const url = `${baseUrl}/zosmf/restfiles/fs?path=${tryPath}`;
-            this.log(`USS list directory: ${tryPath}`);
-            this.log(`USS list URL: ${url}`);
+            this.debugLog(`USS list directory: ${tryPath}`);
+            this.debugLog(`USS list URL: ${url}`);
 
             const response = await this.request(url, 'GET', headers, null, server.rejectUnauthorized);
-            this.log(`USS list response status: ${response.statusCode}`);
+            this.debugLog(`USS list response status: ${response.statusCode}`);
 
             if (response.statusCode === 200) {
                 const listing = JSON.parse(response.body) as UssDirectoryListing;
@@ -540,7 +544,7 @@ export class ZosmfClient {
                 return listing;
             }
 
-            this.log(`USS list response body: ${response.body}`);
+            this.debugLog(`USS list response body: ${response.body}`);
 
             // Check if it's a "path not found" error — strip first segment and retry
             if (response.statusCode === 404) {
@@ -551,7 +555,7 @@ export class ZosmfClient {
                         const nextSlash = tryPath.indexOf('/', 1);
                         if (nextSlash > 0) {
                             const stripped = tryPath.substring(nextSlash);
-                            this.log(`Path not found, stripping prefix: ${tryPath} → ${stripped}`);
+                            this.debugLog(`Path not found, stripping prefix: ${tryPath} → ${stripped}`);
                             tryPath = stripped;
                             continue;
                         }
@@ -583,10 +587,10 @@ export class ZosmfClient {
         };
 
         const url = `${baseUrl}/zosmf/restfiles/fs${ussFilePath}`;
-        this.log(`USS read file: ${ussFilePath}`);
+        this.debugLog(`USS read file: ${ussFilePath}`);
 
         const response = await this.request(url, 'GET', headers, null, server.rejectUnauthorized);
-        this.log(`USS read response status: ${response.statusCode}`);
+        this.debugLog(`USS read response status: ${response.statusCode}`);
 
         if (response.statusCode === 200) {
             return response.body;
@@ -612,10 +616,10 @@ export class ZosmfClient {
         };
 
         const url = `${baseUrl}/zosmf/restfiles/ds/${encodeURIComponent(datasetName)}/member`;
-        this.log(`Dataset list members: ${datasetName}`);
+        this.debugLog(`Dataset list members: ${datasetName}`);
 
         const response = await this.request(url, 'GET', headers, null, server.rejectUnauthorized);
-        this.log(`Dataset list response status: ${response.statusCode}`);
+        this.debugLog(`Dataset list response status: ${response.statusCode}`);
 
         if (response.statusCode === 200) {
             return JSON.parse(response.body) as DatasetMemberListing;
@@ -646,10 +650,10 @@ export class ZosmfClient {
             ? `${datasetName}(${memberName})`
             : datasetName;
         const url = `${baseUrl}/zosmf/restfiles/ds/${encodeURIComponent(dsn)}`;
-        this.log(`Dataset read: ${dsn}`);
+        this.debugLog(`Dataset read: ${dsn}`);
 
         const response = await this.request(url, 'GET', headers, null, server.rejectUnauthorized);
-        this.log(`Dataset read response status: ${response.statusCode}`);
+        this.debugLog(`Dataset read response status: ${response.statusCode}`);
 
         if (response.statusCode === 200) {
             return response.body;

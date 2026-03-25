@@ -39,10 +39,14 @@ export class FreeFormPanel {
     }
 
     private log(message: string): void {
-        const debug = vscode.workspace.getConfiguration('smpe').get<boolean>('debug', true);
-        if (!debug) { return; }
         const timestamp = new Date().toISOString();
         this.outputChannel.appendLine(`[${timestamp}] [FreeFormPanel] ${message}`);
+    }
+
+    private debugLog(message: string): void {
+        const debug = vscode.workspace.getConfiguration('smpe').get<boolean>('debug', true);
+        if (!debug) { return; }
+        this.log(message);
     }
 
     public static createOrShow(
@@ -177,7 +181,7 @@ export class FreeFormPanel {
             this.log(`Query completed: ${(result.entries || []).length} entries`);
             // Log raw subentry data for debugging
             for (const entry of (result.entries || []).slice(0, 3)) {
-                this.log(`Raw subentries for ${entry.entryname}: ${JSON.stringify(entry.subentries)}`);
+                this.debugLog(`Raw subentries for ${entry.entryname}: ${JSON.stringify(entry.subentries)}`);
             }
             this.panel.webview.postMessage({
                 command: 'result',
@@ -594,7 +598,7 @@ export class FreeFormPanel {
 
         // Valid subentries per entry type (IBM z/OS 3.1 SMP/E Reference)
         const SUBENTRIES_BY_TYPE = {
-            SYSMOD: ['ACCEPT','ACCID','APPID','APPLY','ASSEM','BYPASS','CIFREQ','DELBY','DELETE','DELLMOD','DESCRIPTION','DLMOD','ELEMENT','ELEMMOV','EMOVE','ENAME','ERROR','FEATURE','FESN','FMID','HOLDDATA','IFREQ','INSTALLDATE','INSTALLTIME','JAR','JARUPD','JCLIN','LASTSUP','LASTUPD','LASTUPDTYPE','MAC','MACUPD','MOD','NPRE','NPRE2','PRE','PRE2','PROGRAM','RECDATE','RECTIME','REGEN','RENLMOD','REQ','REQ2','RESDATE','RESTIME','RESTORE','REWORK','RLMOD','SMODTYPE','SOURCEID','SRC','SRCUPD','SREL','SUPBY','SUPING','SZAP','TLIBPREFIX','UCLDATE','UCLTIME','VERSION','XZAP'],
+            SYSMOD: ['ACCEPT','ACCID','APPID','APPLY','ASSEM','BYPASS','CIFREQ','DELBY','DELETE','DELLMOD','DESCRIPTION','DLMOD','ELEMENT','ELEMMOV','EMOVE','ENAME','ERROR','FEATURE','FESN','FMID','HOLDDATA','IFREQ','INSTALLDATE','INSTALLTIME','JAR','JARUPD','JCLIN','LASTSUP','LASTUPD','LASTUPDTYPE','MAC','MACUPD','MOD','NPRE','PRE','PROGRAM','RECDATE','RECTIME','REGEN','RENLMOD','REQ','RESDATE','RESTIME','RESTORE','REWORK','RLMOD','SMODTYPE','SOURCEID','SRC','SRCUPD','SREL','SUPBY','SUPING','SZAP','TLIBPREFIX','UCLDATE','UCLTIME','VERSION','XZAP'],
             DDDEF: ['CONCAT','DATACLAS','DATASET','DIR','DISP','DSNTYPE','DSPREFIX','ENAME','INITDISP','MGMTCLAS','PATH','PROTECT','SPACE','STORCLAS','SYSOUT','UNIT','UNITS','VOLUME','WAITFORDSN'],
             TARGETZONE: ['ENAME','OPTIONS','RELATED','SREL','TIEDTO','UPGLEVEL','XZLINK','ZDESC'],
             DLIB: ['ENAME','LASTUPD','LASTUPDTYPE','SYSLIB'],
@@ -1002,10 +1006,11 @@ export class FreeFormPanel {
         document.addEventListener('mouseover', (e) => {
             const td = e.target.closest('td');
             if (!td) { return; }
-            // Only show tooltip if content is truncated
-            if (td.scrollWidth <= td.clientWidth) { return; }
+            const text = td.textContent || '';
+            // Show tooltip if content is truncated OR text is longer than visible width
+            if (td.scrollWidth <= td.clientWidth && text.length <= 40) { return; }
             clearTimeout(tooltipTimeout);
-            tooltip.textContent = td.textContent;
+            tooltip.textContent = text;
             tooltip.classList.add('visible');
             const rect = td.getBoundingClientRect();
             tooltip.style.left = rect.left + 'px';
