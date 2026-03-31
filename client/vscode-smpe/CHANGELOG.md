@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.9.4] - 2026-03-31
+
+### Added
+
+- **smpe_outl** - New CLI tool that prints the document outline (symbols) of SMP/E MCS files as Markdown or JSON (`--json`), with optional LSP range output (`--ranges`). Part of the VSCode extension and release packages.
+- **LLQ-based Language Detection** - z/OS datasets with configurable last level qualifiers (e.g. `.MCS`) are automatically activated as SMP/E files. Configurable via `smpe.zosDatasetsLlq` setting (default: `["MCS"]`).
+
+### Changed
+
+- **z/OSMF Config Lookup** - `.smpe-zosmf.yaml` is now resolved in this order: all open workspace folders (first match wins), then `~/.config/smpe_ls/` as a global fallback. Creating a config via command still creates it in the workspace root.
+- **Dataset Member Listing** - `X-IBM-Attributes: base` header is now sent when listing PDS members, returning full ISPF-style attributes (User, Created, Modified, Ver, Mod).
+
 ## [0.9.3] - 2026-03-25
 
 ### Added

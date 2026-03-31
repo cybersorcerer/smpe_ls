@@ -212,6 +212,22 @@ export function activate(context: vscode.ExtensionContext) {
 	// Register BEFORE starting the client so detection runs before LSP activation
 	const detectSmpeLanguage = (doc: vscode.TextDocument) => {
 		if (doc.languageId === 'smpe') return;
+
+		// LLQ-based detection for z/OS datasets (zowe-ds scheme)
+		// URI format: zowe-ds://<profile>/<DSN> or zowe-ds://<profile>/<DSN>(<member>)
+		if (doc.uri.scheme === 'zowe-ds') {
+			const llqList = vscode.workspace.getConfiguration('smpe').get<string[]>('zosDatasetsLlq', ['MCS']);
+			// Extract the dataset name: strip leading slash, remove member suffix (...)
+			const uriPath = doc.uri.path.replace(/\([^)]*\)$/, ''); // remove (MEMBER)
+			const parts = uriPath.split('.');
+			const llq = parts[parts.length - 1].toUpperCase();
+			if (llqList.some(q => q.toUpperCase() === llq)) {
+				vscode.languages.setTextDocumentLanguage(doc, 'smpe');
+				return;
+			}
+		}
+
+		// Content-based detection: first non-empty line starts with ++
 		for (let i = 0; i < Math.min(10, doc.lineCount); i++) {
 			const line = doc.lineAt(i).text.trim();
 			if (line.startsWith('++')) {
