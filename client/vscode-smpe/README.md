@@ -2,6 +2,11 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 0.9.4
+
+- **z/OSMF Config Lookup** - `.smpe-zosmf.yaml` is now resolved from workspace folders first, then `~/.config/smpe_ls/` as a global fallback
+- **LLQ-based Language Detection** - z/OS datasets with configurable last level qualifiers (e.g. `.MCS`) are automatically recognized as SMP/E files (`smpe.zosDatasetsLlq` setting)
+
 ## What's New in 0.9.3
 
 - **Workspace Symbols** - Search for SYSMOD definitions across all `.smpe` files (`Cmd+T`)
@@ -107,6 +112,27 @@ All diagnostics are enabled by default. Set to `false` to disable specific check
 | `smpe.diagnostics.unknownSubOperand` | Report unknown sub-operands |
 | `smpe.diagnostics.subOperandValidation` | Report sub-operand validation errors |
 | `smpe.diagnostics.contentBeyondColumn72` | Report content that extends beyond column 72 |
+
+### z/OSMF Integration
+
+The z/OSMF integration requires a `.smpe-zosmf.yaml` configuration file. The extension
+resolves the file in the following order:
+
+1. **Workspace folders** — all open workspace folders are searched, first match wins
+2. **Global fallback** — `~/.config/smpe_ls/.smpe-zosmf.yaml`
+
+To create a configuration file in the workspace root, run:
+
+`Ctrl+Shift+P` → **SMP/E: Create z/OSMF Config**
+
+This creates `.smpe-zosmf.yaml` in the root of the first workspace folder and opens it
+for editing. If you want a shared configuration across all projects, place the file at
+`~/.config/smpe_ls/.smpe-zosmf.yaml` instead.
+
+| Setting                           | Default   | Description                                                                 |
+|-----------------------------------|-----------|-----------------------------------------------------------------------------|
+| `smpe.zosmf.queryTimeoutSeconds`  | `300`     | Maximum wait time for z/OSMF CSI queries (30–600s)                          |
+| `smpe.zosDatasetsLlq`             | `["MCS"]` | z/OS dataset last level qualifiers that trigger SMP/E language activation   |
 
 ## File Extensions
 

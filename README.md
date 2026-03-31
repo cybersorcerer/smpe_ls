@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-0.9.3-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-0.9.4-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -11,7 +11,8 @@ A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Mod
 - **🎨 Syntax Highlighting** - Color coding for MCS statements, operands, and comments
 - **💡 Intelligent Code Completion** - Context-aware completion for statements and operands
 - **🔍 Real-time Diagnostics** - Instant validation of SMP/E syntax and semantics
-- **🔧 Command-Line Linter** - CI/CD-ready linter with configurable diagnostics
+- **🔧 Command-Line Linter** - CI/CD-ready linter with configurable diagnostics (`smpe_lint`)
+- **🗂️ Command-Line Outline** - Document outline tool for CI/CD inventory and reporting (`smpe_outl`)
 - **📖 Hover Documentation** - Inline documentation from IBM SMP/E Reference
 - **🔗 Go to Definition** - Navigate to SYSMOD/FMID definitions
 - **🔎 Find References** - Find all references to a SYSMOD or FMID
@@ -103,6 +104,23 @@ smpe_lint --config .smpe_lint.yaml *.smpe
 
 See [cmd/smpe_lint/README.md](cmd/smpe_lint/README.md) for full documentation.
 
+### Command-Line Outline Tool
+
+For CI/CD inventory and reporting, use the `smpe_outl` tool:
+
+```bash
+# Print outline as Markdown
+smpe_outl *.smpe
+
+# JSON output (DocumentSymbol-compatible)
+smpe_outl --json *.smpe
+
+# JSON output with LSP range information
+smpe_outl --json --ranges *.smpe
+```
+
+See [cmd/smpe_outl/README.md](cmd/smpe_outl/README.md) for full documentation.
+
 ## 📝 Example
 
 ```smpe
@@ -134,7 +152,7 @@ See [cmd/smpe_lint/README.md](cmd/smpe_lint/README.md) for full documentation.
 
 ## 🎯 Supported MCS Statements
 
-### Version 0.9.3 (Current)
+### Version 0.9.4 (Current)
 
 **Control MCS (25 statements with full diagnostics):**
 
@@ -226,7 +244,15 @@ make release
 
 ## 📋 What's New
 
-### Version 0.9.3 (Latest)
+### Version 0.9.4 (Latest)
+
+**New Features:**
+
+- 🛠️ **smpe_outl** - New CLI tool to print the document outline (symbols) of SMP/E MCS files, with Markdown and JSON (DocumentSymbol-compatible) output
+- 🔎 **z/OSMF Config Lookup** - `.smpe-zosmf.yaml` is now resolved from workspace folders first, then `~/.config/smpe_ls/` as a global fallback
+- 🏷️ **LLQ-based Language Detection** - z/OS datasets with configurable last level qualifiers (e.g. `.MCS`) are automatically recognized as SMP/E files
+
+### Version 0.9.3
 
 **New Features:**
 

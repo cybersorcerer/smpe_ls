@@ -2,7 +2,7 @@
   "name": "smpe-mcs-language-server",
   "displayName": "SMP/E MCS Language Server",
   "description": "Language support for SMP/E MCS statements",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "publisher": "cybersorcerer",
   "license": "AGPL-3.0",
   "repository": {
@@ -187,6 +187,12 @@
           "type": "boolean",
           "default": true,
           "description": "Show column rulers at positions 72 and 80 for SMP/E files"
+        },
+        "smpe.zosDatasetsLlq": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["MCS"],
+          "description": "List of z/OS dataset last level qualifiers (LLQ) that trigger SMP/E language activation (e.g. 'SYS1.SMPE.MCS' matches 'MCS'). Case-insensitive."
         }
       }
     },

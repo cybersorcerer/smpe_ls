@@ -69,9 +69,42 @@ export class ConfigManager {
     }
 
     /**
-     * Get the path to the config file in the workspace
+     * Resolve the config file path using the following lookup order:
+     * 1. Any workspace folder (all folders searched, first match wins)
+     * 2. $HOME/.config/smpe_ls/.smpe-zosmf.yaml
+     * Returns undefined if not found anywhere.
      */
     getConfigFilePath(): string | undefined {
+        // 1. Search all workspace folders
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (workspaceFolders) {
+            for (const folder of workspaceFolders) {
+                const candidate = path.join(folder.uri.fsPath, CONFIG_FILE_NAME);
+                if (fs.existsSync(candidate)) {
+                    this.debugLog(`Found config in workspace folder: ${candidate}`);
+                    return candidate;
+                }
+            }
+        }
+
+        // 2. $HOME/.config/smpe_ls/
+        const homeDir = process.env.HOME || process.env.USERPROFILE;
+        if (homeDir) {
+            const globalCandidate = path.join(homeDir, '.config', 'smpe_ls', CONFIG_FILE_NAME);
+            if (fs.existsSync(globalCandidate)) {
+                this.debugLog(`Found config in global location: ${globalCandidate}`);
+                return globalCandidate;
+            }
+        }
+
+        return undefined;
+    }
+
+    /**
+     * Get the workspace root path for creating new config files.
+     * Always uses the first workspace folder.
+     */
+    private getWorkspaceConfigFilePath(): string | undefined {
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders || workspaceFolders.length === 0) {
             return undefined;
@@ -80,18 +113,17 @@ export class ConfigManager {
     }
 
     /**
-     * Check if config file exists in workspace
+     * Check if config file exists (workspace or global)
      */
     configExists(): boolean {
-        const configPath = this.getConfigFilePath();
-        return configPath !== undefined && fs.existsSync(configPath);
+        return this.getConfigFilePath() !== undefined;
     }
 
     /**
      * Create a new config file with template
      */
     async createConfigFile(): Promise<boolean> {
-        const configPath = this.getConfigFilePath();
+        const configPath = this.getWorkspaceConfigFilePath();
         if (!configPath) {
             vscode.window.showErrorMessage('No workspace folder open. Please open a folder first.');
             return false;
@@ -131,13 +163,8 @@ export class ConfigManager {
     loadConfig(): ZosmfConfig | undefined {
         const configPath = this.getConfigFilePath();
         if (!configPath) {
-            vscode.window.showErrorMessage('No workspace folder open.');
-            return undefined;
-        }
-
-        if (!fs.existsSync(configPath)) {
             vscode.window.showErrorMessage(
-                `Config file not found. Run "SMP/E: Create z/OSMF Config" first.`,
+                `No ${CONFIG_FILE_NAME} found in workspace or ~/.config/smpe_ls/. Run "SMP/E: Create z/OSMF Config" to create one.`,
                 'Create Config'
             ).then(selection => {
                 if (selection === 'Create Config') {
