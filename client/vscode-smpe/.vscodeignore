@@ -10,6 +10,8 @@ tsconfig.json
 !smpe_ls.exe
 !smpe_lint
 !smpe_lint.exe
+!smpe_outl
+!smpe_outl.exe
 !smpe.json
 !CHANGELOG.md
 !README.md

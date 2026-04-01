@@ -72,20 +72,23 @@ jobs:
           mkdir -p dist
           BINARY_NAME="smpe_ls"
           LINT_BINARY_NAME="smpe_lint"
+          OUTL_BINARY_NAME="smpe_outl"
           if [ "${{ matrix.goos }}" = "windows" ]; then
             BINARY_NAME="smpe_ls.exe"
             LINT_BINARY_NAME="smpe_lint.exe"
+            OUTL_BINARY_NAME="smpe_outl.exe"
           fi
 
           go build -v -ldflags="-s -w -X main.commit=${{ steps.version.outputs.commit }}" -o "dist/${BINARY_NAME}" ./cmd/smpe_ls
           go build -v -ldflags="-s -w -X main.commit=${{ steps.version.outputs.commit }}" -o "dist/${LINT_BINARY_NAME}" ./cmd/smpe_lint
+          go build -v -ldflags="-s -w -X main.commit=${{ steps.version.outputs.commit }}" -o "dist/${OUTL_BINARY_NAME}" ./cmd/smpe_outl
 
           # Create archive
           cd dist
           if [ "${{ matrix.goos }}" = "windows" ]; then
-            zip "../smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}.zip" "${BINARY_NAME}" "${LINT_BINARY_NAME}"
+            zip "../smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}.zip" "${BINARY_NAME}" "${LINT_BINARY_NAME}" "${OUTL_BINARY_NAME}"
           else
-            tar czf "../smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}.tar.gz" "${BINARY_NAME}" "${LINT_BINARY_NAME}"
+            tar czf "../smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}.tar.gz" "${BINARY_NAME}" "${LINT_BINARY_NAME}" "${OUTL_BINARY_NAME}"
           fi
           cd ..
 
@@ -101,9 +104,11 @@ jobs:
           if [ "${{ matrix.goos }}" = "windows" ]; then
             cp dist/smpe_ls.exe "smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}/"
             cp dist/smpe_lint.exe "smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}/"
+            cp dist/smpe_outl.exe "smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}/"
           else
             cp dist/smpe_ls "smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}/"
             cp dist/smpe_lint "smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}/"
+            cp dist/smpe_outl "smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}/"
           fi
 
           cp dist/data/smpe.json "smpe_ls-${{ steps.version.outputs.version }}-${{ matrix.platform }}/"
@@ -179,9 +184,11 @@ jobs:
           if [ "${{ matrix.goos }}" = "windows" ]; then
             go build -ldflags="-s -w -X main.commit=${{ steps.commit.outputs.commit }}" -o client/vscode-smpe/smpe_ls.exe ./cmd/smpe_ls
             go build -ldflags="-s -w -X main.commit=${{ steps.commit.outputs.commit }}" -o client/vscode-smpe/smpe_lint.exe ./cmd/smpe_lint
+            go build -ldflags="-s -w -X main.commit=${{ steps.commit.outputs.commit }}" -o client/vscode-smpe/smpe_outl.exe ./cmd/smpe_outl
           else
             go build -ldflags="-s -w -X main.commit=${{ steps.commit.outputs.commit }}" -o client/vscode-smpe/smpe_ls ./cmd/smpe_ls
             go build -ldflags="-s -w -X main.commit=${{ steps.commit.outputs.commit }}" -o client/vscode-smpe/smpe_lint ./cmd/smpe_lint
+            go build -ldflags="-s -w -X main.commit=${{ steps.commit.outputs.commit }}" -o client/vscode-smpe/smpe_outl ./cmd/smpe_outl
           fi
 
       - name: Copy data files
