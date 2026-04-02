@@ -2,6 +2,11 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 0.9.5
+
+- **Check Missing Input Members** - New command (`SMP/E: Check Missing Input Members`) checks whether all referenced input member files exist in the workspace. Results displayed in a filterable/sortable Webview table. Available in Command Palette and via right-click on `.smpe` files.
+- **`smpe.checkMissingInputMembers.searchFolders`** - Configures which folders are searched for input member files (default: `["customization"]`). Use `"*"` to search the entire workspace.
+
 ## What's New in 0.9.4
 
 - **z/OSMF Config Lookup** - `.smpe-zosmf.yaml` is now resolved from workspace folders first, then `~/.config/smpe_ls/` as a global fallback
@@ -25,6 +30,7 @@ See the [CHANGELOG](https://github.com/cybersorcerer/smpe_ls/blob/main/client/vs
 - **Document Symbols** - Outline view and quick navigation (`Cmd+Shift+O`)
 - **Workspace Symbols** - Search for SYSMOD definitions across all `.smpe` files (`Cmd+T`)
 - **Folding Ranges** - Collapse/expand MCS statements and multi-line comments
+- **Check Missing Input Members** - Scan workspace for missing MCS input files with filterable Webview results
 - **CodeLens** - Inline z/OSMF CSI queries for SYSMODs and DDDEFs
 - **z/OSMF Integration** - Query CSI, browse USS directories and MVS datasets
 - **Column Rulers** - Visual guides at columns 72 and 80 (mainframe card boundaries)
@@ -133,6 +139,12 @@ for editing. If you want a shared configuration across all projects, place the f
 |-----------------------------------|-----------|-----------------------------------------------------------------------------|
 | `smpe.zosmf.queryTimeoutSeconds`  | `300`     | Maximum wait time for z/OSMF CSI queries (30–600s)                          |
 | `smpe.zosDatasetsLlq`             | `["MCS"]` | z/OS dataset last level qualifiers that trigger SMP/E language activation   |
+
+### Check Missing Input Members
+
+| Setting                                       | Default             | Description                                                                                             |
+|-----------------------------------------------|---------------------|---------------------------------------------------------------------------------------------------------|
+| `smpe.checkMissingInputMembers.searchFolders` | `["customization"]` | Folders (relative to workspace root) to search for input member files. Use `"*"` for entire workspace.  |
 
 ## File Extensions
 

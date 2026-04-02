@@ -15,10 +15,6 @@ Rename SYSMOD IDs and FMIDs across the entire document. All occurrences in `PRE`
 Show parameter labels directly in the editor, e.g. `FROMDS(` displays `DSN=` before the
 value. Makes nested sub-operands significantly more readable.
 
-### 3. Workspace Symbols (`workspace/symbol`)
-Search for SYSMOD definitions across multiple `.smpe` files in a workspace. Useful for
-projects that span many MCS files.
-
 ---
 
 ## Diagnostics Improvements
@@ -28,7 +24,7 @@ projects that span many MCS files.
 will only surface on the mainframe.
 
 ### 6. Cross-Statement Consistency
-`PRE`, `REQ`, and `SUP` operands reference SYSMOD IDs that may be defined in the same file.
+`PRE`, `REQ`, and `SUP` operands reference SYSMOD IDs that may be defined in the same file, somewhere in the workspace or already applied into a certain Zone.
 Flag unknown references as a warning.
 
 ### 7. Numeric Parameter Format Validation

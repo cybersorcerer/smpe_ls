@@ -2,7 +2,7 @@
   "name": "smpe-mcs-language-server",
   "displayName": "SMP/E MCS Language Server",
   "description": "Language support for SMP/E MCS statements",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "publisher": "cybersorcerer",
   "license": "AGPL-3.0",
   "repository": {
@@ -193,6 +193,12 @@
           "items": { "type": "string" },
           "default": ["MCS"],
           "description": "List of z/OS dataset last level qualifiers (LLQ) that trigger SMP/E language activation (e.g. 'SYS1.SMPE.MCS' matches 'MCS'). Case-insensitive."
+        },
+        "smpe.checkMissingInputMembers.searchFolders": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["customization"],
+          "description": "Folders (relative to workspace root) to search for input member files. Use '*' to search recursively in the entire workspace."
         }
       }
     },
@@ -243,8 +249,28 @@
       {
         "command": "smpe.codelens.queryDddef",
         "title": "SMP/E: Query DDDEF (CodeLens)"
+      },
+      {
+        "command": "smpe.checkMissingInputMembers",
+        "title": "SMP/E: Check Missing Input Members"
       }
-    ]
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "smpe.checkMissingInputMembers",
+          "when": "resourceExtname == .smpe",
+          "group": "smpe@1"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "smpe.checkMissingInputMembers",
+          "when": "resourceExtname == .smpe",
+          "group": "smpe@1"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	version = "v0.9.4"
+	version = "v0.9.5"
 	commit  = "unknown"
 )
 
@@ -94,7 +94,12 @@ func main() {
 	// Load smpe.json
 	dataPath := *dataFlag
 	if dataPath == "" {
-		dataPath = os.Getenv("HOME") + "/.local/share/smpe_ls/smpe.json"
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error determining home directory: %v\n", err)
+			os.Exit(1)
+		}
+		dataPath = homeDir + "/.local/share/smpe_ls/smpe.json"
 	}
 	store, err := data.Load(dataPath)
 	if err != nil {
@@ -113,9 +118,10 @@ func main() {
 			continue
 		}
 
+		contentStr := string(content)
 		p := parser.NewParser(store.Statements)
-		doc := p.Parse(string(content))
-		lines := strings.Split(string(content), "\n")
+		doc := p.Parse(contentStr)
+		lines := strings.Split(contentStr, "\n")
 
 		symbols := buildSymbols(doc, lines, *withRanges)
 		outlines = append(outlines, OutlineFile{
