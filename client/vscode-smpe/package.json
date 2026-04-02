@@ -52,6 +52,11 @@
           "default": "",
           "description": "Path to the smpe.json data file. If empty, uses the bundled data file."
         },
+        "smpe.outlPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the smpe_outl executable. If empty, uses the bundled binary."
+        },
         "smpe.debug": {
           "type": "boolean",
           "default": true,

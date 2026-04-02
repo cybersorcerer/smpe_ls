@@ -394,11 +394,51 @@ export function activate(context: vscode.ExtensionContext) {
 
 	log('z/OSMF Query commands registered');
 
+	// Resolve smpe_outl binary path (same priority order as smpe_ls)
+	const resolveOutlPath = (): string => {
+		const configuredOutlPath = vscode.workspace.getConfiguration('smpe').get<string>('outlPath') || '';
+
+		// Priority 1: configured path
+		if (configuredOutlPath && fs.existsSync(configuredOutlPath)) {
+			debugLog(`Using configured outlPath: ${configuredOutlPath}`);
+			return configuredOutlPath;
+		} else if (configuredOutlPath) {
+			log(`WARNING: Configured outlPath does not exist: ${configuredOutlPath}`);
+		}
+
+		// Priority 2: bundled binary
+		const bundledOutlName = process.platform === 'win32' ? 'smpe_outl.exe' : 'smpe_outl';
+		const bundledOutlPath = path.join(context.extensionPath, bundledOutlName);
+		if (fs.existsSync(bundledOutlPath)) {
+			debugLog(`Using bundled smpe_outl: ${bundledOutlPath}`);
+			return bundledOutlPath;
+		}
+
+		// Priority 3: fallback to ~/.local/bin
+		const homeDir = process.env.HOME || process.env.USERPROFILE;
+		if (homeDir) {
+			const localBinPath = path.join(homeDir, '.local', 'bin', 'smpe_outl');
+			if (fs.existsSync(localBinPath)) {
+				debugLog(`Using fallback smpe_outl: ${localBinPath}`);
+				return localBinPath;
+			}
+		}
+
+		log('WARNING: smpe_outl binary not found');
+		return '';
+	};
+
 	// Initialize Missing Input Member Checker
-	const missingMemberChecker = new MissingMemberChecker(outputChannel);
+	const missingMemberChecker = new MissingMemberChecker(outputChannel, resolveOutlPath(), dataPath);
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('smpe.checkMissingInputMembers', async () => {
+			const outlPath = resolveOutlPath();
+			if (!outlPath) {
+				vscode.window.showErrorMessage('smpe_outl binary not found. Please install it or configure smpe.outlPath.');
+				return;
+			}
+			missingMemberChecker.setOutlBinaryPath(outlPath);
 			await vscode.window.withProgress(
 				{ location: vscode.ProgressLocation.Notification, title: 'SMP/E: Checking missing input members...', cancellable: false },
 				async () => {
@@ -413,7 +453,7 @@ export function activate(context: vscode.ExtensionContext) {
 				missingMemberChecker.invalidate(doc.fileName);
 			}
 		}),
-		// Invalidate file index when workspace files are created/deleted/renamed
+		// Invalidate file index when workspace files are created/deleted
 		vscode.workspace.createFileSystemWatcher('**/*').onDidCreate(() => missingMemberChecker.invalidateFileIndex()),
 		vscode.workspace.createFileSystemWatcher('**/*').onDidDelete(() => missingMemberChecker.invalidateFileIndex()),
 	);

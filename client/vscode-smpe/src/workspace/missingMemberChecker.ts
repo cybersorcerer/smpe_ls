@@ -1,10 +1,12 @@
 /**
  * Missing Input Member Checker
- * Checks whether input files referenced by MCS statements exist in the workspace.
+ * Uses smpe_outl --json --meta to parse .smpe files and checks whether
+ * the referenced input member files exist in the configured search folders.
  */
 
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as cp from 'child_process';
 
 export interface MemberCheckResult {
     smpeFile: string;
@@ -37,15 +39,33 @@ const STATEMENT_FILE_MAP: Record<string, string> = {
     '++PNLENU':   '.enu.pnl',
 };
 
+// Shape of smpe_outl --json --meta output
+interface OutlineSymbol {
+    name: string;
+    id?: string;
+    hasInlineData?: boolean;
+    children?: OutlineSymbol[];
+}
+
+interface OutlineFile {
+    file: string;
+    symbols: OutlineSymbol[];
+}
+
 export class MissingMemberChecker {
     private outputChannel: vscode.OutputChannel;
+    private outlBinaryPath: string;
+    private dataBinaryPath: string;
+
     // Cache: smpeFilePath -> results
     private resultCache: Map<string, MemberCheckResult[]> = new Map();
-    // Index of all workspace files: filename -> full fsPath
+    // Index of all workspace files: filename -> full fsPath (first match wins)
     private fileIndex: Map<string, string> | undefined;
 
-    constructor(outputChannel: vscode.OutputChannel) {
+    constructor(outputChannel: vscode.OutputChannel, outlBinaryPath: string, dataBinaryPath: string) {
         this.outputChannel = outputChannel;
+        this.outlBinaryPath = outlBinaryPath;
+        this.dataBinaryPath = dataBinaryPath;
     }
 
     private log(message: string): void {
@@ -53,27 +73,25 @@ export class MissingMemberChecker {
         this.outputChannel.appendLine(`[${timestamp}] [MissingMemberChecker] ${message}`);
     }
 
-    /**
-     * Invalidate the cache for a specific .smpe file (called on save).
-     */
+    /** Invalidate the per-file cache entry (called on .smpe save). */
     public invalidate(smpeFilePath: string): void {
         this.resultCache.delete(smpeFilePath);
         this.log(`Cache invalidated for ${smpeFilePath}`);
     }
 
-    /**
-     * Invalidate the entire file index (called when workspace files change).
-     */
+    /** Invalidate the entire file index and all cached results. */
     public invalidateFileIndex(): void {
         this.fileIndex = undefined;
         this.resultCache.clear();
         this.log('File index invalidated');
     }
 
-    /**
-     * Build an index of all files in the configured search folders.
-     * Key: exact filename (basename), Value: full fsPath (first match wins).
-     */
+    /** Update the binary path when the setting changes. */
+    public setOutlBinaryPath(p: string): void {
+        this.outlBinaryPath = p;
+        this.resultCache.clear();
+    }
+
     private async buildFileIndex(): Promise<Map<string, string>> {
         const config = vscode.workspace.getConfiguration('smpe');
         const searchFolders = config.get<string[]>('checkMissingInputMembers.searchFolders', ['customization']);
@@ -83,12 +101,10 @@ export class MissingMemberChecker {
 
         if (searchFolders.includes('*')) {
             pattern = '**/*';
+        } else if (searchFolders.length === 1) {
+            pattern = `${searchFolders[0]}/**/*`;
         } else {
-            if (searchFolders.length === 1) {
-                pattern = `${searchFolders[0]}/**/*`;
-            } else {
-                pattern = `{${searchFolders.join(',')}}/**/*`;
-            }
+            pattern = `{${searchFolders.join(',')}}/**/*`;
         }
 
         this.log(`Building file index with pattern: ${pattern}`);
@@ -105,186 +121,120 @@ export class MissingMemberChecker {
         return index;
     }
 
-    /**
-     * Run the check for all *.smpe files in the workspace.
-     * Uses per-file cache; rebuilds file index if needed.
-     */
+    /** Run smpe_outl --json --meta on all .smpe files and return parsed outlines. */
+    private async runOutl(smpeFiles: vscode.Uri[]): Promise<OutlineFile[]> {
+        if (smpeFiles.length === 0) {
+            return [];
+        }
+
+        const args = ['--json', '--meta'];
+        if (this.dataBinaryPath) {
+            args.push('--data', this.dataBinaryPath);
+        }
+        args.push(...smpeFiles.map(u => u.fsPath));
+
+        this.log(`Running: ${this.outlBinaryPath} ${args.join(' ')}`);
+
+        return new Promise((resolve, reject) => {
+            cp.execFile(this.outlBinaryPath, args, { maxBuffer: 10 * 1024 * 1024 }, (err, stdout, stderr) => {
+                if (stderr) {
+                    this.log(`smpe_outl stderr: ${stderr.trim()}`);
+                }
+                if (err && !stdout) {
+                    reject(new Error(`smpe_outl failed: ${err.message}`));
+                    return;
+                }
+                try {
+                    resolve(JSON.parse(stdout) as OutlineFile[]);
+                } catch (parseErr) {
+                    reject(new Error(`smpe_outl JSON parse error: ${parseErr}`));
+                }
+            });
+        });
+    }
+
+    /** Run the full check. Returns results for all .smpe files in the workspace. */
     public async check(): Promise<MemberCheckResult[]> {
         if (!this.fileIndex) {
             this.fileIndex = await this.buildFileIndex();
         }
 
-        const smpeFiles = await vscode.workspace.findFiles('**/*.smpe', '**/node_modules/**');
-        this.log(`Found ${smpeFiles.length} .smpe files`);
+        const allSmpeFiles = await vscode.workspace.findFiles('**/*.smpe', '**/node_modules/**');
+        this.log(`Found ${allSmpeFiles.length} .smpe files`);
 
-        const allResults: MemberCheckResult[] = [];
+        // Split into cached and uncached files
+        const cached: MemberCheckResult[] = [];
+        const uncached: vscode.Uri[] = [];
 
-        for (const uri of smpeFiles) {
-            const filePath = uri.fsPath;
-            if (this.resultCache.has(filePath)) {
-                allResults.push(...this.resultCache.get(filePath)!);
-                continue;
+        for (const uri of allSmpeFiles) {
+            if (this.resultCache.has(uri.fsPath)) {
+                cached.push(...this.resultCache.get(uri.fsPath)!);
+            } else {
+                uncached.push(uri);
             }
-
-            const fileResults = await this.checkFile(uri);
-            this.resultCache.set(filePath, fileResults);
-            allResults.push(...fileResults);
         }
 
-        return allResults;
+        if (uncached.length === 0) {
+            return cached;
+        }
+
+        // Run smpe_outl on all uncached files in one invocation
+        let outlines: OutlineFile[];
+        try {
+            outlines = await this.runOutl(uncached);
+        } catch (err) {
+            this.log(`ERROR: ${err}`);
+            vscode.window.showErrorMessage(`SMP/E: smpe_outl failed — ${err}`);
+            return cached;
+        }
+
+        // Process results per file
+        const fresh: MemberCheckResult[] = [];
+        for (const outline of outlines) {
+            const fileResults = this.processOutline(outline);
+            this.resultCache.set(outline.file, fileResults);
+            fresh.push(...fileResults);
+        }
+
+        return [...cached, ...fresh];
     }
 
-    private async checkFile(uri: vscode.Uri): Promise<MemberCheckResult[]> {
+    private processOutline(outline: OutlineFile): MemberCheckResult[] {
         const results: MemberCheckResult[] = [];
-        const filePath = uri.fsPath;
-        const smpeFileName = path.basename(filePath);
+        const smpeFileName = path.basename(outline.file);
 
-        let content: string;
-        try {
-            const bytes = await vscode.workspace.fs.readFile(uri);
-            content = Buffer.from(bytes).toString('utf8');
-        } catch (err) {
-            this.log(`Error reading ${filePath}: ${err}`);
-            return results;
-        }
+        for (const sym of outline.symbols ?? []) {
+            // Extract statement name from symbol name (e.g. "++PARM(RSSPRMI)" -> "++PARM")
+            const nameMatch = sym.name.match(/^(\+\+[A-Z]+)/);
+            if (!nameMatch) { continue; }
+            const stmtName = nameMatch[1];
 
-        const statements = this.parseStatements(content);
+            const ext = STATEMENT_FILE_MAP[stmtName];
+            if (!ext) { continue; }
 
-        for (const stmt of statements) {
-            const ext = STATEMENT_FILE_MAP[stmt.name];
-            if (!ext) {
-                continue;
-            }
-            if (!stmt.elementName) {
-                continue;
-            }
-            if (stmt.hasInlineData) {
-                continue;
-            }
-            if (stmt.hasTxlib) {
-                continue;
-            }
+            // Element name is in the id field (e.g. "RSSPRMI")
+            const elementName = sym.id;
+            if (!elementName) { continue; }
 
-            const expectedFile = stmt.elementName + ext;
+            // Skip if statement has inline data
+            if (sym.hasInlineData) { continue; }
+
+            // Skip if TXLIB operand is present (appears as child symbol)
+            const hasTxlib = (sym.children ?? []).some(c => c.name.startsWith('TXLIB('));
+            if (hasTxlib) { continue; }
+
+            const expectedFile = elementName + ext;
             const foundPath = this.fileIndex!.get(expectedFile);
 
             results.push({
                 smpeFile: smpeFileName,
-                statement: stmt.name,
+                statement: stmtName,
                 member: expectedFile,
                 found: foundPath !== undefined,
-                foundPath: foundPath,
+                foundPath,
             });
         }
 
         return results;
     }
-
-    /**
-     * Minimal statement parser — extracts the information needed for the check
-     * without depending on the Go LSP server at runtime.
-     */
-    private parseStatements(content: string): ParsedStatement[] {
-        const statements: ParsedStatement[] = [];
-        const lines = content.split('\n');
-
-        let i = 0;
-        while (i < lines.length) {
-            const line = lines[i];
-            const trimmed = line.trimStart();
-
-            // Skip comment lines
-            if (trimmed.startsWith('++')) {
-                // Extract statement name and optional parameter
-                const match = trimmed.match(/^(\+\+[A-Z]+)\s*(?:\(([^)]*)\))?/);
-                if (match) {
-                    const stmtName = match[1];
-                    const elementName = match[2] ? match[2].trim() : undefined;
-
-                    if (STATEMENT_FILE_MAP[stmtName] || this.isAnyStatement(stmtName)) {
-                        // Collect operands: scan until next ++ or terminator
-                        let hasTxlib = false;
-                        let hasInlineData = false;
-                        let terminated = false;
-
-                        // Check same line for terminator and TXLIB
-                        const restOfLine = trimmed.slice(match[0].length);
-                        if (restOfLine.includes('TXLIB(') || restOfLine.includes('TXLIB (')) {
-                            hasTxlib = true;
-                        }
-                        if (restOfLine.includes('.')) {
-                            terminated = true;
-                        }
-
-                        // Scan continuation lines
-                        let j = i + 1;
-                        while (!terminated && j < lines.length) {
-                            const nextTrimmed = lines[j].trimStart();
-
-                            // New ++ statement starts
-                            if (nextTrimmed.startsWith('++')) {
-                                break;
-                            }
-
-                            // Terminator line
-                            if (nextTrimmed.startsWith('.')) {
-                                terminated = true;
-                                j++;
-                                break;
-                            }
-
-                            // Check for TXLIB operand
-                            if (nextTrimmed.includes('TXLIB(') || nextTrimmed.includes('TXLIB (')) {
-                                hasTxlib = true;
-                            }
-
-                            // If terminated on previous line, check for inline data after terminator
-                            j++;
-                        }
-
-                        // Inline data: any non-empty, non-comment line after the statement block
-                        // that is NOT a ++ statement and comes before the next ++ statement
-                        if (!hasTxlib && STATEMENT_FILE_MAP[stmtName]) {
-                            // Scan from j looking for inline data
-                            let k = j;
-                            while (k < lines.length) {
-                                const candidate = lines[k].trimStart();
-                                if (candidate.startsWith('++')) {
-                                    break;
-                                }
-                                // Non-empty, non-comment line = inline data
-                                if (candidate.length > 0 && !candidate.startsWith('*')) {
-                                    hasInlineData = true;
-                                    break;
-                                }
-                                k++;
-                            }
-                        }
-
-                        if (STATEMENT_FILE_MAP[stmtName]) {
-                            statements.push({ name: stmtName, elementName, hasTxlib, hasInlineData });
-                        }
-
-                        i = j;
-                        continue;
-                    }
-                }
-            }
-
-            i++;
-        }
-
-        return statements;
-    }
-
-    private isAnyStatement(name: string): boolean {
-        return name.startsWith('++');
-    }
-}
-
-interface ParsedStatement {
-    name: string;
-    elementName: string | undefined;
-    hasTxlib: boolean;
-    hasInlineData: boolean;
 }

@@ -24,11 +24,12 @@ type OutlineFile struct {
 	Symbols []OutlineSymbol `json:"symbols"`
 }
 
-// OutlineSymbol is a DocumentSymbol-compatible structure with an extra "id" field
+// OutlineSymbol is a DocumentSymbol-compatible structure with extra fields
 type OutlineSymbol struct {
 	Name           string          `json:"name"`
 	ID             string          `json:"id,omitempty"`
 	Kind           lsp.SymbolKind  `json:"kind"`
+	HasInlineData  *bool           `json:"hasInlineData,omitempty"`
 	Range          *lsp.Range      `json:"range,omitempty"`
 	SelectionRange *lsp.Range      `json:"selectionRange,omitempty"`
 	Children       []OutlineSymbol `json:"children,omitempty"`
@@ -37,6 +38,7 @@ type OutlineSymbol struct {
 func main() {
 	jsonMode := flag.Bool("json", false, "Output results in JSON format")
 	withRanges := flag.Bool("ranges", false, "Include range and selectionRange in JSON output (default: off)")
+	withMeta := flag.Bool("meta", false, "Include hasInlineData field per statement in JSON output (default: off)")
 	versionFlag := flag.Bool("version", false, "Show version information")
 	shortVersionFlag := flag.Bool("v", false, "Show version information")
 	dataFlag := flag.String("data", "", "Path to smpe.json data file")
@@ -47,11 +49,13 @@ func main() {
 		fmt.Fprintf(os.Stderr, "\nOptions:\n")
 		fmt.Fprintf(os.Stderr, "  --data <path>   Path to smpe.json data file\n")
 		fmt.Fprintf(os.Stderr, "  --json          Output results in JSON format\n")
+		fmt.Fprintf(os.Stderr, "  --meta          Include hasInlineData per statement in JSON output\n")
 		fmt.Fprintf(os.Stderr, "  --ranges        Include range and selectionRange in JSON output\n")
 		fmt.Fprintf(os.Stderr, "  --version, -v   Show version information\n")
 		fmt.Fprintf(os.Stderr, "\nExamples:\n")
 		fmt.Fprintf(os.Stderr, "  %s *.smpe\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "  %s --json *.smpe\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "  %s --json --meta *.smpe\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "  %s --json --ranges *.smpe\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "  %s \"packages/**/*.smpe\"\n", os.Args[0])
 	}
@@ -123,7 +127,7 @@ func main() {
 		doc := p.Parse(contentStr)
 		lines := strings.Split(contentStr, "\n")
 
-		symbols := buildSymbols(doc, lines, *withRanges)
+		symbols := buildSymbols(doc, lines, *withRanges, *withMeta)
 		outlines = append(outlines, OutlineFile{
 			File:    file,
 			Symbols: symbols,
@@ -148,7 +152,7 @@ func main() {
 }
 
 // buildSymbols converts a parsed document into OutlineSymbol entries
-func buildSymbols(doc *parser.Document, lines []string, withRanges bool) []OutlineSymbol {
+func buildSymbols(doc *parser.Document, lines []string, withRanges bool, withMeta bool) []OutlineSymbol {
 	if doc == nil {
 		return nil
 	}
@@ -158,13 +162,13 @@ func buildSymbols(doc *parser.Document, lines []string, withRanges bool) []Outli
 		if stmt == nil || stmt.Type != parser.NodeTypeStatement {
 			continue
 		}
-		sym := buildStatementSymbol(stmt, lines, withRanges)
+		sym := buildStatementSymbol(stmt, lines, withRanges, withMeta)
 		symbols = append(symbols, sym)
 	}
 	return symbols
 }
 
-func buildStatementSymbol(stmt *parser.Node, lines []string, withRanges bool) OutlineSymbol {
+func buildStatementSymbol(stmt *parser.Node, lines []string, withRanges bool, withMeta bool) OutlineSymbol {
 	// Extract statement parameter (e.g. "LJS2012" from "++USERMOD(LJS2012)")
 	stmtParam := ""
 	for _, child := range stmt.Children {
@@ -186,6 +190,10 @@ func buildStatementSymbol(stmt *parser.Node, lines []string, withRanges bool) Ou
 		ID:       stmtParam,
 		Kind:     getSymbolKind(stmt.Name),
 		Children: buildOperandSymbols(stmt, withRanges),
+	}
+	if withMeta {
+		hasInlineData := stmt.HasInlineData
+		sym.HasInlineData = &hasInlineData
 	}
 	if withRanges {
 		r := lsp.Range{
