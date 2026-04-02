@@ -12,6 +12,8 @@ import { ResultPanel } from './webview/resultPanel';
 import { UssPanel, UssFileContentProvider } from './webview/ussPanel';
 import { DatasetPanel, DatasetContentProvider } from './webview/datasetPanel';
 import { FreeFormPanel } from './webview/freeFormPanel';
+import { MissingMemberChecker } from './workspace/missingMemberChecker';
+import { MissingMemberPanel } from './webview/missingMemberPanel';
 
 let client: LanguageClient;
 let outputChannel: vscode.OutputChannel;
@@ -213,12 +215,9 @@ export function activate(context: vscode.ExtensionContext) {
 	const detectSmpeLanguage = (doc: vscode.TextDocument) => {
 		if (doc.languageId === 'smpe') return;
 
-		// LLQ-based detection for z/OS datasets (zowe-ds scheme)
-		// URI format: zowe-ds://<profile>/<DSN> or zowe-ds://<profile>/<DSN>(<member>)
 		if (doc.uri.scheme === 'zowe-ds') {
 			const llqList = vscode.workspace.getConfiguration('smpe').get<string[]>('zosDatasetsLlq', ['MCS']);
-			// Extract the dataset name: strip leading slash, remove member suffix (...)
-			const uriPath = doc.uri.path.replace(/\([^)]*\)$/, ''); // remove (MEMBER)
+			const uriPath = doc.uri.path.replace(/\([^)]*\)$/, '');
 			const parts = uriPath.split('.');
 			const llq = parts[parts.length - 1].toUpperCase();
 			if (llqList.some(q => q.toUpperCase() === llq)) {
@@ -394,6 +393,32 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	log('z/OSMF Query commands registered');
+
+	// Initialize Missing Input Member Checker
+	const missingMemberChecker = new MissingMemberChecker(outputChannel);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('smpe.checkMissingInputMembers', async () => {
+			await vscode.window.withProgress(
+				{ location: vscode.ProgressLocation.Notification, title: 'SMP/E: Checking missing input members...', cancellable: false },
+				async () => {
+					const results = await missingMemberChecker.check();
+					MissingMemberPanel.createOrShow(context.extensionUri, results);
+				}
+			);
+		}),
+		// Invalidate per-file cache on save
+		vscode.workspace.onDidSaveTextDocument(doc => {
+			if (doc.fileName.endsWith('.smpe')) {
+				missingMemberChecker.invalidate(doc.fileName);
+			}
+		}),
+		// Invalidate file index when workspace files are created/deleted/renamed
+		vscode.workspace.createFileSystemWatcher('**/*').onDidCreate(() => missingMemberChecker.invalidateFileIndex()),
+		vscode.workspace.createFileSystemWatcher('**/*').onDidDelete(() => missingMemberChecker.invalidateFileIndex()),
+	);
+
+	log('Missing Input Member Checker registered');
 }
 
 export function deactivate(): Thenable<void> | undefined {

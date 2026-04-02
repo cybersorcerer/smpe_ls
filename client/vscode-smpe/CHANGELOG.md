@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.9.5] - 2026-04-02
+
+### Added
+
+- **Check Missing Input Members** - New command `SMP/E: Check Missing Input Members` scans all `*.smpe` files in the workspace and checks whether the referenced input member files (e.g. `MYMOD.hlasm`, `MYSCRIPT.rexx`) exist in the configured search folders. Results are displayed in a filterable and sortable Webview table with Found/Missing status. Available in the Command Palette and via right-click on `.smpe` files in the editor and Explorer.
+- **`smpe.checkMissingInputMembers.searchFolders` setting** - Configures which folders (relative to the workspace root) are searched for input member files. Default: `["customization"]`. Use `"*"` to search recursively in the entire workspace.
+
 ## [0.9.4] - 2026-03-31
 
 ### Added
