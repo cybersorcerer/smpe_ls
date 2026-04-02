@@ -29,7 +29,7 @@ const STATEMENT_FILE_MAP: Record<string, string> = {
     '++ZAP':      '.zap',
     '++CLIST':    '.clist',
     '++USER':     '.usr',
-    '++PROC':     '.proc',
+    '++PROC':     '.jcl',
     '++DATA':     '.data',
     '++SAMP':     '.samp',
     '++HELP':     '.help',
