@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.9.6] - 2026-04-09
+
+### Added
+
+- **Training Documentation** - 22 Markdown training modules (DE + EN) covering installation, all VSCode extension features, CLI tools (`smpe_lint`, `smpe_outl`), and z/OSMF integration. Available under `docs/training/de/` and `docs/training/en/`.
+
 ## [0.9.5] - 2026-04-02
 
 ### Added

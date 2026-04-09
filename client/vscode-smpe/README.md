@@ -2,6 +2,10 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 0.9.6
+
+- **Training Documentation** - 22 Markdown training modules (DE + EN) covering installation, all VSCode extension features, CLI tools (`smpe_lint`, `smpe_outl`), and z/OSMF integration. Available under `docs/training/`.
+
 ## What's New in 0.9.5
 
 - **Check Missing Input Members** - New command (`SMP/E: Check Missing Input Members`) checks whether all referenced input member files exist in the workspace. Results displayed in a filterable/sortable Webview table. Available in Command Palette and via right-click on `.smpe` files.
@@ -54,12 +58,12 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 
 | Platform | File |
 |----------|------|
-| Windows x64 | `smpe-mcs-language-server-win32-x64-0.9.0.vsix` |
-| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-0.9.0.vsix` |
-| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-0.9.0.vsix` |
-| macOS Intel | `smpe-mcs-language-server-darwin-x64-0.9.0.vsix` |
-| Linux x64 | `smpe-mcs-language-server-linux-x64-0.9.0.vsix` |
-| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-0.9.0.vsix` |
+| Windows x64 | `smpe-mcs-language-server-win32-x64-0.9.6.vsix` |
+| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-0.9.6.vsix` |
+| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-0.9.6.vsix` |
+| macOS Intel | `smpe-mcs-language-server-darwin-x64-0.9.6.vsix` |
+| Linux x64 | `smpe-mcs-language-server-linux-x64-0.9.6.vsix` |
+| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-0.9.6.vsix` |
 
 ### Installation in VS Code
 
@@ -71,7 +75,7 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 Alternatively via terminal:
 
 ```bash
-code --install-extension smpe-mcs-language-server-darwin-arm64-0.9.2.vsix
+code --install-extension smpe-mcs-language-server-darwin-arm64-0.9.6.vsix
 ```
 
 The Language Server is already included in the extension - no additional installation required.
