@@ -70,14 +70,14 @@ Quick fixes triggered by diagnostics:
 | Feature | Priority | Status |
 |---------|----------|--------|
 | Rename | High | Planned |
-| Folding Ranges | High | Planned |
+| Folding Ranges | High | Done |
 | Inlay Hints | Medium | Planned |
-| Workspace Symbols | Medium | Planned |
+| Workspace Symbols | Medium | Done |
 | SYSMOD ID Format Validation | High | Planned |
 | Cross-Statement Consistency | Medium | Planned |
 | Numeric Parameter Format | Low | Planned |
 | Sub-Operand Required Validation | Medium | Planned |
 | Declarative `required` in smpe.json | Medium | Planned |
-| Complete HFS Operand Definitions | Medium | Planned |
+| Complete HFS Operand Definitions | Medium | Done |
 | Call Hierarchy | Low | Planned |
 | Code Actions | High | Planned |
