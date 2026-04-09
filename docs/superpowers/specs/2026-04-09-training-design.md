@@ -58,18 +58,21 @@ docs/training/
 ## 4. Module Content
 
 ### Module 00 — Index (DE: `00-index.md` / EN: `00-index.md`)
+
 - Overview of all modules with links
 - Prerequisites (VSCode installed, VSIX available)
 - Version reference (which version of the extension is covered)
 - Link to GitHub releases page
 
 ### Module 01 — Installation (DE: `01-installation.md` / EN: `01-installation.md`)
+
 - Download the correct VSIX for the platform (table: Windows x64/ARM64, macOS Apple Silicon/Intel, Linux x64/ARM64)
 - Install via VSCode UI (`Extensions: Install from VSIX...`) and via terminal (`code --install-extension`)
 - Verify installation: check Output panel "SMP/E Language Server"
 - Key settings overview: `smpe.serverPath`, `smpe.dataPath`, `smpe.debug`
 
 ### Module 02 — First Steps (DE: `02-erste-schritte.md` / EN: `02-first-steps.md`)
+
 - Open or create a `.smpe` file
 - Automatic language detection (file extension `.smpe`, `.mcs`, `.smp`)
 - Automatic detection for files without extension (first line starts with `++`)
@@ -77,6 +80,7 @@ docs/training/
 - Column rulers at 72 and 80
 
 ### Module 03 — Syntax Highlighting (DE: `03-syntax-highlighting.md` / EN: `03-syntax-highlighting.md`)
+
 - Color coding for MCS statements (`++USERMOD`, `++PTF`, etc.)
 - Operands and their parameters
 - Inline comments (`/* ... */`)
@@ -84,6 +88,7 @@ docs/training/
 - Code example: `++USERMOD` with multiple operands
 
 ### Module 04 — Code Completion (DE: `04-code-completion.md` / EN: `04-code-completion.md`)
+
 - Trigger completion with `Ctrl+Space`
 - Statement completion (type `++` to get all statements)
 - Operand completion (context-sensitive: only valid operands for the current statement)
@@ -92,6 +97,7 @@ docs/training/
 - Code example: completing a `++VER` statement step by step
 
 ### Module 05 — Diagnostics (DE: `05-diagnostics.md` / EN: `05-diagnostics.md`)
+
 - Real-time validation as you type
 - Severity levels: Error (🔴), Warning (⚠️), Info (ℹ️), Hint (💡)
 - Overview of all configurable diagnostic checks:
@@ -108,6 +114,7 @@ docs/training/
 - Code example: a `++USERMOD` with several intentional errors
 
 ### Module 06 — Hover and Navigation (DE: `06-hover-und-navigation.md` / EN: `06-hover-and-navigation.md`)
+
 - Hover over a statement → IBM documentation tooltip
 - Hover over an operand → description and valid values
 - Go to Definition (`F12` / `Cmd+Click`) for SYSMOD/FMID references
@@ -117,6 +124,7 @@ docs/training/
 - Folding: collapse/expand statements and comments
 
 ### Module 07 — Formatting (DE: `07-formatting.md` / EN: `07-formatting.md`)
+
 - Format document: `Shift+Alt+F` (Windows/Linux) / `Shift+Option+F` (macOS)
 - What formatting does: one operand per line, continuation indent, terminator on own line
 - Format on Save option (`smpe.formatting.formatOnSave`)
@@ -128,6 +136,7 @@ docs/training/
 - Code example: before and after formatting
 
 ### Module 08 — z/OSMF Integration (DE: `08-zosmf-integration.md` / EN: `08-zosmf-integration.md`)
+
 - What is z/OSMF integration and what does it require
 - Create config: `SMP/E: Create z/OSMF Config` command → `.smpe-zosmf.yaml`
 - Config file lookup order (workspace → `~/.config/smpe_ls/`)
@@ -144,6 +153,7 @@ docs/training/
   - Result table: filter and sort by file, statement, member, found status
 
 ### Module 09 — Bonus: smpe_lint (DE: `09-bonus-smpe-lint.md` / EN: `09-bonus-smpe-lint.md`)
+
 - What is `smpe_lint` and when to use it (CI/CD pipelines)
 - Installation / path to binary
 - Basic usage: `smpe_lint *.smpe`
@@ -154,12 +164,17 @@ docs/training/
 - Exit codes
 
 ### Module 10 — Bonus: smpe_outl (DE: `10-bonus-smpe-outl.md` / EN: `10-bonus-smpe-outl.md`)
-- What is `smpe_outl` and when to use it (inventory, reporting)
+
+- What is `smpe_outl` and when to use it (inventory, reporting, CI/CD pipelines)
 - Installation / path to binary
 - Basic usage: `smpe_outl *.smpe` (Markdown output)
 - JSON output (`--json`) — DocumentSymbol-compatible
 - `--meta` flag: includes `hasInlineData` per statement
 - `--ranges` flag: includes LSP range information
+- **Pipeline use case: detect missing input members**
+  - Use `--json --meta` to get all statements with inline data info
+  - Filter by statement type and `hasInlineData: false` to find members that must exist as files
+  - Example: shell script that calls `smpe_outl --json --meta` and checks for missing files
 - Example: using JSON output in a script
 
 ---
