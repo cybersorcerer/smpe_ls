@@ -1,6 +1,7 @@
 # Binaries
 /smpe_ls
 /smpe_lint
+/smpe_outl
 /testfmt
 *.exe
 *.dll
