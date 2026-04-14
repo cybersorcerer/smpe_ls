@@ -216,11 +216,15 @@ export function activate(context: vscode.ExtensionContext) {
 		if (doc.languageId === 'smpe') return;
 
 		if (doc.uri.scheme === 'zowe-ds') {
-			const llqList = vscode.workspace.getConfiguration('smpe').get<string[]>('zosDatasetsLlq', ['MCS']);
-			const uriPath = doc.uri.path.replace(/\([^)]*\)$/, '');
-			const parts = uriPath.split('.');
-			const llq = parts[parts.length - 1].toUpperCase();
-			if (llqList.some(q => q.toUpperCase() === llq)) {
+			const llqRaw = vscode.workspace.getConfiguration('smpe').get('zosDatasetsLlq', ['MCS']);
+			const llqList: string[] = Array.isArray(llqRaw)
+				? llqRaw.map((q: unknown) => String(q).trim().toUpperCase()).filter(q => q.length > 0)
+				: String(llqRaw).split(',').map(q => q.trim().toUpperCase()).filter(q => q.length > 0);
+			// Remove member name (MEMBERNAME) anywhere in the path, then extract LLQ (last qualifier)
+			const datasetName = doc.uri.path.replace(/\([^)]*\)/g, '').toUpperCase();
+			const parts = datasetName.split('.');
+			const llq = parts[parts.length - 1].replace(/.*\//, '').trim(); // strip any leading profile/path prefix
+			if (llqList.includes(llq)) {
 				vscode.languages.setTextDocumentLanguage(doc, 'smpe');
 				return;
 			}

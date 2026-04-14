@@ -108,6 +108,26 @@ func NewParser(statements map[string]data.MCSStatement) *Parser {
 	}
 }
 
+// countParensOutsideQuotes counts the net paren depth change for a line,
+// ignoring parentheses that appear inside quoted strings ('...').
+func countParensOutsideQuotes(text string) int {
+	depth := 0
+	inQuote := false
+	for i := 0; i < len(text); i++ {
+		ch := text[i]
+		if ch == '\'' {
+			inQuote = !inQuote
+		} else if !inQuote {
+			if ch == '(' {
+				depth++
+			} else if ch == ')' {
+				depth--
+			}
+		}
+	}
+	return depth
+}
+
 // collectStatements preprocesses lines and collects complete statements
 // Handles multiline statements
 // Note: lines passed in are already cleaned of SMP/E comments by the first pass in Parse()
@@ -141,15 +161,31 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 			currentLines = []string{line}
 			startLine = lineNum
 			inStatement = true
-			parenDepth = strings.Count(line, "(") - strings.Count(line, ")")
+			parenDepth = countParensOutsideQuotes(line)
 		} else if inStatement {
 			// Continue collecting statement lines
+			// Record depth BEFORE this line so terminator check uses correct context
+			depthBeforeLine := parenDepth
 			currentLines = append(currentLines, line)
-			parenDepth += strings.Count(line, "(") - strings.Count(line, ")")
+			parenDepth += countParensOutsideQuotes(line)
+			// Check if statement is complete (has terminator and all parens closed)
+			// Use depthBeforeLine so the terminator check sees the correct open-paren context
+			if hasTerminatorOutsideParensWithDepth(trimmed, depthBeforeLine) && parenDepth <= 0 {
+				collected = append(collected, CollectedStatement{
+					Text:             strings.Join(currentLines, " "),
+					StartLine:        startLine,
+					Lines:            currentLines,
+					UnbalancedParens: parenDepth,
+				})
+				currentLines = nil
+				inStatement = false
+				parenDepth = 0
+			}
+			continue
 		}
 
-		// Check if statement is complete (has terminator and all parens closed)
-		if inStatement && hasTerminatorOutsideParens(trimmed) && parenDepth <= 0 {
+		// Check if statement is complete on the opening line (has terminator and all parens closed)
+		if inStatement && hasTerminatorOutsideParensWithDepth(trimmed, 0) && parenDepth <= 0 {
 			collected = append(collected, CollectedStatement{
 				Text:             strings.Join(currentLines, " "),
 				StartLine:        startLine,
@@ -589,18 +625,30 @@ func isOperandStartChar(ch byte) bool {
 	return ch >= 'A' && ch <= 'Z'
 }
 
-// hasTerminatorOutsideParens checks if a '.' exists outside of parentheses
-// This correctly handles dataset names like DSN(MY.DATA.SET) where dots appear inside parentheses
+// hasTerminatorOutsideParens checks if a '.' exists outside of parentheses and quoted strings.
+// This correctly handles dataset names like DSN(MY.DATA.SET) where dots appear inside parentheses,
+// and path names like SYMPATH('../foo.env') where dots appear inside quoted strings.
+// startDepth allows passing in a cumulative paren depth from prior lines of a multiline statement.
 func hasTerminatorOutsideParens(text string) bool {
-	parenCount := 0
+	return hasTerminatorOutsideParensWithDepth(text, 0)
+}
+
+func hasTerminatorOutsideParensWithDepth(text string, startDepth int) bool {
+	parenCount := startDepth
+	inQuote := false
 	for i := 0; i < len(text); i++ {
-		if text[i] == '(' {
-			parenCount++
-		} else if text[i] == ')' {
-			parenCount--
-		} else if text[i] == '.' && parenCount == 0 {
-			// Found a '.' outside of parentheses - this is a statement terminator
-			return true
+		ch := text[i]
+		if ch == '\'' {
+			inQuote = !inQuote
+		} else if !inQuote {
+			if ch == '(' {
+				parenCount++
+			} else if ch == ')' {
+				parenCount--
+			} else if ch == '.' && parenCount == 0 {
+				// Found a '.' outside of parentheses and quotes - this is a statement terminator
+				return true
+			}
 		}
 	}
 	return false

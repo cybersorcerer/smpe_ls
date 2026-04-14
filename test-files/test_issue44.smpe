@@ -1,0 +1,20 @@
+++HFS(RVEQAIVP) SYSLIB(SEQACZFS) DISTLIB(A$RVDUMY)
+    TEXT
+    PARM(PATHMODE(0,7,5,5))
+    SYMLINK('../IVP/eqarmtd.env',
+        '../IVP/eqahcc.env',
+        '../IVP/eqadrest.env')
+    SYMPATH('../eqarmtd.env', 
+        '../eqahcc.env',
+        '../eqadrest.env')
+# inline
+++HFS(RVEQAAEW) SYSLIB(SEQACZFS) DISTLIB(A$RVDUMY)
+    TEXT
+    PARM(PATHMODE(0,7,5,5))
+        SYMLINK('../AEW/eqarmtd.env',
+        '../AEW/eqahcc.env',
+        '../AEW/eqadrest.env')
+    SYMPATH('../eqarmtd.env',
+        '../eqahcc.env',
+        '../eqadrest.env').
+# inline
