@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.9.7] - 2026-04-14
+
+### Fixed
+
+- **SYMPATH Operand not recognized in `++HFS`** - The parser incorrectly terminated multiline statements early when quoted path strings (e.g. `'../IVP/eqadrest.env'`) contained a dot before the closing parenthesis. The dot was mistakenly interpreted as a statement terminator. The terminator detection and parenthesis depth tracking are now quote-aware, correctly ignoring dots and parentheses inside `'...'` strings.
+- **z/OS Dataset LLQ language detection** - When multiple LLQs were configured in `smpe.zosDatasetsLlq` (e.g. `["MCS", "USERMOD"]`), only the first entry triggered SMP/E language mode. The member name removal regex now uses a global flag to handle all URI formats reliably, and the LLQ comparison is fully case-insensitive. Also simplified the `firstLine` detection pattern from an incomplete statement list to `^\+\+[A-Z]`, covering all valid MCS statements.
+
 ## [0.9.6] - 2026-04-09
 
 ### Added

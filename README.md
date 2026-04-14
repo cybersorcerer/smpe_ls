@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-0.9.6-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-0.9.7-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -244,7 +244,13 @@ make release
 
 ## 📋 What's New
 
-### Version 0.9.4 (Latest)
+### Version 0.9.7 (Latest)
+
+**Bug Fixes:**
+
+- 🐛 **Parser Fix: SYMPATH in `++HFS`** - Quoted path strings (e.g. `'../IVP/eqadrest.env'`) no longer cause premature statement termination. Dots and parentheses inside `'...'` are now correctly ignored by the terminator and parenthesis depth logic.
+
+### Version 0.9.4
 
 **New Features:**
 
