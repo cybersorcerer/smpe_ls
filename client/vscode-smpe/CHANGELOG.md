@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.9.8] - 2026-04-17
+
+### Fixed
+
+- **Content beyond column 72 false positive in inline data** - The column 72 diagnostic no longer fires for lines that are inline data (e.g. JCL after `++JCLIN`, source after `++SRC`). Inline data regions are now excluded from the check, consistent with all other diagnostics.
+- **Free Form CSI Query: default subentries** - When selecting an entry type, the subentries field is now pre-filled with a meaningful default set. Defaults are defined for SYSMOD, DDDEF, GLOBALZONE, TARGETZONE, DLIBZONE, and DLIB. The subentry picker also pre-selects the matching checkboxes. Entry types without a defined default still clear the field on change.
+- **z/OS Dataset LLQ language detection** - Reworked LLQ detection for Zowe Explorer datasets: member name removal now uses a global regex flag, the LLQ is extracted robustly regardless of URI format, and the comparison is fully case-insensitive. Fixes cases where only the first configured LLQ triggered SMP/E language mode.
+- **`firstLine` detection pattern** - Simplified from an incomplete hardcoded list of MCS statement names to `^\+\+[A-Z]`, which correctly matches any valid MCS statement.
+- **Training documentation** - Corrected `.smpe-zosmf.yaml` example: `csi` is a flat string list, `defaultCsi` is a server-level field, removed non-existent `zosmfBase` field.
+
 ## [0.9.7] - 2026-04-14
 
 ### Fixed

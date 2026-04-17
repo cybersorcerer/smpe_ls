@@ -1,3 +1,14 @@
 ++USERMOD(TEST001)
   DESC(TEST PRIMARY(!) DATA)
   .
+++EXEC(E1) DISTLIB(DD1) SYSLIB(DD2)
+.
+/* Inline */                                                            00000000
+/* Inline */                                                            00000000
+/* Inline */                                                            00000000
+/* Inline */                                                            00000000
+/* Inline */                                                            00000000
+/* Inline */                                                            00000000
+/* Inline */                                                            00000000
+++SRC(SRC1) DISTLIB(D1) TXLIB(DD4)
+.

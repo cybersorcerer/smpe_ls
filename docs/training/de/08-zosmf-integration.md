@@ -23,15 +23,59 @@ servers:
   - name: MVSDEV
     host: mvsdev.example.com
     port: 10443
-    zosmfBase: /zosmf/services/v1
+    user: USERID
+    rejectUnauthorized: true
+    csi:
+      - SYS1.SMPCSI
+      - SYS1.SMPCSI2
+    defaultCsi: SYS1.SMPCSI
     zones:
-      - TZONE
-      - DZONE
-    csis:
-      - name: CSI
-        dataset: SYS1.SMPCSI
-        defaultCsi: true
+      - GLOBAL
+      - MVST100
+      - MVST200
+      - MVSD100
+      - MVSD200
+    defaultZones:
+      - GLOBAL
+      - MVST*
+
+# Optionaler Standard-Server (wenn nicht gesetzt, wird immer nachgefragt)
+# defaultServer: MVSDEV
 ```
+
+### Felder der Konfigurationsdatei
+
+| Feld | Pflicht | Beschreibung |
+|------|---------|--------------|
+| `name` | ja | Anzeigename des Servers |
+| `host` | ja | Hostname oder IP-Adresse des z/OSMF-Servers |
+| `port` | ja | Port des z/OSMF-Servers (typisch: 443 oder 10443) |
+| `user` | ja | z/OS Benutzer-ID |
+| `rejectUnauthorized` | nein | TLS-Zertifikat prüfen (Standard: `true`) |
+| `csi` | ja | Liste der CSI-Datasets (mindestens eine Angabe) |
+| `defaultCsi` | nein | Standard-CSI — wird bei mehreren CSIs ohne Rückfrage verwendet |
+| `zones` | nein | Vollständige Liste aller Zonen im System — ermöglicht Wildcard-Auflösung |
+| `defaultZones` | nein | Vorausgefüllte Zonen beim Abfrage-Dialog — unterstützt Wildcards (`*`, `?`) |
+| `defaultServer` | nein | Name des Standard-Servers (auf oberster Ebene, außerhalb von `servers`) |
+
+### Zonen und Wildcard-Auflösung
+
+Die z/OSMF CSI Query API (GIMAPI) unterstützt kein Wildcard-Matching in Zonennamen —
+jede Zone muss exakt und einzeln angegeben werden. Die Extension löst dieses Problem
+clientseitig:
+
+- In `zones` werden alle im System vorhandenen Zonennamen hinterlegt.
+- In `defaultZones` (und im Abfrage-Dialog) können Wildcards verwendet werden:
+  - `*` steht für beliebig viele Zeichen
+  - `?` steht für genau ein Zeichen
+- Die Extension löst Wildcards gegen die `zones`-Liste auf und übergibt der API
+  die resultierenden exakten Zonennamen.
+
+**Beispiel:** `defaultZones: [GLOBAL, MVST*]` mit `zones: [GLOBAL, MVST100, MVST200, MVSD100]`
+ergibt bei der Abfrage die Zonen `GLOBAL`, `MVST100` und `MVST200`.
+
+Wenn keine `zones`-Liste konfiguriert ist, werden Zonennamen unverändert an die API
+übergeben — Wildcards funktionieren dann nicht.
 
 Die Konfigurationsdatei wird in folgender Reihenfolge gesucht:
 

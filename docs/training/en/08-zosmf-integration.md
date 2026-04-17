@@ -23,15 +23,59 @@ servers:
   - name: MVSDEV
     host: mvsdev.example.com
     port: 10443
-    zosmfBase: /zosmf/services/v1
+    user: USERID
+    rejectUnauthorized: true
+    csi:
+      - SYS1.SMPCSI
+      - SYS1.SMPCSI2
+    defaultCsi: SYS1.SMPCSI
     zones:
-      - TZONE
-      - DZONE
-    csis:
-      - name: CSI
-        dataset: SYS1.SMPCSI
-        defaultCsi: true
+      - GLOBAL
+      - MVST100
+      - MVST200
+      - MVSD100
+      - MVSD200
+    defaultZones:
+      - GLOBAL
+      - MVST*
+
+# Optional default server (if not set, user is always prompted)
+# defaultServer: MVSDEV
 ```
+
+### Configuration File Fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `name` | yes | Display name of the server |
+| `host` | yes | Hostname or IP address of the z/OSMF server |
+| `port` | yes | Port of the z/OSMF server (typically 443 or 10443) |
+| `user` | yes | z/OS user ID |
+| `rejectUnauthorized` | no | Verify TLS certificate (default: `true`) |
+| `csi` | yes | List of CSI datasets (at least one required) |
+| `defaultCsi` | no | Default CSI — used without prompting when multiple CSIs are configured |
+| `zones` | no | Complete list of all zones in the system — enables wildcard resolution |
+| `defaultZones` | no | Pre-filled zones in the query dialog — supports wildcards (`*`, `?`) |
+| `defaultServer` | no | Name of the default server (top-level field, outside `servers`) |
+
+### Zones and Wildcard Resolution
+
+The z/OSMF CSI Query API (GIMAPI) does not support wildcard matching in zone names —
+each zone must be specified exactly and individually. The extension solves this
+client-side:
+
+- `zones` holds the complete list of all zone names present in the system.
+- `defaultZones` (and the query dialog) support wildcards:
+  - `*` matches any number of characters
+  - `?` matches exactly one character
+- The extension resolves wildcards against the `zones` list and passes the resulting
+  exact zone names to the API.
+
+**Example:** `defaultZones: [GLOBAL, MVST*]` with `zones: [GLOBAL, MVST100, MVST200, MVSD100]`
+results in the query being executed for zones `GLOBAL`, `MVST100`, and `MVST200`.
+
+If no `zones` list is configured, zone names are passed to the API unchanged —
+wildcards will not work in that case.
 
 The configuration file is resolved in this order:
 

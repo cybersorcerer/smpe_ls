@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-0.9.7-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-0.9.8-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -244,10 +244,12 @@ make release
 
 ## 📋 What's New
 
-### Version 0.9.7 (Latest)
+### Version 0.9.8 (Latest)
 
 **Bug Fixes:**
 
+- 🐛 **Content beyond column 72 false positive in inline data** - The column 72 diagnostic no longer fires for lines that are inline data (e.g. JCL after `++JCLIN`, source after `++SRC`). Inline data regions are now excluded from the check, consistent with all other diagnostics.
+- 🐛 **Free Form CSI Query: default subentries** - Entry type selection now pre-fills the subentries field with a default set for SYSMOD, DDDEF, GLOBALZONE, TARGETZONE, DLIBZONE, and DLIB. The picker pre-selects the matching checkboxes. Entry types without a defined default still clear the field on change.
 - 🐛 **Parser Fix: SYMPATH in `++HFS`** - Quoted path strings (e.g. `'../IVP/eqadrest.env'`) no longer cause premature statement termination. Dots and parentheses inside `'...'` are now correctly ignored by the terminator and parenthesis depth logic.
 
 ### Version 0.9.4
