@@ -2,8 +2,10 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
-## What's New in 0.9.7
+## What's New in 0.9.8
 
+- **Content beyond column 72 false positive in inline data** - The column 72 diagnostic no longer fires for inline data lines (e.g. JCL after `++JCLIN`, source after `++SRC`).
+- **Free Form CSI Query: default subentries** - Entry type selection now pre-fills the subentries field with a default set for SYSMOD, DDDEF, GLOBALZONE, TARGETZONE, DLIBZONE, and DLIB. The picker also pre-selects the matching checkboxes.
 - **Parser Fix: SYMPATH in `++HFS`** - Quoted path strings (e.g. `'../IVP/eqadrest.env'`) no longer cause premature statement termination. Dots and parentheses inside `'...'` are now correctly ignored by the terminator and parenthesis depth logic.
 
 ## What's New in 0.9.6
@@ -62,12 +64,12 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 
 | Platform | File |
 |----------|------|
-| Windows x64 | `smpe-mcs-language-server-win32-x64-0.9.7.vsix` |
-| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-0.9.7.vsix` |
-| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-0.9.7.vsix` |
-| macOS Intel | `smpe-mcs-language-server-darwin-x64-0.9.7.vsix` |
-| Linux x64 | `smpe-mcs-language-server-linux-x64-0.9.7.vsix` |
-| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-0.9.7.vsix` |
+| Windows x64 | `smpe-mcs-language-server-win32-x64-0.9.8.vsix` |
+| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-0.9.8.vsix` |
+| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-0.9.8.vsix` |
+| macOS Intel | `smpe-mcs-language-server-darwin-x64-0.9.8.vsix` |
+| Linux x64 | `smpe-mcs-language-server-linux-x64-0.9.8.vsix` |
+| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-0.9.8.vsix` |
 
 ### Installation in VS Code
 
@@ -79,7 +81,7 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 Alternatively via terminal:
 
 ```bash
-code --install-extension smpe-mcs-language-server-darwin-arm64-0.9.7.vsix
+code --install-extension smpe-mcs-language-server-darwin-arm64-0.9.8.vsix
 ```
 
 The Language Server is already included in the extension - no additional installation required.

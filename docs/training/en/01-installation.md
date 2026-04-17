@@ -34,8 +34,6 @@ installation required.
 2. Press `Cmd+Shift+P` (macOS) or `Ctrl+Shift+P` (Windows/Linux)
 3. Type `Extensions: Install from VSIX...` and confirm
 4. Select the downloaded `.vsix` file
-5. After installation, reload the window:
-   `Cmd+Shift+P` → `Developer: Reload Window`
 
 ## Installation via Terminal
 

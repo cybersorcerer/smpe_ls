@@ -7,7 +7,7 @@ detection works, and what visual aids the editor provides.
 
 ## Prerequisites
 
-Extension installed and VSCode reloaded — see [Module 01](01-installation.md).
+Extension installed — see [Module 01](01-installation.md).
 
 ## Opening or Creating a .smpe File
 

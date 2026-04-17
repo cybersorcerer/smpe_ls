@@ -97,7 +97,7 @@ func (p *Provider) AnalyzeASTWithConfigAndText(doc *parser.Document, config *Con
 
 	// Check for content beyond column 72 (needs original text)
 	if config.ContentBeyondColumn72 && text != "" {
-		diagnostics = append(diagnostics, p.checkContentBeyondColumn72(text)...)
+		diagnostics = append(diagnostics, p.checkContentBeyondColumn72(doc, text)...)
 	}
 
 	// Analyze each statement in the AST
@@ -603,13 +603,65 @@ func (p *Provider) validateOperandsASTWithConfig(stmt *parser.Node, operands map
 
 // checkContentBeyondColumn72 checks for content that extends beyond column 72
 // Per IBM documentation, columns 73-80 are ignored by SMP/E
-func (p *Provider) checkContentBeyondColumn72(text string) []lsp.Diagnostic {
+// Lines that follow a statement expecting inline data are skipped.
+func (p *Provider) checkContentBeyondColumn72(doc *parser.Document, text string) []lsp.Diagnostic {
 	var diagnostics []lsp.Diagnostic
 	lines := strings.Split(text, "\n")
 
+	// stmtExpectsInlineData mirrors the same helper in checkStandaloneCommentsBetweenMCS
+	stmtExpectsInlineData := func(stmt *parser.Node) bool {
+		if stmt.StatementDef == nil || !stmt.StatementDef.InlineData {
+			return false
+		}
+		for _, child := range stmt.Children {
+			if child.Type == parser.NodeTypeOperand {
+				opName := child.Name
+				if opName == "FROMDS" || opName == "RELFILE" || opName == "TXLIB" || opName == "DELETE" {
+					return false
+				}
+			}
+		}
+		return true
+	}
+
+	// Collect the line ranges that contain inline data so they can be skipped.
+	// An inline data region starts after the terminator of a statement that expects
+	// inline data and ends before the next statement begins.
+	type lineRange struct{ start, end int }
+	var inlineRanges []lineRange
+	for i, stmt := range doc.Statements {
+		if !stmtExpectsInlineData(stmt) {
+			continue
+		}
+		// The inline data ends where the next statement begins (or EOF)
+		regionEnd := len(lines)
+		if i+1 < len(doc.Statements) {
+			regionEnd = doc.Statements[i+1].Position.Line
+		}
+		// The inline data starts on the line after the last AST node of this statement
+		regionStart := stmt.Position.Line
+		for _, child := range stmt.Children {
+			if child.Position.Line > regionStart {
+				regionStart = child.Position.Line
+			}
+		}
+		inlineRanges = append(inlineRanges, lineRange{regionStart + 1, regionEnd})
+	}
+
+	isInlineDataLine := func(lineNum int) bool {
+		for _, r := range inlineRanges {
+			if lineNum >= r.start && lineNum < r.end {
+				return true
+			}
+		}
+		return false
+	}
+
 	for lineNum, line := range lines {
-		// Skip empty lines
 		if len(line) == 0 {
+			continue
+		}
+		if isInlineDataLine(lineNum) {
 			continue
 		}
 

@@ -887,12 +887,15 @@ export class FreeFormPanel {
             const entryType = document.getElementById('entryType').value;
             const grid = document.getElementById('subentryGrid');
             const subs = (SUBENTRIES_BY_TYPE[entryType] || []).slice().sort();
+            const currentVal = document.getElementById('subentries').value;
+            const selected = new Set(currentVal.split(',').map(s => s.trim().toUpperCase()).filter(s => s.length > 0));
             grid.innerHTML = '';
             for (const sub of subs) {
                 const lbl = document.createElement('label');
                 const cb = document.createElement('input');
                 cb.type = 'checkbox';
                 cb.value = sub;
+                cb.checked = selected.has(sub.toUpperCase());
                 lbl.appendChild(cb);
                 lbl.appendChild(document.createTextNode(sub));
                 grid.appendChild(lbl);
@@ -946,8 +949,8 @@ export class FreeFormPanel {
                 rb.addEventListener('change', () => {
                     document.getElementById('entryType').value = item;
                     document.getElementById('entryTypePicker').classList.remove('visible');
+                    applySubentryDefaults();
                     updateSubentryGrid();
-                    document.getElementById('subentries').value = '';
                     document.getElementById('filter').value = '';
                     document.getElementById('subentryPicker').classList.remove('visible');
                 });
@@ -970,14 +973,31 @@ export class FreeFormPanel {
             }
         });
 
+        // Default subentries per entry type (shown when entry type is selected)
+        const SUBENTRY_DEFAULTS = {
+            SYSMOD:     'APPID,APPLY,ERROR,HOLDDATA,IFREQ,INSTALLDATE,INSTALLTIME,LASTUPD,PRE,RECDATE,RECTIME,REQ,REWORK,SUPBY,SUPING',
+            DDDEF:      'CONCAT,DATACLAS,DATASET,DISP,DSNTYPE,INITDISP,MGMTCLAS,PATH,STORCLAS',
+            GLOBALZONE: 'ENAME,FMID,OPTIONS,UPGLEVEL,ZDESC,ZONEINDEX',
+            TARGETZONE: 'ENAME,OPTIONS,RELATED,SREL,TIEDTO,UPGLEVEL,XZLINK,ZDESC',
+            DLIBZONE:   'ACCJCLIN,ENAME,OPTIONS,RELATED,SREL,UPGLEVEL,ZDESC',
+            DLIB:       'ENAME,LASTUPD,LASTUPDTYPE,SYSLIB',
+        };
+
+        function applySubentryDefaults() {
+            const entryType = document.getElementById('entryType').value.trim().toUpperCase();
+            const defaults = SUBENTRY_DEFAULTS[entryType] ?? '';
+            document.getElementById('subentries').value = defaults;
+        }
+
         document.getElementById('entryType').addEventListener('input', () => {
+            applySubentryDefaults();
             updateSubentryGrid();
-            document.getElementById('subentries').value = '';
             document.getElementById('filter').value = '';
             document.getElementById('subentryPicker').classList.remove('visible');
         });
 
         // Initial population
+        applySubentryDefaults();
         updateSubentryGrid();
 
         // Attach event listeners (onclick attributes are blocked by CSP)

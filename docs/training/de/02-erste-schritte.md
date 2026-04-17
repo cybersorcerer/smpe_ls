@@ -8,7 +8,7 @@ bereitstellt.
 
 ## Voraussetzungen
 
-Extension installiert und VSCode neu geladen — siehe [Modul 01](01-installation.md).
+Extension installiert — siehe [Modul 01](01-installation.md).
 
 ## Eine .smpe-Datei öffnen oder erstellen
 
