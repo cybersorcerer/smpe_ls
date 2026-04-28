@@ -758,8 +758,13 @@ func TestCompletionSnippetItem(t *testing.T) {
 	for _, item := range items {
 		if item.Label == "++PTF … (snippet)" {
 			foundSnippet = true
-			if item.InsertText != "++PTF(${1:UAnnnnn}) .\n++VER(${2:Z038}) ." {
-				t.Errorf("Unexpected snippet text: %s", item.InsertText)
+			// When typing "+" a replaceRange is set, so TextEdit is used instead of InsertText
+			snippetText := item.InsertText
+			if item.TextEdit != nil {
+				snippetText = item.TextEdit.NewText
+			}
+			if snippetText != "++PTF(${1:UAnnnnn}) .\n++VER(${2:Z038}) ." {
+				t.Errorf("Unexpected snippet text: %s", snippetText)
 			}
 			if item.InsertTextFormat != lsp.InsertTextFormatSnippet {
 				t.Error("Expected InsertTextFormatSnippet")
@@ -799,5 +804,44 @@ func TestCompletionTextEditRange(t *testing.T) {
 					item.TextEdit.Range.End.Line, item.TextEdit.Range.End.Character)
 			}
 		}
+	}
+}
+
+func TestCompletionSnippetItemWithReplaceRange(t *testing.T) {
+	statements := map[string]data.MCSStatement{
+		"++PTF": {
+			Name:        "++PTF",
+			Description: "Program Temporary Fix",
+			Parameter:   "SYSMOD-ID",
+			Snippet:     "++PTF(${1:UAnnnnn}) .\n++VER(${2:Z038}) .",
+		},
+	}
+	store := &data.Store{
+		Statements: statements,
+		List:       []data.MCSStatement{statements["++PTF"]},
+	}
+	cp := NewProvider(store)
+	p := parser.NewParser(statements)
+	// Simulate user typing "++" — triggers replaceRange path
+	text := "++"
+	doc := p.Parse(text)
+	items := cp.GetCompletionsAST(doc, text, 0, 2)
+
+	foundSnippet := false
+	for _, item := range items {
+		if item.Label == "++PTF … (snippet)" {
+			foundSnippet = true
+			if item.TextEdit == nil {
+				t.Error("Expected TextEdit to be set when replaceRange != nil")
+			} else if item.TextEdit.NewText != "++PTF(${1:UAnnnnn}) .\n++VER(${2:Z038}) ." {
+				t.Errorf("Unexpected TextEdit.NewText: %s", item.TextEdit.NewText)
+			}
+			if item.InsertText != "" {
+				t.Error("InsertText should be empty when TextEdit is set")
+			}
+		}
+	}
+	if !foundSnippet {
+		t.Error("Expected snippet completion item for ++PTF with replaceRange")
 	}
 }

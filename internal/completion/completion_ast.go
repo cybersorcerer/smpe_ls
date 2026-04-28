@@ -832,7 +832,14 @@ func (p *Provider) getMCSCompletions(replaceRange *lsp.Range) []lsp.CompletionIt
 				Detail:           "Boilerplate",
 				Documentation:    stmt.Description,
 				InsertTextFormat: lsp.InsertTextFormatSnippet,
-				InsertText:       stmt.Snippet,
+			}
+			if replaceRange != nil {
+				snippetItem.TextEdit = &lsp.TextEdit{
+					Range:   *replaceRange,
+					NewText: stmt.Snippet,
+				}
+			} else {
+				snippetItem.InsertText = stmt.Snippet
 			}
 			items = append(items, snippetItem)
 		}
