@@ -824,6 +824,18 @@ func (p *Provider) getMCSCompletions(replaceRange *lsp.Range) []lsp.CompletionIt
 
 			items = append(items, item)
 		}
+
+		if stmt.Snippet != "" {
+			snippetItem := lsp.CompletionItem{
+				Label:            name + " … (snippet)",
+				Kind:             lsp.CompletionItemKindSnippet,
+				Detail:           "Boilerplate",
+				Documentation:    stmt.Description,
+				InsertTextFormat: lsp.InsertTextFormatSnippet,
+				InsertText:       stmt.Snippet,
+			}
+			items = append(items, snippetItem)
+		}
 	}
 
 	return items
