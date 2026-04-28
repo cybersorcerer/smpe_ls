@@ -63,6 +63,34 @@ Ergebnis:
         UJ67890).
 ```
 
+## Boilerplate-Snippets
+
+Für alle Control MCS Statements bietet die Completion zusätzlich ein Snippet-Item an.
+Es ist am `…`-Suffix im Label und am Snippet-Icon erkennbar:
+
+```text
+++PTF
+++PTF …        ← Snippet
+++USERMOD
+++USERMOD …    ← Snippet
+```
+
+Ein Snippet fügt ein vollständiges Boilerplate-Template ein, das alle required Operanden
+enthält und Tab Stops für die Platzhalter setzt. Beispiel für `++PTF …`:
+
+```smpe
+++PTF(UAnnnnn)
+  DESC(description)
+  REWORK(2026118)
+  .
+```
+
+Nach der Auswahl springt der Cursor automatisch zum ersten Platzhalter (`UAnnnnn`).
+Mit `Tab` gelangt man zum nächsten Platzhalter, bis alle Werte ausgefüllt sind.
+
+Der REWORK-Wert wird automatisch mit dem aktuellen Datum im Format `yyyyddd` vorbesetzt
+(z.B. `2026118` für den 28. April 2026).
+
 ## Gegenseitig ausschließende Operanden
 
 Manche Operanden schließen sich gegenseitig aus (z.B. `SYSLIB` und `TXLIB` bei
