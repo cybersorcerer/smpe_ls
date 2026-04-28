@@ -5954,7 +5954,7 @@
           "description": "Specifies one or more function SYSMODs that currently contain the element."
         }
       ],
-      "snippet": "++SRC(${1:name})\n  DISTLIB(${2:ddname})\n  ."
+      "snippet": "++SRC(${1:name})\n  ."
     },
     {
       "name": "++SRCUPD",
