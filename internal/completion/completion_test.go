@@ -756,7 +756,7 @@ func TestCompletionSnippetItem(t *testing.T) {
 
 	foundSnippet := false
 	for _, item := range items {
-		if item.Label == "++PTF … (snippet)" {
+		if item.Label == "++PTF …" {
 			foundSnippet = true
 			// When typing "+" a replaceRange is set, so TextEdit is used instead of InsertText
 			snippetText := item.InsertText
@@ -829,7 +829,7 @@ func TestCompletionSnippetItemWithReplaceRange(t *testing.T) {
 
 	foundSnippet := false
 	for _, item := range items {
-		if item.Label == "++PTF … (snippet)" {
+		if item.Label == "++PTF …" {
 			foundSnippet = true
 			if item.TextEdit == nil {
 				t.Error("Expected TextEdit to be set when replaceRange != nil")
@@ -870,7 +870,7 @@ func TestCompletionSnippetItemNoReplaceRange(t *testing.T) {
 
 	foundSnippet := false
 	for _, item := range items {
-		if item.Label == "++PTF … (snippet)" {
+		if item.Label == "++PTF …" {
 			foundSnippet = true
 			if item.InsertText != "++PTF(${1:UAnnnnn}) .\n++VER(${2:Z038}) ." {
 				t.Errorf("Expected InsertText to be set, got: %q", item.InsertText)

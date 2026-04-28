@@ -834,7 +834,7 @@ func (p *Provider) getMCSCompletions(replaceRange *lsp.Range) []lsp.CompletionIt
 				snippetText = strings.ReplaceAll(snippetText, "yyyyddd", fmt.Sprintf("%d%03d", now.Year(), now.YearDay()))
 			}
 			snippetItem := lsp.CompletionItem{
-				Label:            name + " … (snippet)",
+				Label:            name + " …",
 				Kind:             lsp.CompletionItemKindSnippet,
 				Detail:           "Boilerplate",
 				Documentation:    stmt.Description,
