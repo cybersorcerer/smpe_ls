@@ -5,6 +5,7 @@ import (
 
 	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/parser"
+	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
 // Helper function to create test data and providers
@@ -730,6 +731,46 @@ func TestCompletionNoOperandsForStatementWithoutOperands(t *testing.T) {
 		}
 		// Note: This might still offer MCS completions if parser thinks we're at start
 		// Let's be lenient here - as long as we don't crash
+	}
+}
+
+// Test: Snippet completion item
+func TestCompletionSnippetItem(t *testing.T) {
+	statements := map[string]data.MCSStatement{
+		"++PTF": {
+			Name:        "++PTF",
+			Description: "Program Temporary Fix",
+			Parameter:   "SYSMOD-ID",
+			Snippet:     "++PTF(${1:UAnnnnn}) .\n++VER(${2:Z038}) .",
+		},
+	}
+	store := &data.Store{
+		Statements: statements,
+		List:       []data.MCSStatement{statements["++PTF"]},
+	}
+	cp := NewProvider(store)
+	p := parser.NewParser(statements)
+	text := "+"
+	doc := p.Parse(text)
+	items := cp.GetCompletionsAST(doc, text, 0, 1)
+
+	foundSnippet := false
+	for _, item := range items {
+		if item.Label == "++PTF … (snippet)" {
+			foundSnippet = true
+			if item.InsertText != "++PTF(${1:UAnnnnn}) .\n++VER(${2:Z038}) ." {
+				t.Errorf("Unexpected snippet text: %s", item.InsertText)
+			}
+			if item.InsertTextFormat != lsp.InsertTextFormatSnippet {
+				t.Error("Expected InsertTextFormatSnippet")
+			}
+			if item.Kind != lsp.CompletionItemKindSnippet {
+				t.Error("Expected CompletionItemKindSnippet")
+			}
+		}
+	}
+	if !foundSnippet {
+		t.Error("Expected snippet completion item for ++PTF")
 	}
 }
 

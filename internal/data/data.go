@@ -16,6 +16,7 @@ type MCSStatement struct {
 	Type             string    `json:"type"`
 	InlineData       bool      `json:"inline_data,omitempty"`
 	Operands         []Operand `json:"operands,omitempty"`
+	Snippet          string    `json:"snippet,omitempty"`
 }
 
 // Operand represents an operand definition
