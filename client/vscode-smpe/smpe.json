@@ -204,17 +204,19 @@
           "parameter": "SOURCE-ID",
           "type": "string",
           "length": 64,
-          "description": "Is a 1- to 64-character string identifying the source of the SYSMODs being processed. SMP/E   associates the SOURCEID value with the SYSMODs named on the ++ASSIGN MCS. The SOURCEID value can consist o any nonblank character (X'41' through X'FE') except single quotation mark ('), asterisk (*), percent (%) comma (,), left parenthesis (() and right parenthesis ())."
+          "description": "Is a 1- to 64-character string identifying the source of the SYSMODs being processed. SMP/E   associates the SOURCEID value with the SYSMODs named on the ++ASSIGN MCS. The SOURCEID value can consist o any nonblank character (X'41' through X'FE') except single quotation mark ('), asterisk (*), percent (%) comma (,), left parenthesis (() and right parenthesis ()).",
+          "required": true
         },
         {
           "name": "TO",
           "parameter": "SYSMOD-IDs",
           "type": "list",
           "length": 7,
-          "description": "Specifies the SYSMODs with which the source ID is to be associated."
+          "description": "Specifies the SYSMODs with which the source ID is to be associated.",
+          "required": true
         }
       ],
-      "snippet": "++ASSIGN\n  ${1:operands}\n  ."
+      "snippet": "++ASSIGN\n  SOURCEID(${1:source_id})\n  TO(${2:UAnnnnn})\n  ."
     },
     {
       "name": "++DELETE",
