@@ -5441,6 +5441,7 @@
           "parameter": "DDNAME",
           "type": "string",
           "length": 8,
+          "required": true,
           "description": "Specifies the ddname of the target library to which the member is to be moved. Required if SYSLIB is specified."
         }
       ],
