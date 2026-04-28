@@ -2,11 +2,9 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
-## What's New in 0.9.8
+## What's New in 1.0.0
 
-- **Content beyond column 72 false positive in inline data** - The column 72 diagnostic no longer fires for inline data lines (e.g. JCL after `++JCLIN`, source after `++SRC`).
-- **Free Form CSI Query: default subentries** - Entry type selection now pre-fills the subentries field with a default set for SYSMOD, DDDEF, GLOBALZONE, TARGETZONE, DLIBZONE, and DLIB. The picker also pre-selects the matching checkboxes.
-- **Parser Fix: SYMPATH in `++HFS`** - Quoted path strings (e.g. `'../IVP/eqadrest.env'`) no longer cause premature statement termination. Dots and parentheses inside `'...'` are now correctly ignored by the terminator and parenthesis depth logic.
+- **Boilerplate Snippets** - All Control MCS statements (e.g. `++PTF`, `++APAR`, `++USERMOD`) now offer a second completion item `… (snippet)` that inserts a ready-to-use template with tab stops for required operands.
 
 ## What's New in 0.9.6
 
