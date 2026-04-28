@@ -236,7 +236,8 @@
           "parameter": "DDNAME|ALL",
           "type": "string",
           "length": 64,
-          "description": "Specifies the DDNAMEs of the target library where the load module resides. If ALL is specified, the load module is deleted from all target libraries defined in the target zone."
+          "description": "Specifies the DDNAMEs of the target library where the load module resides. If ALL is specified, the load module is deleted from all target libraries defined in the target zone.",
+          "required": true
         },
         {
           "name": "TO",
@@ -246,7 +247,7 @@
         }
       ],
       "type": "MCS",
-      "snippet": "++DELETE(${1:name})\n  ."
+      "snippet": "++DELETE(${1:name})\n  SYSLIB(${2|ALL,ddname|})\n  ."
     },
     {
       "name": "++FEATURE",
