@@ -261,6 +261,7 @@
           "parameter": "DESCRIPTION",
           "type": "string",
           "length": 64,
+          "required": true,
           "description": "Describes the feature that represents this collection of function SYSMODs.. The DESCRIPTION value can contain up to 64 bytes of data, including blanks. Extra blanks, as well as leading and trailing blanks, are deleted."
         },
         {
@@ -456,6 +457,7 @@
           "parameter": "FMID",
           "type": "string",
           "length": 7,
+          "required": true,
           "description": "Specifies the FMID to which the held SYSMOD is applicable. For external HOLDDATA (a ++HOLD statement not within a SYSMOD), this information allows SMP/E to receive only those statements associated with FMIDs defined in the user's global zone. This operand is required."
         },
         {
@@ -463,6 +465,7 @@
           "parameter": "REASON_ID",
           "type": "string",
           "length": 7,
+          "required": true,
           "description": "A 1 to 7 character string used to help users identify the reason why the SYSMOD is being put into exception SYSMOD status. The reason IDs that can be specified depend on the type of hold. An error reason ID is the APAR number that caused the SYSMOD to be placed in exception status. A system reason ID identifies some special processing the SYSMOD requires. A user reason ID is defined by the user. A Fix Category reason ID is the SYSMOD ID for the APAR that caused the SYSMOD to be placed into exception status. The APAR reason ID is associated to one or more categories of fixes.",
           "values": [
             {
@@ -583,7 +586,7 @@
           "description": "Identifies the SYSMOD that resolves the held SYSMOD. More specifically, the resolving SYSMOD supersedes the reason ID APAR that caused the SYSMOD to be held."
         }
       ],
-      "snippet": "++HOLD(${1:UAnnnnn})\n  ${2|ERROR,FIXCAT,SYSTEM,USER|}(${3:comment/fix-category})\n  ."
+      "snippet": "++HOLD(${1:UAnnnnn})\n  FMID(${2:FMIDnnn})\n  REASON(${3:reason_id})\n  ${4|ERROR,FIXCAT,SYSTEM,USER|}(${5:comment/fix-category})\n  ."
     },
     {
       "name": "++IF",
@@ -5392,18 +5395,24 @@
           "name": "MAC",
           "type": "boolean",
           "mutually_exclusive": "MOD|SRC|LMOD",
+          "required_group": true,
+          "required_group_id": "move_type",
           "description": "Specifies that the member to be moved is a macro."
         },
         {
           "name": "MOD",
           "type": "boolean",
           "mutually_exclusive": "MAC|SRC|LMOD",
+          "required_group": true,
+          "required_group_id": "move_type",
           "description": "Specifies that the member to be moved is a module."
         },
         {
           "name": "SRC",
           "type": "boolean",
           "mutually_exclusive": "MAC|MOD|LMOD",
+          "required_group": true,
+          "required_group_id": "move_type",
           "description": "Specifies that the member to be moved is a source."
         },
         {
@@ -5424,6 +5433,7 @@
           "parameter": "DDNAME",
           "type": "string",
           "length": 8,
+          "required": true,
           "description": "Specifies the ddname of the distribution library to which the member is to be moved. Required if DISTLIB is specified."
         },
         {
@@ -5434,7 +5444,7 @@
           "description": "Specifies the ddname of the target library to which the member is to be moved. Required if SYSLIB is specified."
         }
       ],
-      "snippet": "++MOVE(${1:name})\n  DISTLIB(${2:ddname})\n  ."
+      "snippet": "++MOVE(${1:name})\n  ${2|MAC,MOD,SRC|}\n  DISTLIB(${3:ddname})\n  TODISTLIB(${4:ddname})\n  ."
     },
     {
       "name": "++NULL",
@@ -5454,6 +5464,7 @@
           "parameter": "DESCRIPTION",
           "type": "string",
           "length": 64,
+          "required": true,
           "description": "A text description of the product. Can contain up to 64 bytes of data."
         },
         {
