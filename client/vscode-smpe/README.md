@@ -4,7 +4,7 @@ Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
 ## What's New in 1.0.0
 
-- **Boilerplate Snippets** - All Control MCS statements (e.g. `++PTF`, `++APAR`, `++USERMOD`) now offer a second completion item `… (snippet)` that inserts a ready-to-use template with tab stops for required operands.
+- **Boilerplate Snippets** - All Control MCS statements (e.g. `++PTF`, `++APAR`, `++USERMOD`) now offer a second completion item `…` (recognizable by the snippet icon) that inserts a ready-to-use template with tab stops for all required operands. The REWORK operand is pre-filled with the current date.
 
 ## What's New in 0.9.6
 
@@ -62,12 +62,12 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 
 | Platform | File |
 |----------|------|
-| Windows x64 | `smpe-mcs-language-server-win32-x64-0.9.8.vsix` |
-| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-0.9.8.vsix` |
-| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-0.9.8.vsix` |
-| macOS Intel | `smpe-mcs-language-server-darwin-x64-0.9.8.vsix` |
-| Linux x64 | `smpe-mcs-language-server-linux-x64-0.9.8.vsix` |
-| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-0.9.8.vsix` |
+| Windows x64 | `smpe-mcs-language-server-win32-x64-1.0.0.vsix` |
+| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-1.0.0.vsix` |
+| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-1.0.0.vsix` |
+| macOS Intel | `smpe-mcs-language-server-darwin-x64-1.0.0.vsix` |
+| Linux x64 | `smpe-mcs-language-server-linux-x64-1.0.0.vsix` |
+| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-1.0.0.vsix` |
 
 ### Installation in VS Code
 
@@ -79,7 +79,7 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 Alternatively via terminal:
 
 ```bash
-code --install-extension smpe-mcs-language-server-darwin-arm64-0.9.8.vsix
+code --install-extension smpe-mcs-language-server-darwin-arm64-1.0.0.vsix
 ```
 
 The Language Server is already included in the extension - no additional installation required.

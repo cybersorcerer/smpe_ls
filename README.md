@@ -244,7 +244,13 @@ make release
 
 ## 📋 What's New
 
-### Version 0.9.8 (Latest)
+### Version 1.0.0 (Latest)
+
+**New Features:**
+
+- ✨ **Boilerplate Snippets** - All Control MCS statements now offer a second completion item `…` (recognizable by the snippet icon) that inserts a ready-to-use template with tab stops for all required operands. The REWORK operand is pre-filled with the current date in `yyyyddd` format.
+
+### Version 0.9.8
 
 **Bug Fixes:**
 
