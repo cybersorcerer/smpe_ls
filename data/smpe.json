@@ -192,7 +192,7 @@
           "description": "Identifies to SMP/E the prefix used in the relative file data set names for this SYSMOD.SMP/E uses this prefix when allocating data set names for the SYSMOD's relative files during RECEIVEprocessing. The prefix can be from 1 to 8 alphanumeric or national ($, #, @) characters or a dash (-). This operand can be specified only if the FILES operand is also specified."
         }
       ],
-      "snippet": "++APAR(${1:AAnnnnn}) .$0"
+      "snippet": "++APAR(${1:AAnnnnn})\n  DESC(${2:description})\n  REWORK(${3:yyyyddd})\n  ."
     },
     {
       "name": "++ASSIGN",
@@ -214,7 +214,7 @@
           "description": "Specifies the SYSMODs with which the source ID is to be associated."
         }
       ],
-      "snippet": "++ASSIGN\n  ${1:operands} .$0"
+      "snippet": "++ASSIGN\n  ${1:operands}\n  ."
     },
     {
       "name": "++DELETE",
@@ -244,7 +244,7 @@
         }
       ],
       "type": "MCS",
-      "snippet": "++DELETE(${1:name}) .$0"
+      "snippet": "++DELETE(${1:name})\n  ."
     },
     {
       "name": "++FEATURE",
@@ -282,7 +282,7 @@
           "description": "Specifies the level of this feature, which was reworked for minor changes. Up to eightnumeric characters can be specified. For SYSMODs supplied by IBM\u00ae, the REWORK level is yyyyddd, whereyyyy is the year the SYSMOD was reworked and ddd is the Julian date. REWORK allows an updated SYSMOD tobe automatically received again, as long as it is more recent than the version that has already beenreceived. This takes the place of rejecting the SYSMOD and receiving it again."
         }
       ],
-      "snippet": "++FEATURE(${1:name}) .$0"
+      "snippet": "++FEATURE(${1:name})\n  DESC(${2:description})\n  REWORK(${3:yyyyddd})\n  ."
     },
     {
       "name": "++FUNCTION",
@@ -328,7 +328,7 @@
           "description": "Identifies to SMP/E the prefix used in the relative file data set names for this SYSMOD.SMP/E uses this prefix when allocating data set names for the SYSMOD's relative files during RECEIVEprocessing. The prefix can be from 1 to 8 alphanumeric or national ($, #, @) characters or a dash (-). This operand can be specified only if the FILES operand is also specified."
         }
       ],
-      "snippet": "++FUNCTION(${1:FMIDnnn}) .$0"
+      "snippet": "++FUNCTION(${1:FMIDnnn})\n  DESC(${2:description})\n  REWORK(${3:yyyyddd})\n  ."
     },
     {
       "name": "++HOLD",
@@ -580,7 +580,7 @@
           "description": "Identifies the SYSMOD that resolves the held SYSMOD. More specifically, the resolving SYSMOD supersedes the reason ID APAR that caused the SYSMOD to be held."
         }
       ],
-      "snippet": "++HOLD(${1:UAnnnnn})\n  ${2|ERROR,FIXCAT,SYSTEM,USER|}(${3:comment/fix-category}) .$0"
+      "snippet": "++HOLD(${1:UAnnnnn})\n  ${2|ERROR,FIXCAT,SYSTEM,USER|}(${3:comment/fix-category})\n  ."
     },
     {
       "name": "++IF",
@@ -610,7 +610,7 @@
           "description": "Specifies that the requisite for the ++IF MCS follows."
         }
       ],
-      "snippet": "++IF(${1:condition}) .$0"
+      "snippet": "++IF(${1:condition})\n  ."
     },
     {
       "name": "++JAR",
@@ -771,7 +771,7 @@
           "description": "Specifies one or more function SYSMODs that currently contain the element. The function containing the element MCS takes over ownership of the element from the specified functions. When VERSION is specified on an element statement, it overrides any VERSION operand values that might be specified on the ++VER MCS."
         }
       ],
-      "snippet": "++JAR(${1:name})\n  DISTLIB(${2:ddname}) .$0"
+      "snippet": "++JAR(${1:name})\n  DISTLIB(${2:ddname})\n  ."
     },
     {
       "name": "++JARUPD",
@@ -830,7 +830,7 @@
           "description": "Is the ddname of the partitioned data set containing the JAR element. This operand is required if the JAR element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with RELFILE."
         }
       ],
-      "snippet": "++JARUPD(${1:name}) .$0"
+      "snippet": "++JARUPD(${1:name})\n  ."
     },
     {
       "name": "++JCLIN",
@@ -935,7 +935,7 @@
           "description": "Specifies the name of the update program or procedure that is used in the JCLIN data. This operand must be specified if the name is different from that recognized by SMP/E, which is the program name IEBUPDTE."
         }
       ],
-      "snippet": "++JCLIN .$0"
+      "snippet": "++JCLIN\n  ."
     },
     {
       "name": "++VER",
@@ -994,7 +994,7 @@
           "description": "Indicates functions whose elements should be considered functionally lower than the elements contained in this SYSMOD. It specifies one or more function SYSMODs that currently contain the element. The function containing the ++VER MCS takes over ownership of all the elements from the specified functions. When VERSION is specified on an element statement, it overrides any VERSION operand values specified on the ++VER MCS."
         }
       ],
-      "snippet": "++VER(${1:Z038})\n  PRE(${2:UAnnnnn}) .$0"
+      "snippet": "++VER(${1:Z038})\n  PRE(${2:UAnnnnn})\n  ."
     },
     {
       "name": "++ZAP",
@@ -1026,7 +1026,7 @@
           "description": "Identifies all the alias names of a module that has aliases in both the target and distribution libraries. You can use TALIAS for a module that was copied from a distribution library into a target library (defined by JCLIN data as a copied module), but not for one that is link-edited (defined by JCLIN data as a link-edited module). TALIAS must be specified on the ++MOD MCS even if ALIAS was specified on the COPY SELECT statement."
         }
       ],
-      "snippet": "++ZAP(${1:name})\n  DISTLIB(${2:ddname}) .$0"
+      "snippet": "++ZAP(${1:name})\n  DISTLIB(${2:ddname})\n  ."
     },
     {
       "name": "++BOOK",
@@ -5029,7 +5029,7 @@
           "description": "Specifies one or more function SYSMODs that currently contain the element."
         }
       ],
-      "snippet": "++MAC(${1:name})\n  DISTLIB(${2:ddname}) .$0"
+      "snippet": "++MAC(${1:name})\n  DISTLIB(${2:ddname})\n  ."
     },
     {
       "name": "++MACUPD",
@@ -5089,7 +5089,7 @@
           "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         }
       ],
-      "snippet": "++MACUPD(${1:name}) .$0"
+      "snippet": "++MACUPD(${1:name})\n  ."
     },
     {
       "name": "++MOD",
@@ -5358,7 +5358,7 @@
           "description": "Specifies one or more function SYSMODs that currently contain the element."
         }
       ],
-      "snippet": "++MOD(${1:name})\n  DISTLIB(${2:ddname}) .$0"
+      "snippet": "++MOD(${1:name})\n  DISTLIB(${2:ddname})\n  ."
     },
     {
       "name": "++MOVE",
@@ -5429,14 +5429,14 @@
           "description": "Specifies the ddname of the target library to which the member is to be moved. Required if SYSLIB is specified."
         }
       ],
-      "snippet": "++MOVE(${1:name})\n  DISTLIB(${2:ddname}) .$0"
+      "snippet": "++MOVE(${1:name})\n  DISTLIB(${2:ddname})\n  ."
     },
     {
       "name": "++NULL",
       "type": "MCS",
       "description": "The ++NULL MCS is valid only in the SMPHOLD data set. It provides no SMP/E function other than allowing all service tapes to be built with the same format, even though a function may have no exception SYSMOD data for a particular month.",
       "operands": [],
-      "snippet": "++NULL .$0"
+      "snippet": "++NULL\n  ."
     },
     {
       "name": "++PRODUCT",
@@ -5487,7 +5487,7 @@
           "description": "The level of this ++PRODUCT MCS, which was reworked for minor changes. Up to eight numeric characters."
         }
       ],
-      "snippet": "++PRODUCT(${1:prodid},${2:VV.RR.MM})\n  SREL(${3:Z038}) .$0"
+      "snippet": "++PRODUCT(${1:prodid},${2:VV.RR.MM})\n  SREL(${3:Z038})\n  DESC(${4:description})\n  REWORK(${5:yyyyddd})\n  ."
     },
     {
       "name": "++PROGRAM",
@@ -5595,7 +5595,7 @@
           "description": "Specifies one or more function SYSMODs that currently contain the element."
         }
       ],
-      "snippet": "++PROGRAM(${1:name})\n  DISTLIB(${2:ddname})\n  SYSLIB(${3:ddname}) .$0"
+      "snippet": "++PROGRAM(${1:name})\n  DISTLIB(${2:ddname})\n  SYSLIB(${3:ddname})\n  ."
     },
     {
       "name": "++PTF",
@@ -5634,7 +5634,7 @@
           "description": "Identifies the prefix used in the relative file data set names for this SYSMOD. Can only be specified if FILES operand is also specified."
         }
       ],
-      "snippet": "++PTF(${1:UAnnnnn}) .$0"
+      "snippet": "++PTF(${1:UAnnnnn})\n  DESC(${2:description})\n  REWORK(${3:yyyyddd})\n  ."
     },
     {
       "name": "++RELEASE",
@@ -5811,7 +5811,7 @@
           ]
         }
       ],
-      "snippet": "++RELEASE(${1:UAnnnnn})\n  ${2|ERROR,FIXCAT,SYSTEM,USER|}\n  FMID(${3:FMIDnnn})\n  REASON(${4:reason-id}) .$0"
+      "snippet": "++RELEASE(${1:UAnnnnn})\n  ${2|ERROR,FIXCAT,SYSTEM,USER|}\n  FMID(${3:FMIDnnn})\n  REASON(${4:reason-id})\n  ."
     },
     {
       "name": "++RENAME",
@@ -5829,7 +5829,7 @@
           "description": "Specifies the new name for the load module."
         }
       ],
-      "snippet": "++RENAME(${1:old-name})\n  TONAME(${2:new-name}) .$0"
+      "snippet": "++RENAME(${1:old-name})\n  TONAME(${2:new-name})\n  ."
     },
     {
       "name": "++SRC",
@@ -5952,7 +5952,7 @@
           "description": "Specifies one or more function SYSMODs that currently contain the element."
         }
       ],
-      "snippet": "++SRC(${1:name})\n  DISTLIB(${2:ddname}) .$0"
+      "snippet": "++SRC(${1:name})\n  DISTLIB(${2:ddname})\n  ."
     },
     {
       "name": "++SRCUPD",
@@ -5984,7 +5984,7 @@
           "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         }
       ],
-      "snippet": "++SRCUPD(${1:name}) .$0"
+      "snippet": "++SRCUPD(${1:name})\n  ."
     },
     {
       "name": "++AIX1",
@@ -6652,7 +6652,7 @@
           "description": "Identifies the prefix used in the relative file data set names for this SYSMOD. Can only be specified if FILES operand is also specified."
         }
       ],
-      "snippet": "++USERMOD(${1:USERnnn}) .$0"
+      "snippet": "++USERMOD(${1:USERnnn})\n  DESC(${2:description})\n  REWORK(${3:yyyyddd})\n  ."
     }
   ]
 }
