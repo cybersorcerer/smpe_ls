@@ -192,7 +192,7 @@
           "description": "Identifies to SMP/E the prefix used in the relative file data set names for this SYSMOD.SMP/E uses this prefix when allocating data set names for the SYSMOD's relative files during RECEIVEprocessing. The prefix can be from 1 to 8 alphanumeric or national ($, #, @) characters or a dash (-). This operand can be specified only if the FILES operand is also specified."
         }
       ],
-      "snippet": "++APAR(${1:AAnnnnn}) .\n++VER(${2:Z038}) .$0"
+      "snippet": "++APAR(${1:AAnnnnn}) .$0"
     },
     {
       "name": "++ASSIGN",
@@ -328,7 +328,7 @@
           "description": "Identifies to SMP/E the prefix used in the relative file data set names for this SYSMOD.SMP/E uses this prefix when allocating data set names for the SYSMOD's relative files during RECEIVEprocessing. The prefix can be from 1 to 8 alphanumeric or national ($, #, @) characters or a dash (-). This operand can be specified only if the FILES operand is also specified."
         }
       ],
-      "snippet": "++FUNCTION(${1:FMIDnnnnn}) .\n++VER(${2:Z038})\n  FMID(${3:same-FMID}) .$0"
+      "snippet": "++FUNCTION(${1:FMIDnnn}) .$0"
     },
     {
       "name": "++HOLD",
@@ -5634,7 +5634,7 @@
           "description": "Identifies the prefix used in the relative file data set names for this SYSMOD. Can only be specified if FILES operand is also specified."
         }
       ],
-      "snippet": "++PTF(${1:UAnnnnn}) .\n++VER(${2:Z038})\n  PRE(${3:UAnnnnn}) .$0"
+      "snippet": "++PTF(${1:UAnnnnn}) .$0"
     },
     {
       "name": "++RELEASE",
@@ -5811,7 +5811,7 @@
           ]
         }
       ],
-      "snippet": "++RELEASE(${1:UAnnnnn})\n  ${2|ERROR,FIXCAT,SYSTEM,USER|}\n  FMID(${3:FMIDnnnnn})\n  REASON(${4:reason-id}) .$0"
+      "snippet": "++RELEASE(${1:UAnnnnn})\n  ${2|ERROR,FIXCAT,SYSTEM,USER|}\n  FMID(${3:FMIDnnn})\n  REASON(${4:reason-id}) .$0"
     },
     {
       "name": "++RENAME",
@@ -6652,7 +6652,7 @@
           "description": "Identifies the prefix used in the relative file data set names for this SYSMOD. Can only be specified if FILES operand is also specified."
         }
       ],
-      "snippet": "++USERMOD(${1:USERnnnn}) .\n++VER(${2:Z038}) .$0"
+      "snippet": "++USERMOD(${1:USERnnn}) .$0"
     }
   ]
 }
