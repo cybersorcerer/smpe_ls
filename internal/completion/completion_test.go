@@ -845,3 +845,42 @@ func TestCompletionSnippetItemWithReplaceRange(t *testing.T) {
 		t.Error("Expected snippet completion item for ++PTF with replaceRange")
 	}
 }
+
+func TestCompletionSnippetItemNoReplaceRange(t *testing.T) {
+	statements := map[string]data.MCSStatement{
+		"++PTF": {
+			Name:        "++PTF",
+			Description: "Program Temporary Fix",
+			Parameter:   "SYSMOD-ID",
+			Snippet:     "++PTF(${1:UAnnnnn}) .\n++VER(${2:Z038}) .",
+		},
+	}
+	store := &data.Store{
+		Statements: statements,
+		List:       []data.MCSStatement{statements["++PTF"]},
+	}
+	cp := NewProvider(store)
+	p := parser.NewParser(statements)
+	// Use text with no "++"-prefixed content so no statement node is found,
+	// but trimmedBefore is non-empty (not "+"-prefixed) — this forces the
+	// findNodeAtPosition nil branch which calls getMCSCompletions(nil).
+	text := "SOMETHING"
+	doc := p.Parse(text)
+	items := cp.GetCompletionsAST(doc, text, 0, 5)
+
+	foundSnippet := false
+	for _, item := range items {
+		if item.Label == "++PTF … (snippet)" {
+			foundSnippet = true
+			if item.InsertText != "++PTF(${1:UAnnnnn}) .\n++VER(${2:Z038}) ." {
+				t.Errorf("Expected InsertText to be set, got: %q", item.InsertText)
+			}
+			if item.TextEdit != nil {
+				t.Error("Expected TextEdit to be nil when replaceRange is nil")
+			}
+		}
+	}
+	if !foundSnippet {
+		t.Error("Expected snippet completion item for ++PTF without replaceRange")
+	}
+}
