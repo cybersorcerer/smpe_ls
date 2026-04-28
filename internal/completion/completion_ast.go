@@ -1,7 +1,9 @@
 package completion
 
 import (
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/langid"
@@ -823,6 +825,30 @@ func (p *Provider) getMCSCompletions(replaceRange *lsp.Range) []lsp.CompletionIt
 			}
 
 			items = append(items, item)
+		}
+
+		if stmt.Snippet != "" {
+			snippetText := stmt.Snippet
+			if strings.Contains(snippetText, "yyyyddd") {
+				now := time.Now()
+				snippetText = strings.ReplaceAll(snippetText, "yyyyddd", fmt.Sprintf("%d%03d", now.Year(), now.YearDay()))
+			}
+			snippetItem := lsp.CompletionItem{
+				Label:            name + " …",
+				Kind:             lsp.CompletionItemKindSnippet,
+				Detail:           "Boilerplate",
+				Documentation:    stmt.Description,
+				InsertTextFormat: lsp.InsertTextFormatSnippet,
+			}
+			if replaceRange != nil {
+				snippetItem.TextEdit = &lsp.TextEdit{
+					Range:   *replaceRange,
+					NewText: snippetText,
+				}
+			} else {
+				snippetItem.InsertText = snippetText
+			}
+			items = append(items, snippetItem)
 		}
 	}
 

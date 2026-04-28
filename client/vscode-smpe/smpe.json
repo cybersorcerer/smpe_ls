@@ -99,7 +99,7 @@
         "type": "string",
         "length": 8,
         "mutually_exclusive": "DELETE",
-        "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
+        "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
       },
       {
         "name": "TEXT",
@@ -191,7 +191,8 @@
           "allowed_if": "FILES",
           "description": "Identifies to SMP/E the prefix used in the relative file data set names for this SYSMOD.SMP/E uses this prefix when allocating data set names for the SYSMOD's relative files during RECEIVEprocessing. The prefix can be from 1 to 8 alphanumeric or national ($, #, @) characters or a dash (-). This operand can be specified only if the FILES operand is also specified."
         }
-      ]
+      ],
+      "snippet": "++APAR(${1:AAnnnnn})\n  DESC(${2:description})\n  REWORK(${3:yyyyddd})\n  ."
     },
     {
       "name": "++ASSIGN",
@@ -203,16 +204,19 @@
           "parameter": "SOURCE-ID",
           "type": "string",
           "length": 64,
-          "description": "Is a 1- to 64-character string identifying the source of the SYSMODs being processed. SMP/E   associates the SOURCEID value with the SYSMODs named on the ++ASSIGN MCS. The SOURCEID value can consist o any nonblank character (X'41' through X'FE') except single quotation mark ('), asterisk (*), percent (%) comma (,), left parenthesis (() and right parenthesis ())."
+          "description": "Is a 1- to 64-character string identifying the source of the SYSMODs being processed. SMP/E   associates the SOURCEID value with the SYSMODs named on the ++ASSIGN MCS. The SOURCEID value can consist o any nonblank character (X'41' through X'FE') except single quotation mark ('), asterisk (*), percent (%) comma (,), left parenthesis (() and right parenthesis ()).",
+          "required": true
         },
         {
           "name": "TO",
           "parameter": "SYSMOD-IDs",
           "type": "list",
           "length": 7,
-          "description": "Specifies the SYSMODs with which the source ID is to be associated."
+          "description": "Specifies the SYSMODs with which the source ID is to be associated.",
+          "required": true
         }
-      ]
+      ],
+      "snippet": "++ASSIGN\n  SOURCEID(${1:source_id})\n  TO(${2:UAnnnnn})\n  ."
     },
     {
       "name": "++DELETE",
@@ -232,7 +236,8 @@
           "parameter": "DDNAME|ALL",
           "type": "string",
           "length": 64,
-          "description": "Specifies the DDNAMEs of the target library where the load module resides. If ALL is specified, the load module is deleted from all target libraries defined in the target zone."
+          "description": "Specifies the DDNAMEs of the target library where the load module resides. If ALL is specified, the load module is deleted from all target libraries defined in the target zone.",
+          "required": true
         },
         {
           "name": "TO",
@@ -241,7 +246,8 @@
           "description": "Specifies the SYSMODs with which the source ID is to be associated."
         }
       ],
-      "type": "MCS"
+      "type": "MCS",
+      "snippet": "++DELETE(${1:name})\n  SYSLIB(${2|ALL,ddname|})\n  ."
     },
     {
       "name": "++FEATURE",
@@ -255,6 +261,7 @@
           "parameter": "DESCRIPTION",
           "type": "string",
           "length": 64,
+          "required": true,
           "description": "Describes the feature that represents this collection of function SYSMODs.. The DESCRIPTION value can contain up to 64 bytes of data, including blanks. Extra blanks, as well as leading and trailing blanks, are deleted."
         },
         {
@@ -278,7 +285,8 @@
           "length": 8,
           "description": "Specifies the level of this feature, which was reworked for minor changes. Up to eightnumeric characters can be specified. For SYSMODs supplied by IBM\u00ae, the REWORK level is yyyyddd, whereyyyy is the year the SYSMOD was reworked and ddd is the Julian date. REWORK allows an updated SYSMOD tobe automatically received again, as long as it is more recent than the version that has already beenreceived. This takes the place of rejecting the SYSMOD and receiving it again."
         }
-      ]
+      ],
+      "snippet": "++FEATURE(${1:name})\n  DESC(${2:description})\n  REWORK(${3:yyyyddd})\n  ."
     },
     {
       "name": "++FUNCTION",
@@ -323,7 +331,8 @@
           "allowed_if": "FILES",
           "description": "Identifies to SMP/E the prefix used in the relative file data set names for this SYSMOD.SMP/E uses this prefix when allocating data set names for the SYSMOD's relative files during RECEIVEprocessing. The prefix can be from 1 to 8 alphanumeric or national ($, #, @) characters or a dash (-). This operand can be specified only if the FILES operand is also specified."
         }
-      ]
+      ],
+      "snippet": "++FUNCTION(${1:FMIDnnn})\n  DESC(${2:description})\n  REWORK(${3:yyyyddd})\n  ."
     },
     {
       "name": "++HOLD",
@@ -448,6 +457,7 @@
           "parameter": "FMID",
           "type": "string",
           "length": 7,
+          "required": true,
           "description": "Specifies the FMID to which the held SYSMOD is applicable. For external HOLDDATA (a ++HOLD statement not within a SYSMOD), this information allows SMP/E to receive only those statements associated with FMIDs defined in the user's global zone. This operand is required."
         },
         {
@@ -455,6 +465,7 @@
           "parameter": "REASON_ID",
           "type": "string",
           "length": 7,
+          "required": true,
           "description": "A 1 to 7 character string used to help users identify the reason why the SYSMOD is being put into exception SYSMOD status. The reason IDs that can be specified depend on the type of hold. An error reason ID is the APAR number that caused the SYSMOD to be placed in exception status. A system reason ID identifies some special processing the SYSMOD requires. A user reason ID is defined by the user. A Fix Category reason ID is the SYSMOD ID for the APAR that caused the SYSMOD to be placed into exception status. The APAR reason ID is associated to one or more categories of fixes.",
           "values": [
             {
@@ -574,7 +585,8 @@
           "length": 7,
           "description": "Identifies the SYSMOD that resolves the held SYSMOD. More specifically, the resolving SYSMOD supersedes the reason ID APAR that caused the SYSMOD to be held."
         }
-      ]
+      ],
+      "snippet": "++HOLD(${1:UAnnnnn})\n  FMID(${2:FMIDnnn})\n  REASON(${3:reason_id})\n  ${4|ERROR,FIXCAT,SYSTEM,USER|}(${5:comment/fix-category})\n  ."
     },
     {
       "name": "++IF",
@@ -587,14 +599,16 @@
           "parameter": "SYSMOD_ID",
           "type": "string",
           "length": 7,
-          "description": "Specifies the function that is to be checked to determine whether it is installed in one of the following:\n - The target libraries (for APPLY processing)\n - The distribution libraries (for ACCEPT processing)\n\nThis operand is required. It is not satisfied by superseded FMIDs."
+          "description": "Specifies the function that is to be checked to determine whether it is installed in one of the following:\n - The target libraries (for APPLY processing)\n - The distribution libraries (for ACCEPT processing)\n\nThis operand is required. It is not satisfied by superseded FMIDs.",
+          "required": true
         },
         {
           "name": "REQ",
           "parameter": "SYSMOD_ID",
           "type": "list",
           "length": 7,
-          "description": "Specifies the SYSMODs that are needed if the function SYSMOD specified on the FMID operand of the ++IF MCS is installed. This operand is required."
+          "description": "Specifies the SYSMODs that are needed if the function SYSMOD specified on the FMID operand of the ++IF MCS is installed. This operand is required.",
+          "required": true
         },
         {
           "name": "THEN",
@@ -603,7 +617,8 @@
           "length": 7,
           "description": "Specifies that the requisite for the ++IF MCS follows."
         }
-      ]
+      ],
+      "snippet": "++IF\n  FMID(${1:FMIDnnn})\n  REQ(${2:UAnnnnn})\n  ."
     },
     {
       "name": "++JAR",
@@ -739,7 +754,7 @@
           "parameter": "DDNAME",
           "type": "string",
           "length": 8,
-          "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the JAR element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the JAR element from the distribution library member into a UNIX file system. SYSLIB must be specified when the JAR element is first installed."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -763,7 +778,8 @@
           "length": 7,
           "description": "Specifies one or more function SYSMODs that currently contain the element. The function containing the element MCS takes over ownership of the element from the specified functions. When VERSION is specified on an element statement, it overrides any VERSION operand values that might be specified on the ++VER MCS."
         }
-      ]
+      ],
+      "snippet": "++JAR(${1:name})\n  DISTLIB(${2:ddname})\n  ."
     },
     {
       "name": "++JARUPD",
@@ -821,7 +837,8 @@
           "length": 8,
           "description": "Is the ddname of the partitioned data set containing the JAR element. This operand is required if the JAR element is provided in a data set that the users have access to, rather than inline or in RELFILE format. SMPTLIB cannot be used as a value on the TXLIB operand. TXLIB is mutually exclusive with RELFILE."
         }
-      ]
+      ],
+      "snippet": "++JARUPD(${1:name})\n  ."
     },
     {
       "name": "++JCLIN",
@@ -925,7 +942,8 @@
           "length": 0,
           "description": "Specifies the name of the update program or procedure that is used in the JCLIN data. This operand must be specified if the name is different from that recognized by SMP/E, which is the program name IEBUPDTE."
         }
-      ]
+      ],
+      "snippet": "++JCLIN\n  ."
     },
     {
       "name": "++VER",
@@ -983,7 +1001,8 @@
           "length": 7,
           "description": "Indicates functions whose elements should be considered functionally lower than the elements contained in this SYSMOD. It specifies one or more function SYSMODs that currently contain the element. The function containing the ++VER MCS takes over ownership of all the elements from the specified functions. When VERSION is specified on an element statement, it overrides any VERSION operand values specified on the ++VER MCS."
         }
-      ]
+      ],
+      "snippet": "++VER(${1:Z038})\n  PRE(${2:UAnnnnn})\n  ."
     },
     {
       "name": "++ZAP",
@@ -1014,7 +1033,8 @@
           "length": 7,
           "description": "Identifies all the alias names of a module that has aliases in both the target and distribution libraries. You can use TALIAS for a module that was copied from a distribution library into a target library (defined by JCLIN data as a copied module), but not for one that is link-edited (defined by JCLIN data as a link-edited module). TALIAS must be specified on the ++MOD MCS even if ALIAS was specified on the COPY SELECT statement."
         }
-      ]
+      ],
+      "snippet": "++ZAP(${1:name})\n  DISTLIB(${2:ddname})\n  ."
     },
     {
       "name": "++BOOK",
@@ -1105,7 +1125,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library for the specified element."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -1213,7 +1233,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library for the specified element."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -1321,7 +1341,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library for the specified element."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -1426,7 +1446,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library for the specified element."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -1531,7 +1551,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library for the specified element."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -1636,7 +1656,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -1741,7 +1761,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -1846,7 +1866,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -1951,7 +1971,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -2056,7 +2076,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -2164,7 +2184,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -2271,7 +2291,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -2379,7 +2399,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -2487,7 +2507,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -2595,7 +2615,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -2703,7 +2723,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -2811,7 +2831,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -2917,7 +2937,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -3025,7 +3045,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -3133,7 +3153,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -3239,7 +3259,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -3345,7 +3365,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -3453,7 +3473,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -3561,7 +3581,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -3669,7 +3689,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -3777,7 +3797,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -3885,7 +3905,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -3993,7 +4013,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -4101,7 +4121,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -4207,7 +4227,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -4313,7 +4333,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -4419,7 +4439,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -4525,7 +4545,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -4631,7 +4651,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -4739,7 +4759,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -4847,7 +4867,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -4992,7 +5012,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library, if the macro exists in one."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -5016,7 +5036,8 @@
           "length": 7,
           "description": "Specifies one or more function SYSMODs that currently contain the element."
         }
-      ]
+      ],
+      "snippet": "++MAC(${1:name})\n  DISTLIB(${2:ddname})\n  ."
     },
     {
       "name": "++MACUPD",
@@ -5073,9 +5094,10 @@
           "parameter": "DDNAME",
           "type": "string",
           "length": 8,
-          "description": "Specifies the ddname of the target library, if the macro exists in one."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         }
-      ]
+      ],
+      "snippet": "++MACUPD(${1:name})\n  ."
     },
     {
       "name": "++MOD",
@@ -5343,7 +5365,8 @@
           "length": 7,
           "description": "Specifies one or more function SYSMODs that currently contain the element."
         }
-      ]
+      ],
+      "snippet": "++MOD(${1:name})\n  DISTLIB(${2:ddname})\n  ."
     },
     {
       "name": "++MOVE",
@@ -5372,18 +5395,24 @@
           "name": "MAC",
           "type": "boolean",
           "mutually_exclusive": "MOD|SRC|LMOD",
+          "required_group": true,
+          "required_group_id": "move_type",
           "description": "Specifies that the member to be moved is a macro."
         },
         {
           "name": "MOD",
           "type": "boolean",
           "mutually_exclusive": "MAC|SRC|LMOD",
+          "required_group": true,
+          "required_group_id": "move_type",
           "description": "Specifies that the member to be moved is a module."
         },
         {
           "name": "SRC",
           "type": "boolean",
           "mutually_exclusive": "MAC|MOD|LMOD",
+          "required_group": true,
+          "required_group_id": "move_type",
           "description": "Specifies that the member to be moved is a source."
         },
         {
@@ -5397,13 +5426,14 @@
           "parameter": "DDNAME",
           "type": "string",
           "length": 8,
-          "description": "Specifies the ddname of the target library in which the member resides. Required for target library moves."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TODISTLIB",
           "parameter": "DDNAME",
           "type": "string",
           "length": 8,
+          "required": true,
           "description": "Specifies the ddname of the distribution library to which the member is to be moved. Required if DISTLIB is specified."
         },
         {
@@ -5411,15 +5441,18 @@
           "parameter": "DDNAME",
           "type": "string",
           "length": 8,
+          "required": true,
           "description": "Specifies the ddname of the target library to which the member is to be moved. Required if SYSLIB is specified."
         }
-      ]
+      ],
+      "snippet": "++MOVE(${1:name})\n  ${2|MAC,MOD,SRC|}\n  DISTLIB(${3:ddname})\n  TODISTLIB(${4:ddname})\n  ."
     },
     {
       "name": "++NULL",
       "type": "MCS",
       "description": "The ++NULL MCS is valid only in the SMPHOLD data set. It provides no SMP/E function other than allowing all service tapes to be built with the same format, even though a function may have no exception SYSMOD data for a particular month.",
-      "operands": []
+      "operands": [],
+      "snippet": "++NULL\n  ."
     },
     {
       "name": "++PRODUCT",
@@ -5432,6 +5465,7 @@
           "parameter": "DESCRIPTION",
           "type": "string",
           "length": 64,
+          "required": true,
           "description": "A text description of the product. Can contain up to 64 bytes of data."
         },
         {
@@ -5469,7 +5503,8 @@
           "length": 8,
           "description": "The level of this ++PRODUCT MCS, which was reworked for minor changes. Up to eight numeric characters."
         }
-      ]
+      ],
+      "snippet": "++PRODUCT(${1:prodid},${2:VV.RR.MM})\n  SREL(${3:Z038})\n  DESC(${4:description})\n  REWORK(${5:yyyyddd})\n  ."
     },
     {
       "name": "++PROGRAM",
@@ -5567,7 +5602,7 @@
           "length": 8,
           "required": true,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library for the program element."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "VERSION",
@@ -5576,7 +5611,8 @@
           "length": 7,
           "description": "Specifies one or more function SYSMODs that currently contain the element."
         }
-      ]
+      ],
+      "snippet": "++PROGRAM(${1:name})\n  DISTLIB(${2:ddname})\n  SYSLIB(${3:ddname})\n  ."
     },
     {
       "name": "++PTF",
@@ -5614,7 +5650,8 @@
           "allowed_if": "FILES",
           "description": "Identifies the prefix used in the relative file data set names for this SYSMOD. Can only be specified if FILES operand is also specified."
         }
-      ]
+      ],
+      "snippet": "++PTF(${1:UAnnnnn})\n  DESC(${2:description})\n  REWORK(${3:yyyyddd})\n  ."
     },
     {
       "name": "++RELEASE",
@@ -5790,7 +5827,8 @@
             }
           ]
         }
-      ]
+      ],
+      "snippet": "++RELEASE(${1:UAnnnnn})\n  ${2|ERROR,FIXCAT,SYSTEM,USER|}\n  FMID(${3:FMIDnnn})\n  REASON(${4:reason-id})\n  ."
     },
     {
       "name": "++RENAME",
@@ -5807,7 +5845,8 @@
           "required": true,
           "description": "Specifies the new name for the load module."
         }
-      ]
+      ],
+      "snippet": "++RENAME(${1:old-name})\n  TONAME(${2:new-name})\n  ."
     },
     {
       "name": "++SRC",
@@ -5904,7 +5943,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library, if the source module exists in one."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TXLIB",
@@ -5929,7 +5968,8 @@
           "length": 7,
           "description": "Specifies one or more function SYSMODs that currently contain the element."
         }
-      ]
+      ],
+      "snippet": "++SRC(${1:name})\n  ."
     },
     {
       "name": "++SRCUPD",
@@ -5958,9 +5998,10 @@
           "parameter": "DDNAME",
           "type": "string",
           "length": 8,
-          "description": "Specifies the ddname of the target library, if the source exists in one."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         }
-      ]
+      ],
+      "snippet": "++SRCUPD(${1:name})\n  ."
     },
     {
       "name": "++AIX1",
@@ -6219,7 +6260,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the hierarchical file system element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the hierarchical file system element from the distribution library member into a UNIX file system. Required when the element is first installed."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "TEXT",
@@ -6358,7 +6399,7 @@
           "type": "string",
           "length": 8,
           "mutually_exclusive": "DELETE",
-          "description": "Specifies the ddname of the target library within the UNIX file system for the element. During APPLY processing, the HFS copy utility installs the shell script element into a UNIX file system. During RESTORE processing, the HFS copy utility copies the shell script element from the distribution library member into a UNIX file system. Required when the element is first installed."
+          "description": "Specifies the ddname of the target z/OS library or the UNIX file system for the element. During APPLY processing, the SMP/E installs the element into a target library or a target UNIX file system. During RESTORE processing, SMP/E copies the element from the distribution library member into a target z/OS Library or a UNIX file system. SYSLIB must be specified when the element is first installed."
         },
         {
           "name": "SHSCRIPT",
@@ -6627,7 +6668,8 @@
           "allowed_if": "FILES",
           "description": "Identifies the prefix used in the relative file data set names for this SYSMOD. Can only be specified if FILES operand is also specified."
         }
-      ]
+      ],
+      "snippet": "++USERMOD(${1:USERnnn})\n  DESC(${2:description})\n  REWORK(${3:yyyyddd})\n  ."
     }
   ]
 }

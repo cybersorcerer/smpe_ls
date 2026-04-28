@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.0.0] - 2026-04-28
+
+### Added
+
+- **Boilerplate Snippets** - All Control MCS statements now offer a second completion item `… (snippet)` alongside the standard keyword completion. Selecting it inserts a ready-to-use multi-line template with LSP tab stops for required operands (e.g. `++PTF` inserts a `++PTF` header plus `++VER` with `PRE`). Templates are defined in `smpe.json` and can be extended without code changes.
+
 ## [0.9.8] - 2026-04-17
 
 ### Fixed

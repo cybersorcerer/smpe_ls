@@ -5,6 +5,7 @@ import (
 
 	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/parser"
+	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
 // Helper function to create test data and providers
@@ -733,6 +734,51 @@ func TestCompletionNoOperandsForStatementWithoutOperands(t *testing.T) {
 	}
 }
 
+// Test: Snippet completion item
+func TestCompletionSnippetItem(t *testing.T) {
+	statements := map[string]data.MCSStatement{
+		"++PTF": {
+			Name:        "++PTF",
+			Description: "Program Temporary Fix",
+			Parameter:   "SYSMOD-ID",
+			Snippet:     "++PTF(${1:UAnnnnn}) .\n++VER(${2:Z038}) .",
+		},
+	}
+	store := &data.Store{
+		Statements: statements,
+		List:       []data.MCSStatement{statements["++PTF"]},
+	}
+	cp := NewProvider(store)
+	p := parser.NewParser(statements)
+	text := "+"
+	doc := p.Parse(text)
+	items := cp.GetCompletionsAST(doc, text, 0, 1)
+
+	foundSnippet := false
+	for _, item := range items {
+		if item.Label == "++PTF …" {
+			foundSnippet = true
+			// When typing "+" a replaceRange is set, so TextEdit is used instead of InsertText
+			snippetText := item.InsertText
+			if item.TextEdit != nil {
+				snippetText = item.TextEdit.NewText
+			}
+			if snippetText != "++PTF(${1:UAnnnnn}) .\n++VER(${2:Z038}) ." {
+				t.Errorf("Unexpected snippet text: %s", snippetText)
+			}
+			if item.InsertTextFormat != lsp.InsertTextFormatSnippet {
+				t.Error("Expected InsertTextFormatSnippet")
+			}
+			if item.Kind != lsp.CompletionItemKindSnippet {
+				t.Error("Expected CompletionItemKindSnippet")
+			}
+		}
+	}
+	if !foundSnippet {
+		t.Error("Expected snippet completion item for ++PTF")
+	}
+}
+
 // Test: Completion with TextEdit range
 func TestCompletionTextEditRange(t *testing.T) {
 	_, p, cp := createTestProviders()
@@ -758,5 +804,83 @@ func TestCompletionTextEditRange(t *testing.T) {
 					item.TextEdit.Range.End.Line, item.TextEdit.Range.End.Character)
 			}
 		}
+	}
+}
+
+func TestCompletionSnippetItemWithReplaceRange(t *testing.T) {
+	statements := map[string]data.MCSStatement{
+		"++PTF": {
+			Name:        "++PTF",
+			Description: "Program Temporary Fix",
+			Parameter:   "SYSMOD-ID",
+			Snippet:     "++PTF(${1:UAnnnnn}) .\n++VER(${2:Z038}) .",
+		},
+	}
+	store := &data.Store{
+		Statements: statements,
+		List:       []data.MCSStatement{statements["++PTF"]},
+	}
+	cp := NewProvider(store)
+	p := parser.NewParser(statements)
+	// Simulate user typing "++" — triggers replaceRange path
+	text := "++"
+	doc := p.Parse(text)
+	items := cp.GetCompletionsAST(doc, text, 0, 2)
+
+	foundSnippet := false
+	for _, item := range items {
+		if item.Label == "++PTF …" {
+			foundSnippet = true
+			if item.TextEdit == nil {
+				t.Error("Expected TextEdit to be set when replaceRange != nil")
+			} else if item.TextEdit.NewText != "++PTF(${1:UAnnnnn}) .\n++VER(${2:Z038}) ." {
+				t.Errorf("Unexpected TextEdit.NewText: %s", item.TextEdit.NewText)
+			}
+			if item.InsertText != "" {
+				t.Error("InsertText should be empty when TextEdit is set")
+			}
+		}
+	}
+	if !foundSnippet {
+		t.Error("Expected snippet completion item for ++PTF with replaceRange")
+	}
+}
+
+func TestCompletionSnippetItemNoReplaceRange(t *testing.T) {
+	statements := map[string]data.MCSStatement{
+		"++PTF": {
+			Name:        "++PTF",
+			Description: "Program Temporary Fix",
+			Parameter:   "SYSMOD-ID",
+			Snippet:     "++PTF(${1:UAnnnnn}) .\n++VER(${2:Z038}) .",
+		},
+	}
+	store := &data.Store{
+		Statements: statements,
+		List:       []data.MCSStatement{statements["++PTF"]},
+	}
+	cp := NewProvider(store)
+	p := parser.NewParser(statements)
+	// Use text with no "++"-prefixed content so no statement node is found,
+	// but trimmedBefore is non-empty (not "+"-prefixed) — this forces the
+	// findNodeAtPosition nil branch which calls getMCSCompletions(nil).
+	text := "SOMETHING"
+	doc := p.Parse(text)
+	items := cp.GetCompletionsAST(doc, text, 0, 5)
+
+	foundSnippet := false
+	for _, item := range items {
+		if item.Label == "++PTF …" {
+			foundSnippet = true
+			if item.InsertText != "++PTF(${1:UAnnnnn}) .\n++VER(${2:Z038}) ." {
+				t.Errorf("Expected InsertText to be set, got: %q", item.InsertText)
+			}
+			if item.TextEdit != nil {
+				t.Error("Expected TextEdit to be nil when replaceRange is nil")
+			}
+		}
+	}
+	if !foundSnippet {
+		t.Error("Expected snippet completion item for ++PTF without replaceRange")
 	}
 }

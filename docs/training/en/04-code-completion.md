@@ -61,6 +61,34 @@ Result:
         UJ67890).
 ```
 
+## Boilerplate Snippets
+
+For all Control MCS statements, completion offers an additional snippet item.
+It is recognizable by the `…` suffix in the label and the snippet icon:
+
+```text
+++PTF
+++PTF …        ← Snippet
+++USERMOD
+++USERMOD …    ← Snippet
+```
+
+A snippet inserts a complete boilerplate template containing all required operands
+with tab stops for each placeholder. Example for `++PTF …`:
+
+```smpe
+++PTF(UAnnnnn)
+  DESC(description)
+  REWORK(2026118)
+  .
+```
+
+After selecting the snippet, the cursor jumps automatically to the first placeholder
+(`UAnnnnn`). Press `Tab` to move to the next placeholder until all values are filled in.
+
+The REWORK value is automatically pre-filled with the current date in `yyyyddd` format
+(e.g. `2026118` for April 28, 2026).
+
 ## Mutually Exclusive Operands
 
 Some operands are mutually exclusive (e.g. `SYSLIB` and `TXLIB` in `++PARM`).
