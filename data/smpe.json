@@ -596,14 +596,16 @@
           "parameter": "SYSMOD_ID",
           "type": "string",
           "length": 7,
-          "description": "Specifies the function that is to be checked to determine whether it is installed in one of the following:\n - The target libraries (for APPLY processing)\n - The distribution libraries (for ACCEPT processing)\n\nThis operand is required. It is not satisfied by superseded FMIDs."
+          "description": "Specifies the function that is to be checked to determine whether it is installed in one of the following:\n - The target libraries (for APPLY processing)\n - The distribution libraries (for ACCEPT processing)\n\nThis operand is required. It is not satisfied by superseded FMIDs.",
+          "required": true
         },
         {
           "name": "REQ",
           "parameter": "SYSMOD_ID",
           "type": "list",
           "length": 7,
-          "description": "Specifies the SYSMODs that are needed if the function SYSMOD specified on the FMID operand of the ++IF MCS is installed. This operand is required."
+          "description": "Specifies the SYSMODs that are needed if the function SYSMOD specified on the FMID operand of the ++IF MCS is installed. This operand is required.",
+          "required": true
         },
         {
           "name": "THEN",
@@ -613,7 +615,7 @@
           "description": "Specifies that the requisite for the ++IF MCS follows."
         }
       ],
-      "snippet": "++IF(${1:condition})\n  ."
+      "snippet": "++IF\n  FMID(${1:FMIDnnn})\n  REQ(${2:UAnnnnn})\n  ."
     },
     {
       "name": "++JAR",
