@@ -70,6 +70,7 @@ type mcsStatementRaw struct {
 	Type             string            `json:"type"`
 	InlineData       bool              `json:"inline_data,omitempty"`
 	OperandsRaw      []json.RawMessage `json:"operands,omitempty"`
+	Snippet          string            `json:"snippet,omitempty"`
 }
 
 // refEntry is used to detect {"$ref": "template_name"} entries.
@@ -116,6 +117,7 @@ func loadNewFormat(fileBytes []byte) (*Store, error) {
 			Length:           raw.Length,
 			Type:             raw.Type,
 			InlineData:       raw.InlineData,
+			Snippet:          raw.Snippet,
 		}
 
 		resolved, err := resolveOperands(raw.OperandsRaw, wrapper.Templates)
