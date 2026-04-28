@@ -157,7 +157,7 @@
   "statements": [
     {
       "name": "++APAR",
-      "description": "The ++APAR MCS identifies a service SYSMOD. The parameter **<SYSMOD-ID>** specifies a unique 7-character system modification identifier for the APAR fix. This type of SYSMOD is a temporary corrective fix to the  elements of target system and distribution libraries. All other MCSs for this SYSMOD follow this header MCS. The parameter SYSMOD ID specifies a unique 7-character system modification identifier for the APAR fix. The IBM® convention for the SYSMOD ID of a service SYSMOD (APAR, APAR fix, PTF) or USERMOD is tannnnn, where:\nt - identifies the type of SYSMOD. It is a single alphanumeric character. These are the values used by IBM:\nA-K - Used by IBM for various levels of an APAR fix\nL-T - Available for users\nU - Used by IBM for PTFs\nV-Z\nUsed by IBM for various levels of an APAR fix\na - is any alphabetic character(A-Z). Any valid character can be used for user SYSMODs.\nnnnnn - is an additional identifier for the SYSMOD. For PTFs and APAR fixes supplied by IBM, it is a number from 00001 to 99999. Any valid characters can be used for user SYSMODs.",
+      "description": "The ++APAR MCS identifies a service SYSMOD. The parameter **<SYSMOD-ID>** specifies a unique 7-character system modification identifier for the APAR fix. This type of SYSMOD is a temporary corrective fix to the  elements of target system and distribution libraries. All other MCSs for this SYSMOD follow this header MCS. The parameter SYSMOD ID specifies a unique 7-character system modification identifier for the APAR fix. The IBM\u00ae convention for the SYSMOD ID of a service SYSMOD (APAR, APAR fix, PTF) or USERMOD is tannnnn, where:\nt - identifies the type of SYSMOD. It is a single alphanumeric character. These are the values used by IBM:\nA-K - Used by IBM for various levels of an APAR fix\nL-T - Available for users\nU - Used by IBM for PTFs\nV-Z\nUsed by IBM for various levels of an APAR fix\na - is any alphabetic character(A-Z). Any valid character can be used for user SYSMODs.\nnnnnn - is an additional identifier for the SYSMOD. For PTFs and APAR fixes supplied by IBM, it is a number from 00001 to 99999. Any valid characters can be used for user SYSMODs.",
       "parameter": "SYSMOD-ID",
       "length": 7,
       "type": "MCS",
@@ -181,7 +181,7 @@
           "parameter": "LEVEL",
           "type": "integer",
           "length": 8,
-          "description": "Specifies the level of this SYSMOD, which was reworked for minor changes. Up to eightnumeric characters can be specified. For SYSMODs supplied by IBM®, the REWORK level is yyyyddd, whereyyyy is the year the SYSMOD was reworked and ddd is the Julian date. REWORK allows an updated SYSMOD tobe automatically received again, as long as it is more recent than the version that has already beenreceived. This takes the place of rejecting the SYSMOD and receiving it again."
+          "description": "Specifies the level of this SYSMOD, which was reworked for minor changes. Up to eightnumeric characters can be specified. For SYSMODs supplied by IBM\u00ae, the REWORK level is yyyyddd, whereyyyy is the year the SYSMOD was reworked and ddd is the Julian date. REWORK allows an updated SYSMOD tobe automatically received again, as long as it is more recent than the version that has already beenreceived. This takes the place of rejecting the SYSMOD and receiving it again."
         },
         {
           "name": "RFDSNPFX",
@@ -279,7 +279,7 @@
           "parameter": "LEVEL",
           "type": "integer",
           "length": 8,
-          "description": "Specifies the level of this feature, which was reworked for minor changes. Up to eightnumeric characters can be specified. For SYSMODs supplied by IBM®, the REWORK level is yyyyddd, whereyyyy is the year the SYSMOD was reworked and ddd is the Julian date. REWORK allows an updated SYSMOD tobe automatically received again, as long as it is more recent than the version that has already beenreceived. This takes the place of rejecting the SYSMOD and receiving it again."
+          "description": "Specifies the level of this feature, which was reworked for minor changes. Up to eightnumeric characters can be specified. For SYSMODs supplied by IBM\u00ae, the REWORK level is yyyyddd, whereyyyy is the year the SYSMOD was reworked and ddd is the Julian date. REWORK allows an updated SYSMOD tobe automatically received again, as long as it is more recent than the version that has already beenreceived. This takes the place of rejecting the SYSMOD and receiving it again."
         }
       ],
       "snippet": "++FEATURE(${1:name}) .$0"
@@ -317,7 +317,7 @@
           "parameter": "LEVEL",
           "type": "integer",
           "length": 8,
-          "description": "Specifies the level of this sysmod, which was reworked for minor changes. Up to eightnumeric characters can be specified. For SYSMODs supplied by IBM®, the REWORK level is yyyyddd, whereyyyy is the year the SYSMOD was reworked and ddd is the Julian date. REWORK allows an updated SYSMOD tobe automatically received again, as long as it is more recent than the version that has already beenreceived. This takes the place of rejecting the SYSMOD and receiving it again."
+          "description": "Specifies the level of this sysmod, which was reworked for minor changes. Up to eightnumeric characters can be specified. For SYSMODs supplied by IBM\u00ae, the REWORK level is yyyyddd, whereyyyy is the year the SYSMOD was reworked and ddd is the Julian date. REWORK allows an updated SYSMOD tobe automatically received again, as long as it is more recent than the version that has already beenreceived. This takes the place of rejecting the SYSMOD and receiving it again."
         },
         {
           "name": "RFDSNPFX",
@@ -328,7 +328,7 @@
           "description": "Identifies to SMP/E the prefix used in the relative file data set names for this SYSMOD.SMP/E uses this prefix when allocating data set names for the SYSMOD's relative files during RECEIVEprocessing. The prefix can be from 1 to 8 alphanumeric or national ($, #, @) characters or a dash (-). This operand can be specified only if the FILES operand is also specified."
         }
       ],
-      "snippet": "++FUNCTION(${1:FMIDnnnnn}) .\n++VER(${2:Z038})\n  FMID(${3:FMIDnnnnn}) .$0"
+      "snippet": "++FUNCTION(${1:FMIDnnnnn}) .\n++VER(${2:Z038})\n  FMID(${3:same-FMID}) .$0"
     },
     {
       "name": "++HOLD",
@@ -439,7 +439,7 @@
           "parameter": "ENHANCED-HOLDDATA",
           "type": "string",
           "length": 64,
-          "description": "Contains IBM–supplied Enhanced HOLDDATA."
+          "description": "Contains IBM\u2013supplied Enhanced HOLDDATA."
         },
         {
           "name": "DATE",
@@ -580,7 +580,7 @@
           "description": "Identifies the SYSMOD that resolves the held SYSMOD. More specifically, the resolving SYSMOD supersedes the reason ID APAR that caused the SYSMOD to be held."
         }
       ],
-      "snippet": "++HOLD(${1:UAnnnnn})\n  ${2|ERROR,FIXCAT,SYSTEM,USER|}(${3:comment}) .$0"
+      "snippet": "++HOLD(${1:UAnnnnn})\n  ${2|ERROR,FIXCAT,SYSTEM,USER|}(${3:comment/fix-category}) .$0"
     },
     {
       "name": "++IF",
@@ -942,7 +942,7 @@
       "parameter": "SREL",
       "length": 4,
       "type": "MCS",
-      "description": "The ++VER MCS describes the environment required for receiving and installing a SYSMOD. The Parameter <SREL> specifies the system or subsystem release on which the SYSMOD can be installed. The SREL must contain four alphanumeric characters, usually one alphabetic character followed by three numeric characters. These are the systems and subsystems defined by IBM®, with their SRELs:\n\n- System\n    SREL\n- DB2\n    P115\n- CICS\n    C150\n- IMS\n    P115\n- MVS\n    Z038\n- NCP\n    P004\n\nThe SREL is used during RECEIVE processing to determine whether a SYSMOD should be received. A SYSMOD must contain a separate ++VER MCS for each environment to which it applies. At least one ++VER MCS must be present in a SYSMOD, and a maximum of 255 ++VER statements are allowed for each SYSMOD.",
+      "description": "The ++VER MCS describes the environment required for receiving and installing a SYSMOD. The Parameter <SREL> specifies the system or subsystem release on which the SYSMOD can be installed. The SREL must contain four alphanumeric characters, usually one alphabetic character followed by three numeric characters. These are the systems and subsystems defined by IBM\u00ae, with their SRELs:\n\n- System\n    SREL\n- DB2\n    P115\n- CICS\n    C150\n- IMS\n    P115\n- MVS\n    Z038\n- NCP\n    P004\n\nThe SREL is used during RECEIVE processing to determine whether a SYSMOD should be received. A SYSMOD must contain a separate ++VER MCS for each environment to which it applies. At least one ++VER MCS must be present in a SYSMOD, and a maximum of 255 ++VER statements are allowed for each SYSMOD.",
       "operands": [
         {
           "name": "DELETE",
