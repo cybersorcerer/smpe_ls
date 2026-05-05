@@ -79,6 +79,7 @@ type CollectedStatement struct {
 	StartLine        int      // Line number where statement starts (0-indexed)
 	Lines            []string // Original lines
 	UnbalancedParens int      // Parenthesis imbalance: positive = missing closing, negative = missing opening
+	HasTerminator    bool     // True if a '.' terminator was found while collecting lines
 }
 
 // Parser parses SMP/E MCS text into an AST
@@ -201,6 +202,7 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 					StartLine:        startLine,
 					Lines:            currentLines,
 					UnbalancedParens: parenDepth,
+					HasTerminator:    true,
 				})
 				currentLines = nil
 				inStatement = false
@@ -217,6 +219,7 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 				StartLine:        startLine,
 				Lines:            currentLines,
 				UnbalancedParens: parenDepth,
+				HasTerminator:    true,
 			})
 			currentLines = nil
 			inStatement = false
@@ -745,6 +748,9 @@ func hasTerminatorSkippingFreeText(text string, freeTextOps map[string]bool) boo
 					i = k
 					continue
 				}
+				// Not a free-text operand: advance past the name to avoid re-scanning
+				i = j
+				continue
 			}
 		}
 		if ch == '\'' {

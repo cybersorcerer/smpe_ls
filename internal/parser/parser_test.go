@@ -543,6 +543,7 @@ func TestParseHold(t *testing.T) {
 				{Name: "FMID", Parameter: "fmid", Type: "string"},
 				{Name: "REASON", Parameter: "reason-id", Type: "string"},
 				{Name: "DATE", Parameter: "date", Type: "integer"},
+				{Name: "COMMENT", Type: "string", FreeText: true},
 			},
 		},
 	}
@@ -587,6 +588,39 @@ func TestParseHold(t *testing.T) {
 	}
 	if !reasonFound {
 		t.Error("REASON operand not found")
+	}
+}
+
+func TestParseHoldFreeTextComment(t *testing.T) {
+	statements := map[string]data.MCSStatement{
+		"++HOLD": {
+			Name:      "++HOLD",
+			Parameter: "SYSMOD-ID",
+			Type:      "MCS",
+			Operands: []data.Operand{
+				{Name: "ERR", Type: "boolean"},
+				{Name: "FMID", Parameter: "fmid", Type: "string"},
+				{Name: "REASON", Parameter: "reason-id", Type: "string"},
+				{Name: "COMMENT", Type: "string", FreeText: true},
+			},
+		},
+	}
+
+	parser := NewParser(statements)
+
+	// COMMENT with inner '(' in free text — must not cause unbalanced_parentheses
+	text := "++HOLD(UZ12346)\n  COMMENT(\n  some text\n  (\n  more text\n  )\n  ERR\n  FMID(HBB7781)\n  REASON(DEF5678)\n.\n"
+	doc := parser.Parse(text)
+
+	if len(doc.Statements) != 1 {
+		t.Fatalf("Expected 1 statement, got %d", len(doc.Statements))
+	}
+	stmt := doc.Statements[0]
+	if stmt.UnbalancedParens != 0 {
+		t.Errorf("Expected UnbalancedParens=0, got %d", stmt.UnbalancedParens)
+	}
+	if !stmt.HasTerminator {
+		t.Errorf("Expected HasTerminator=true")
 	}
 }
 
@@ -701,3 +735,4 @@ func TestParseFeature(t *testing.T) {
 		t.Error("FMID operand not found")
 	}
 }
+

@@ -178,6 +178,13 @@ func (p *Parser) Parse(text string) *Document {
 			// Set unbalanced parentheses flag
 			currentStatement.UnbalancedParens = stmt.UnbalancedParens
 
+			// Override HasTerminator from collectStatements when it was determined
+			// using line-level free-text operand awareness (e.g. COMMENT in ++HOLD).
+			// collectStatements has the line context; parseStatement only sees joined text.
+			if stmt.HasTerminator {
+				currentStatement.HasTerminator = true
+			}
+
 			// Check if this statement expects inline data
 			if currentStatement.StatementDef != nil && currentStatement.StatementDef.InlineData {
 				trimmed := strings.TrimSpace(stmt.Text)
