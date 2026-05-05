@@ -137,6 +137,8 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 	var startLine int
 	inStatement := false
 	parenDepth := 0
+	var stmtFreeTextOps map[string]bool // free_text operand names for current statement
+	inFreeTextBlock := false            // true while inside a free-text operand's parens
 
 	for lineNum, line := range lines {
 		trimmed := strings.TrimSpace(line)
@@ -161,16 +163,39 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 			currentLines = []string{line}
 			startLine = lineNum
 			inStatement = true
+			inFreeTextBlock = false
+			stmtFreeTextOps = p.freeTextOperandNames("++" + extractStatementName(trimmed))
 			parenDepth = countParensOutsideQuotes(line)
 		} else if inStatement {
 			// Continue collecting statement lines
-			// Record depth BEFORE this line so terminator check uses correct context
 			depthBeforeLine := parenDepth
 			currentLines = append(currentLines, line)
-			parenDepth += countParensOutsideQuotes(line)
+
+			if inFreeTextBlock {
+				// Inside a free-text operand: all content is opaque free text.
+				// The block ends at the first ')' that appears alone on a line
+				// (i.e. trimmed == ")"). Parentheses within the text are irrelevant.
+				if trimmed == ")" {
+					inFreeTextBlock = false
+					parenDepth-- // the opening '(' of COMMENT( was already counted
+				}
+			} else {
+				parenDepth += countParensOutsideQuotes(line)
+				// Check if this line opens a free-text operand block
+				if len(stmtFreeTextOps) > 0 {
+					for opName := range stmtFreeTextOps {
+						if entersFreeTextBlock(trimmed, opName) {
+							inFreeTextBlock = true
+							// The '(' of COMMENT( was already counted by countParensOutsideQuotes above.
+							// We need to undo any extra parens counted inside that same line after COMMENT(.
+							break
+						}
+					}
+				}
+			}
+
 			// Check if statement is complete (has terminator and all parens closed)
-			// Use depthBeforeLine so the terminator check sees the correct open-paren context
-			if hasTerminatorOutsideParensWithDepth(trimmed, depthBeforeLine) && parenDepth <= 0 {
+			if !inFreeTextBlock && hasTerminatorOutsideParensWithDepth(trimmed, depthBeforeLine) && parenDepth <= 0 {
 				collected = append(collected, CollectedStatement{
 					Text:             strings.Join(currentLines, " "),
 					StartLine:        startLine,
@@ -179,6 +204,7 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 				})
 				currentLines = nil
 				inStatement = false
+				inFreeTextBlock = false
 				parenDepth = 0
 			}
 			continue
@@ -194,6 +220,7 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 			})
 			currentLines = nil
 			inStatement = false
+			inFreeTextBlock = false
 			parenDepth = 0
 		}
 	}
@@ -209,6 +236,35 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 	}
 
 	return collected
+}
+
+// extractStatementName extracts the statement name (e.g. "HOLD") from a ++STATEMENT line.
+func extractStatementName(trimmed string) string {
+	if !strings.HasPrefix(trimmed, "++") {
+		return ""
+	}
+	s := trimmed[2:]
+	end := 0
+	for end < len(s) && s[end] != '(' && s[end] != ' ' && s[end] != '\t' {
+		end++
+	}
+	return s[:end]
+}
+
+// entersFreeTextBlock reports whether trimmed contains a free-text operand opener
+// (e.g. "COMMENT(" possibly with leading whitespace) such that the operand content
+// starts on a subsequent line (i.e. nothing follows the '(' on this line except whitespace).
+// We only enter free-text block mode for multi-line free-text operands; single-line ones
+// like COMMENT('text') are handled correctly by the existing quote-aware paren counter.
+func entersFreeTextBlock(trimmed, opName string) bool {
+	idx := strings.Index(trimmed, opName+"(")
+	if idx < 0 {
+		return false
+	}
+	rest := strings.TrimSpace(trimmed[idx+len(opName)+1:])
+	// Only enter free-text block mode when the opening paren is the last non-space
+	// character on the line (content is on subsequent lines).
+	return rest == ""
 }
 
 
