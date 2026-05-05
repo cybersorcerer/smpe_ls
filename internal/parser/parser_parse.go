@@ -245,7 +245,15 @@ func (p *Parser) fixPositionsForMultilineStatement(stmt *Node, collected Collect
 	posMap := make(map[int]originalPos)
 	joinedPos := 0
 
-	for lineIdx, line := range collected.Lines {
+	// ParseLines has the same length and indices as Lines.
+	// ParseLines entries that were in a free-text block are empty strings (""),
+	// so joinedPos advances correctly for the stripped text that the parser saw.
+	// lineNum is derived from Lines (original) so positions map back to real source lines.
+	parseLines := collected.ParseLines
+	if len(parseLines) == 0 {
+		parseLines = collected.Lines
+	}
+	for lineIdx, line := range parseLines {
 		lineNum := collected.StartLine + lineIdx
 
 		// Map each character in this line
@@ -255,7 +263,7 @@ func (p *Parser) fixPositionsForMultilineStatement(stmt *Node, collected Collect
 		}
 
 		// Account for the space added by Join
-		if lineIdx < len(collected.Lines)-1 {
+		if lineIdx < len(parseLines)-1 {
 			posMap[joinedPos] = originalPos{Line: lineNum, Char: len(line)}
 			joinedPos++
 		}

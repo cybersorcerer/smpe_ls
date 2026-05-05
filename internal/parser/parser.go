@@ -75,9 +75,10 @@ type Document struct {
 
 // CollectedStatement represents a statement that may span multiple lines
 type CollectedStatement struct {
-	Text             string   // Combined text of all lines
+	Text             string   // Combined text of all lines (free-text content stripped)
 	StartLine        int      // Line number where statement starts (0-indexed)
-	Lines            []string // Original lines
+	Lines            []string // Original lines (used for position fixing)
+	ParseLines       []string // Lines used to build Text (free-text lines replaced with "")
 	UnbalancedParens int      // Parenthesis imbalance: positive = missing closing, negative = missing opening
 	HasTerminator    bool     // True if a '.' terminator was found while collecting lines
 }
@@ -158,6 +159,7 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 					Text:             strings.Join(parseLines, " "),
 					StartLine:        startLine,
 					Lines:            currentLines,
+					ParseLines:       parseLines,
 					UnbalancedParens: parenDepth,
 				})
 			}
@@ -205,6 +207,7 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 					Text:             strings.Join(parseLines, " "),
 					StartLine:        startLine,
 					Lines:            currentLines,
+					ParseLines:       parseLines,
 					UnbalancedParens: parenDepth,
 					HasTerminator:    true,
 				})
@@ -223,6 +226,7 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 				Text:             strings.Join(parseLines, " "),
 				StartLine:        startLine,
 				Lines:            currentLines,
+				ParseLines:       parseLines,
 				UnbalancedParens: parenDepth,
 				HasTerminator:    true,
 			})
@@ -240,6 +244,7 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 			Text:             strings.Join(parseLines, " "),
 			StartLine:        startLine,
 			Lines:            currentLines,
+			ParseLines:       parseLines,
 			UnbalancedParens: parenDepth,
 		})
 	}
