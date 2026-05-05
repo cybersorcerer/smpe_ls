@@ -13,7 +13,7 @@ func (p *Parser) Parse(text string) *Document {
 		StatementsExpectingInline: []*Node{},
 	}
 
-	lines := strings.Split(text, "\n")
+	lines := strings.Split(strings.ReplaceAll(text, "\r\n", "\n"), "\n")
 
 	// First pass: Extract all comments and create clean lines for parsing
 	cleanLines := make([]string, len(lines))
