@@ -894,7 +894,7 @@ export class FreeFormPanel {
                     } else if (currentEntryType === 'DDDEF' && sub === 'DATASET' && val.length > 0) {
                         html += '<td><a href="#" class="ds-link" data-dataset="' + escapeHtml(val) + '">' + escapeHtml(val) + '</a></td>';
                     } else if (currentEntryType === 'SYSMOD' && sub === 'HOLDDATA' && val.length > 0 && isGlobal) {
-                        html += '<td>' + escapeHtml(val) + ' <a href="#" class="hold-comments-link" data-entryname="' + escapeHtml(entry.entryname || '') + '" title="Show HOLD comments">💬</a></td>';
+                        html += '<td><a href="#" class="hold-comments-link" data-entryname="' + escapeHtml(entry.entryname || '') + '" title="Show HOLD comments">💬</a> ' + escapeHtml(val) + '</td>';
                     } else {
                         html += '<td>' + escapeHtml(val) + '</td>';
                     }
