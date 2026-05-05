@@ -2,6 +2,11 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 1.1.0
+
+- **HOLD Comments Viewer** - Right-click the 💬 icon in the HOLDDATA column of a SYSMOD Free Form Query result (GLOBAL zone only) to fetch and display all `++HOLD` COMMENT texts from the SMPPTS member. If the PTF was already accepted, a clear message is shown.
+- **CRLF fix for Zowe Explorer** - z/OS Dataset Members opened via Zowe Explorer no longer produce false `unknown_operand` diagnostics for `COMMENT` content in `++HOLD` statements.
+
 ## What's New in 1.0.1
 
 - **`++HOLD` COMMENT free-text handling** - The `COMMENT(...)` operand is now correctly treated as free text. False diagnostics ("requires parameter TEXT/ENHANCED HOLD-DATA") and false missing-terminator errors caused by English apostrophes in COMMENT content are fixed.

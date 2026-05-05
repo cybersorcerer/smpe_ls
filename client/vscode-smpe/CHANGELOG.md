@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.1.0] - 2026-05-05
+
+### Added
+
+- **HOLD Comments Viewer** - Right-clicking the 💬 icon in the HOLDDATA column of a SYSMOD query result (GLOBAL zone only) fetches the PTF member from SMPPTS and displays all `++HOLD` blocks with their COMMENT text in a dedicated side panel. If the PTF has already been accepted and is no longer in SMPPTS, a clear warning is shown instead.
+
+### Fixed
+
+- **CRLF line endings** - z/OS Dataset Members opened via Zowe Explorer are transferred with CRLF line endings. The parser now normalizes `\r\n` to `\n` before processing, fixing false `unknown_operand` diagnostics for `COMMENT` content in `++HOLD` statements.
+
 ## [1.0.1] - 2026-05-05
 
 ### Fixed

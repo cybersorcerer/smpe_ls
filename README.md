@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -244,7 +244,17 @@ make release
 
 ## 📋 What's New
 
-### Version 1.0.1 (Latest)
+### Version 1.1.0 (Latest)
+
+**New Features:**
+
+- ✨ **HOLD Comments Viewer** - Right-click the 💬 icon in the HOLDDATA column of a SYSMOD Free Form Query result (GLOBAL zone only) to fetch and display all `++HOLD` COMMENT texts from the SMPPTS member.
+
+**Bug Fixes:**
+
+- 🐛 **CRLF line endings (Zowe Explorer)** - z/OS Dataset Members opened via Zowe Explorer no longer produce false `unknown_operand` diagnostics for `COMMENT` content in `++HOLD` statements.
+
+### Version 1.0.1
 
 **Bug Fixes:**
 
