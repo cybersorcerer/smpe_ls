@@ -547,15 +547,7 @@ export class FreeFormPanel {
         .hold-comments-btn {
             font-size: 0.78em;
             padding: 2px 8px;
-            cursor: pointer;
             white-space: nowrap;
-            background-color: var(--vscode-button-background);
-            color: var(--vscode-button-foreground);
-            border: none;
-            border-radius: 2px;
-        }
-        .hold-comments-btn:hover {
-            background-color: var(--vscode-button-hoverBackground);
         }
         .uss-link, .ds-link {
             color: var(--vscode-textLink-foreground);
@@ -903,7 +895,7 @@ export class FreeFormPanel {
 
                 if (showHoldCol) {
                     if (hasHold) {
-                        html += '<td class="hold-btn-cell"><button class="hold-comments-btn secondary" data-entryname="' + escapeHtml(entry.entryname || '') + '" title="Show HOLD comments">HOLD</button></td>';
+                        html += '<td class="hold-btn-cell"><button class="hold-comments-btn" data-entryname="' + escapeHtml(entry.entryname || '') + '" title="Show HOLD comments">HOLD</button></td>';
                     } else {
                         html += '<td></td>';
                     }
