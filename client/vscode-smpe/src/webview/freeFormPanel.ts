@@ -546,16 +546,16 @@ export class FreeFormPanel {
         }
         .hold-comments-btn {
             font-size: 0.78em;
-            padding: 1px 6px;
+            padding: 2px 8px;
             cursor: pointer;
             white-space: nowrap;
-            background-color: var(--vscode-button-secondaryBackground);
-            color: var(--vscode-button-secondaryForeground);
+            background-color: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
             border: none;
             border-radius: 2px;
         }
         .hold-comments-btn:hover {
-            background-color: var(--vscode-button-secondaryHoverBackground);
+            background-color: var(--vscode-button-hoverBackground);
         }
         .uss-link, .ds-link {
             color: var(--vscode-textLink-foreground);
