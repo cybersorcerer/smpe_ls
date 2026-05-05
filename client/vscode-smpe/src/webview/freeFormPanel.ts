@@ -539,37 +539,13 @@ export class FreeFormPanel {
         .toggle-link:hover {
             color: var(--vscode-textLink-activeForeground);
         }
-        .holddata-cell {
-            cursor: context-menu;
-            background: var(--vscode-inputOption-activeBackground, rgba(0,120,212,0.1));
+        .hold-comments-link {
+            margin-left: 4px;
+            text-decoration: none;
+            opacity: 0.7;
         }
-        .holddata-cell:hover {
-            background: var(--vscode-list-hoverBackground);
-        }
-        #contextMenu {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            background: var(--vscode-menu-background);
-            border: 1px solid var(--vscode-menu-border);
-            border-radius: 4px;
-            padding: 4px 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            min-width: 180px;
-        }
-        #contextMenu.visible {
-            display: block;
-        }
-        .context-menu-item {
-            padding: 6px 16px;
-            cursor: pointer;
-            color: var(--vscode-menu-foreground);
-            font-size: var(--vscode-font-size);
-            white-space: nowrap;
-        }
-        .context-menu-item:hover {
-            background: var(--vscode-menu-selectionBackground);
-            color: var(--vscode-menu-selectionForeground);
+        .hold-comments-link:hover {
+            opacity: 1;
         }
         .uss-link, .ds-link {
             color: var(--vscode-textLink-foreground);
@@ -696,9 +672,6 @@ export class FreeFormPanel {
         </div>
     </div>
 
-    <div id="contextMenu">
-        <div class="context-menu-item" id="contextMenuHoldComments">Show HOLD Comments</div>
-    </div>
     <div id="cellTooltip" class="cell-tooltip"></div>
     <div id="statusBar" class="status-bar" style="display:none;"></div>
 
@@ -921,7 +894,7 @@ export class FreeFormPanel {
                     } else if (currentEntryType === 'DDDEF' && sub === 'DATASET' && val.length > 0) {
                         html += '<td><a href="#" class="ds-link" data-dataset="' + escapeHtml(val) + '">' + escapeHtml(val) + '</a></td>';
                     } else if (currentEntryType === 'SYSMOD' && sub === 'HOLDDATA' && val.length > 0 && isGlobal) {
-                        html += '<td class="holddata-cell" data-entryname="' + escapeHtml(entry.entryname || '') + '" title="Right-click for HOLD comments">' + escapeHtml(val) + '</td>';
+                        html += '<td>' + escapeHtml(val) + ' <a href="#" class="hold-comments-link" data-entryname="' + escapeHtml(entry.entryname || '') + '" title="Show HOLD comments">💬</a></td>';
                     } else {
                         html += '<td>' + escapeHtml(val) + '</td>';
                     }
@@ -1148,30 +1121,12 @@ export class FreeFormPanel {
             }
         });
 
-        // Context menu for HOLDDATA cells (GLOBAL zone only)
-        const contextMenu = document.getElementById('contextMenu');
-        let contextMenuEntryname = '';
-        document.addEventListener('contextmenu', (e) => {
-            const cell = e.target.closest('.holddata-cell');
-            if (!cell) {
-                contextMenu.classList.remove('visible');
-                return;
-            }
-            e.preventDefault();
-            contextMenuEntryname = cell.dataset.entryname || '';
-            contextMenu.style.left = e.clientX + 'px';
-            contextMenu.style.top = e.clientY + 'px';
-            contextMenu.classList.add('visible');
-        });
+        // HOLD comments link in HOLDDATA cells (GLOBAL zone only)
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('#contextMenu')) {
-                contextMenu.classList.remove('visible');
-            }
-        });
-        document.getElementById('contextMenuHoldComments').addEventListener('click', () => {
-            contextMenu.classList.remove('visible');
-            if (contextMenuEntryname) {
-                vscode.postMessage({ command: 'showHoldComments', entryname: contextMenuEntryname });
+            const link = e.target.closest('.hold-comments-link');
+            if (link) {
+                e.preventDefault();
+                vscode.postMessage({ command: 'showHoldComments', entryname: link.dataset.entryname });
             }
         });
 
