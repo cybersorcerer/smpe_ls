@@ -736,3 +736,60 @@ func TestParseFeature(t *testing.T) {
 	}
 }
 
+
+func TestParseHoldCommentSplitParen(t *testing.T) {
+	statements := map[string]data.MCSStatement{
+		"++HOLD": {
+			Name:      "++HOLD",
+			Parameter: "SYSMOD-ID",
+			Type:      "MCS",
+			Operands: []data.Operand{
+				{Name: "SYSTEM", Type: "boolean"},
+				{Name: "FMID", Parameter: "fmid", Type: "string"},
+				{Name: "REASON", Parameter: "reason-id", Type: "string"},
+				{Name: "COMMENT", Type: "string", FreeText: true},
+			},
+		},
+	}
+
+	parser := NewParser(statements)
+
+	// COMMENT with '(' on a separate line (real-world PTF format)
+	text := "++HOLD(FSD0217)\n  FMID(CTSA400)\n  SYSTEM\n  REASON(DELETE)\n  COMMENT\n  (\nBEMD#BDEL\n  This PTF deletes stuff.\n  )\n."
+	doc := parser.Parse(text)
+
+	if len(doc.Statements) != 1 {
+		t.Fatalf("Expected 1 statement, got %d", len(doc.Statements))
+	}
+	stmt := doc.Statements[0]
+
+	// FMID, SYSTEM, REASON must all be recognized
+	fmidFound, systemFound, reasonFound := false, false, false
+	for _, c := range stmt.Children {
+		if c.Type == NodeTypeOperand {
+			switch c.Name {
+			case "FMID":
+				fmidFound = true
+			case "SYSTEM":
+				systemFound = true
+			case "REASON":
+				reasonFound = true
+			}
+		}
+	}
+	if !fmidFound {
+		t.Error("Expected FMID operand to be recognized")
+	}
+	if !systemFound {
+		t.Error("Expected SYSTEM operand to be recognized")
+	}
+	if !reasonFound {
+		t.Error("Expected REASON operand to be recognized")
+	}
+	if !stmt.HasTerminator {
+		t.Error("Expected HasTerminator=true")
+	}
+	if stmt.UnbalancedParens != 0 {
+		t.Errorf("Expected UnbalancedParens=0, got %d", stmt.UnbalancedParens)
+	}
+}
