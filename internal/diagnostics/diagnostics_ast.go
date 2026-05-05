@@ -301,6 +301,10 @@ func (p *Provider) validateOperandsASTWithConfig(stmt *parser.Node, operands map
 		names := strings.Split(op.Name, "|")
 		for _, name := range names {
 			if opNode, exists := operands[name]; exists {
+				// Free-text operands: skip all content validation
+				if op.FreeText {
+					continue
+				}
 				// Check if this operand expects a parameter
 				if config.EmptyOperandParameter && op.Parameter != "" {
 					// Check if operand has children (either parameters or sub-operands)

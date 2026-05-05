@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	version  = "1.0.0"
+	version  = "1.0.1"
 	commit   = "unknown" // Set via ldflags: -X main.commit=...
 	debug    = flag.Bool("debug", false, "Enable debug logging")
 	showVer  = flag.Bool("version", false, "Show version")

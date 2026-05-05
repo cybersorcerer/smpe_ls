@@ -1,0 +1,72 @@
+++HOLD (FSD0217) FMID(CTSA400) SYSTEM REASON(DELETE)
+ COMMENT
+ (
+BEMD#BDEL
+  This PTF deletes the LMOD(s) listed below, therefore it will be
+  impossible to restore this PTF. Please ensure that sufficient
+  backups exist.
+
+       LMOD(s) list:
+       -------------
+$1   LMOD        CTSAPCC
+$1   LMOD        CTSAP84
+$1   LMOD        CTSCACD
+$1   LMOD        CTSCACS
+$1   LMOD        CTSCDIAG
+$1   LMOD        CTSCGRO
+$1   LMOD        CTSCOFL
+$1   LMOD        CTSCONI
+ )
+ .
+++HOLD (FSD0217) FMID(CTSA400) SYSTEM REASON(ACTION)
+ COMMENT
+ (
+BEMD#BBKP
+  Prior to APPLYing this PTF, please verify that the member(s) listed
+  below were not modified locally and that you have an updated BACKUP
+  of the library.
+
+       TYPE        ELEMENT         LIBRARY
+       ----        -------         -------
+$1   PROC        CTSAONI         PROCLIB
+$1   SAMP        CTSPARMJ        INSTALL
+     . . . . . .
+BEMD#ATLR
+  After applying the PTF submit the S8TAILOR job from the UPGRADE
+  library to tailor all updated elements according to the values
+  specified during MF Connector installation.
+
+  Re-apply local modificatins, if any.
+
+       TYPE        ELEMENT         LIBRARY
+       ----        -------         -------
+$1   PROC        CTSAONI         PROCLIB
+$1   SAMP        CTSPARMJ        INSTALL
+     . . . . . .
+BEMD#ASAE
+  After APPLYing this fix, EXITs used by the online interceptor should
+  be re-compiled and set in the system.  This refers to all EXITs used
+  by online interceptor:
+
+  TSS installation EXIT
+  RACF SMF EXIT, 2 password EXITs and phassphrase EXIT
+  ACF2 SMF EXIT, password EXIT and passphrase EXIT
+
+  Please refer to MF Connector Administrator Guide for detailed
+  explanations how to install the relevant EXIT/s used by the online
+  interceptor.
+     . . . . . .
+BEMD#APCP
+  After successfully APPLYing the PTF, copy (and rename if required)
+  the procedure elements listed below to the site's PROCLIB Library,
+  which is pointed to by the %PROCLIB% parameter of the DEFPARMS
+  member in the INSTALL library.
+
+  Re-apply local modifications, if exist, to these elements, before
+  restarting the MF Connector.
+
+       TYPE        ELEMENT         LIBRARY
+       ----        -------         -------
+$1   PROC        CTSAONI         PROCLIB
+ )
+ .

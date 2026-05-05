@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.0.1] - 2026-05-05
+
+### Fixed
+
+- **`++HOLD` COMMENT false diagnostics** - The COMMENT operand in `++HOLD` statements is now correctly treated as free text. Previously, the diagnostics engine incorrectly reported "Comment requires parameter TEXT" and "Comment requires parameter ENHANCED HOLD-DATA". The content within `COMMENT(...)` is now fully ignored during validation.
+- **`++HOLD` missing terminator false positive** - English apostrophes inside `COMMENT(...)` free text (e.g. `site's`, `don't`) no longer corrupt statement terminator detection. The terminator scanner now blindly skips the content of free-text operands by paren-counting only, without quote tracking.
+- **SMRTDATA operand added to `++HOLD`** - The enhanced HOLDDATA operand `SMRTDATA` (with sub-operands `CHGDT`, `FIX`, `SYMP`) is now correctly modelled as a separate structured operand and validated accordingly.
+
 ## [1.0.0] - 2026-04-28
 
 ### Added

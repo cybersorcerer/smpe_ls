@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -244,7 +244,14 @@ make release
 
 ## 📋 What's New
 
-### Version 1.0.0 (Latest)
+### Version 1.0.1 (Latest)
+
+**Bug Fixes:**
+
+- 🐛 **`++HOLD` COMMENT free-text handling** - `COMMENT(...)` is now correctly treated as free text: no false diagnostics for missing TEXT/ENHANCED-HOLDDATA parameters, and English apostrophes in COMMENT content no longer cause false missing-terminator errors.
+- 🐛 **SMRTDATA operand for `++HOLD`** - Enhanced HOLDDATA is now correctly modelled as a separate `SMRTDATA` operand with sub-operands `CHGDT`, `FIX`, and `SYMP`.
+
+### Version 1.0.0
 
 **New Features:**
 

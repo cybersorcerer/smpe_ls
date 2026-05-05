@@ -28,6 +28,7 @@ type Operand struct {
 	Required          bool           `json:"required,omitempty"`
 	RequiredGroup     bool           `json:"required_group,omitempty"`
 	RequiredGroupID   string         `json:"required_group_id,omitempty"`
+	FreeText          bool           `json:"free_text,omitempty"`
 	Description       string         `json:"description,omitempty"`
 	Values            []AllowedValue `json:"values,omitempty"`
 	MutuallyExclusive string         `json:"mutually_exclusive,omitempty"`

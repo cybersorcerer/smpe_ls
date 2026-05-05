@@ -2,6 +2,11 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 1.0.1
+
+- **`++HOLD` COMMENT free-text handling** - The `COMMENT(...)` operand is now correctly treated as free text. False diagnostics ("requires parameter TEXT/ENHANCED HOLD-DATA") and false missing-terminator errors caused by English apostrophes in COMMENT content are fixed.
+- **SMRTDATA operand for `++HOLD`** - Enhanced HOLDDATA is now correctly modelled as a separate `SMRTDATA` operand with sub-operands `CHGDT`, `FIX`, and `SYMP`.
+
 ## What's New in 1.0.0
 
 - **Boilerplate Snippets** - All Control MCS statements (e.g. `++PTF`, `++APAR`, `++USERMOD`) now offer a second completion item `…` (recognizable by the snippet icon) that inserts a ready-to-use template with tab stops for all required operands. The REWORK operand is pre-filled with the current date.
@@ -62,12 +67,12 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 
 | Platform | File |
 |----------|------|
-| Windows x64 | `smpe-mcs-language-server-win32-x64-1.0.0.vsix` |
-| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-1.0.0.vsix` |
-| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-1.0.0.vsix` |
-| macOS Intel | `smpe-mcs-language-server-darwin-x64-1.0.0.vsix` |
-| Linux x64 | `smpe-mcs-language-server-linux-x64-1.0.0.vsix` |
-| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-1.0.0.vsix` |
+| Windows x64 | `smpe-mcs-language-server-win32-x64-1.0.1.vsix` |
+| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-1.0.1.vsix` |
+| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-1.0.1.vsix` |
+| macOS Intel | `smpe-mcs-language-server-darwin-x64-1.0.1.vsix` |
+| Linux x64 | `smpe-mcs-language-server-linux-x64-1.0.1.vsix` |
+| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-1.0.1.vsix` |
 
 ### Installation in VS Code
 

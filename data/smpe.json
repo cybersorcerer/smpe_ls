@@ -433,17 +433,37 @@
         },
         {
           "name": "COMMENT",
-          "parameter": "TEXT",
           "type": "string",
-          "length": 64,
+          "free_text": true,
           "description": "Free-form text to be used to describe the problem identified by the REASON operand. The comments supplied are associated only with the reason ID supplied."
         },
         {
-          "name": "COMMENT",
-          "parameter": "ENHANCED-HOLDDATA",
+          "name": "SMRTDATA",
           "type": "string",
-          "length": 64,
-          "description": "Contains IBM\u2013supplied Enhanced HOLDDATA."
+          "description": "Contains IBM-supplied Enhanced HOLDDATA. Introduced by IBM to provide structured hold information.",
+          "values": [
+            {
+              "name": "CHGDT",
+              "parameter": "yymmdd",
+              "type": "string",
+              "length": 6,
+              "required": true,
+              "description": "The date the Enhanced HOLDDATA was generated, in yymmdd format."
+            },
+            {
+              "name": "FIX",
+              "parameter": "sysmod_id",
+              "type": "string",
+              "length": 7,
+              "description": "The SYSMOD ID of the fix that resolves the hold condition."
+            },
+            {
+              "name": "SYMP",
+              "parameter": "symptoms",
+              "type": "string",
+              "description": "Describes the symptoms of the problem identified by the hold."
+            }
+          ]
         },
         {
           "name": "DATE",

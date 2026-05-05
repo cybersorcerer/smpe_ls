@@ -324,10 +324,15 @@ func (p *Parser) parseStatement(line string, lineNum int, startIdx int) *Node {
 		stmtNode.Children = append(stmtNode.Children, operands...)
 	}
 
-	// Check for terminator on the statement line
+	// Check for terminator on the statement line.
+	// If the statement has free-text operands (e.g. COMMENT), use a variant that
+	// skips their parenthesised content without quote-tracking so that apostrophes
+	// in plain English prose (e.g. "site's") do not confuse the scanner.
 	trimmed := strings.TrimSpace(line)
-	if hasTerminatorOutsideParens(trimmed) {
-		stmtNode.HasTerminator = true
+	if freeTextOps := p.freeTextOperandNames(stmtNode.Name); len(freeTextOps) > 0 {
+		stmtNode.HasTerminator = hasTerminatorSkippingFreeText(trimmed, freeTextOps)
+	} else {
+		stmtNode.HasTerminator = hasTerminatorOutsideParens(trimmed)
 	}
 
 	return stmtNode
@@ -462,22 +467,28 @@ func (p *Parser) parseOperands(text string, lineNum int, offset int, parent *Nod
 			if i < len(text) && text[i] == '(' {
 				paramNode := p.parseOperandParameter(text, lineNum, offset, i, operandNode)
 				if paramNode != nil {
-					// Check if this operand has sub-operands by looking at the parameter definition
-					// Sub-operands have parentheses in the parameter field (e.g., "DSN(dsname) VOL(volser)")
-					// Simple parameters don't have parentheses (e.g., "REASON_ID")
-					hasSubOperands := false
-					if operandNode.OperandDef != nil && len(operandNode.OperandDef.Values) > 0 {
-						// Check if the parameter contains parentheses indicating sub-operands
-						hasSubOperands = strings.Contains(operandNode.OperandDef.Parameter, "(")
-					}
+					// Free-text operands (e.g., COMMENT): treat entire content as opaque raw text,
+					// no length check, no sub-operand parsing, no further validation.
+					isFreeText := operandNode.OperandDef != nil && operandNode.OperandDef.FreeText
 
-					if hasSubOperands {
-						// Parse sub-operands recursively
-						subOperands := p.parseOperands(paramNode.Value, lineNum, paramNode.Position.Character, operandNode)
-						operandNode.Children = subOperands
-					} else {
-						// Simple parameter
-						operandNode.Children = []*Node{paramNode}
+					if !isFreeText {
+						// Check if this operand has sub-operands by looking at the parameter definition
+						// Sub-operands have parentheses in the parameter field (e.g., "DSN(dsname) VOL(volser)")
+						// Simple parameters don't have parentheses (e.g., "REASON_ID")
+						hasSubOperands := false
+						if operandNode.OperandDef != nil && len(operandNode.OperandDef.Values) > 0 {
+							// Check if the parameter contains parentheses indicating sub-operands
+							hasSubOperands = strings.Contains(operandNode.OperandDef.Parameter, "(")
+						}
+
+						if hasSubOperands {
+							// Parse sub-operands recursively
+							subOperands := p.parseOperands(paramNode.Value, lineNum, paramNode.Position.Character, operandNode)
+							operandNode.Children = subOperands
+						} else {
+							// Simple parameter
+							operandNode.Children = []*Node{paramNode}
+						}
 					}
 
 					i = paramNode.Position.Character + paramNode.Position.Length + 1 - offset // +1 for closing ')'
@@ -623,6 +634,77 @@ func isOperandChar(ch byte) bool {
 // isOperandStartChar checks if a character can start an operand
 func isOperandStartChar(ch byte) bool {
 	return ch >= 'A' && ch <= 'Z'
+}
+
+// freeTextOperandNames returns the set of operand names that have free_text=true for a statement.
+func (p *Parser) freeTextOperandNames(stmtName string) map[string]bool {
+	ops, ok := p.operands[stmtName]
+	if !ok {
+		return nil
+	}
+	result := map[string]bool{}
+	for name, op := range ops {
+		if op.FreeText {
+			result[name] = true
+		}
+	}
+	return result
+}
+
+// hasTerminatorSkippingFreeText works like hasTerminatorOutsideParens but skips the
+// parenthesised content of free-text operands (e.g. COMMENT) without quote-tracking.
+// This prevents plain-English apostrophes inside COMMENT(...) from corrupting the
+// quote state and causing the terminator '.' to be missed.
+func hasTerminatorSkippingFreeText(text string, freeTextOps map[string]bool) bool {
+	parenCount := 0
+	inQuote := false
+	i := 0
+	for i < len(text) {
+		ch := text[i]
+		if !inQuote && parenCount == 0 {
+			// Check if we're at the start of a free-text operand name followed by '('
+			if isOperandStartChar(ch) {
+				j := i
+				for j < len(text) && isOperandChar(text[j]) {
+					j++
+				}
+				name := text[i:j]
+				// Skip whitespace between name and '('
+				k := j
+				for k < len(text) && (text[k] == ' ' || text[k] == '\t') {
+					k++
+				}
+				if freeTextOps[name] && k < len(text) && text[k] == '(' {
+					// Skip the entire parenthesised block blindly (count parens, ignore quotes)
+					depth := 1
+					k++
+					for k < len(text) && depth > 0 {
+						if text[k] == '(' {
+							depth++
+						} else if text[k] == ')' {
+							depth--
+						}
+						k++
+					}
+					i = k
+					continue
+				}
+			}
+		}
+		if ch == '\'' {
+			inQuote = !inQuote
+		} else if !inQuote {
+			if ch == '(' {
+				parenCount++
+			} else if ch == ')' {
+				parenCount--
+			} else if ch == '.' && parenCount == 0 {
+				return true
+			}
+		}
+		i++
+	}
+	return false
 }
 
 // hasTerminatorOutsideParens checks if a '.' exists outside of parentheses and quoted strings.
