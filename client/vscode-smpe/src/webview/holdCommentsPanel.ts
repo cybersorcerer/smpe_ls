@@ -176,8 +176,14 @@ export function parseHoldComments(text: string, sysmodeId: string): HoldBlock[] 
     const blocks = normalized.split(/(?=\+\+HOLD\s*\()/);
     const result: HoldBlock[] = [];
 
-    for (const block of blocks) {
+    for (let block of blocks) {
         if (!block.trim().startsWith('++HOLD')) { continue; }
+
+        // Truncate at the next MCS statement (anything after the terminator '.')
+        const nextStmtMatch = block.match(/\.\s*\n[\s\S]*$/);
+        if (nextStmtMatch && nextStmtMatch.index !== undefined) {
+            block = block.slice(0, nextStmtMatch.index + 1);
+        }
 
         // Extract hold type: ERROR|ERR, SYSTEM|SYS, FIXCAT|F6, USER
         let holdType = '';
@@ -194,13 +200,19 @@ export function parseHoldComments(text: string, sysmodeId: string): HoldBlock[] 
         const reasonMatch = block.match(/\bREASON\s*\(\s*([^)]+)\s*\)/i);
         const reason = reasonMatch ? reasonMatch[1].trim() : '';
 
-        // Extract COMMENT content — handles both COMMENT(...) and COMMENT\n(...)
+        // Extract COMMENT content via paren-counting
         let comment = '';
-        // Match COMMENT followed optionally by whitespace/newline then '(' ... ')'
-        // The content between outer parens is the free-text block
-        const commentMatch = block.match(/\bCOMMENT\s*\n?\s*\(([\s\S]*?)\s*\)\s*\n/);
-        if (commentMatch) {
-            comment = commentMatch[1];
+        const commentStartMatch = block.match(/\bCOMMENT\s*[\s\S]*?\(/);
+        if (commentStartMatch && commentStartMatch.index !== undefined) {
+            const openIdx = commentStartMatch.index + commentStartMatch[0].length;
+            let depth = 1;
+            let i = openIdx;
+            while (i < block.length && depth > 0) {
+                if (block[i] === '(') { depth++; }
+                else if (block[i] === ')') { depth--; }
+                if (depth > 0) { i++; }
+            }
+            comment = block.slice(openIdx, i).trim();
         }
 
         result.push({ sysmodeId, holdType, fmid, reason, comment });
