@@ -44,6 +44,8 @@ build:
 	@echo "Building $(BINARY_NAME) (commit: $(COMMIT))..."
 	go build -ldflags="-X main.commit=$(COMMIT)" -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/smpe_ls
 	@echo "Build complete: $(BUILD_DIR)/$(BINARY_NAME)"
+	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/smpe.json
+	@echo "Synced data/smpe.json → client/vscode-smpe/smpe.json"
 
 build-lint:
 	@echo "Building $(LINT_BINARY_NAME) (commit: $(COMMIT))..."

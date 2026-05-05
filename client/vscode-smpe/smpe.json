@@ -434,6 +434,7 @@
         {
           "name": "COMMENT",
           "type": "string",
+          "free_text": true,
           "description": "Free-form text to be used to describe the problem identified by the REASON operand. The comments supplied are associated only with the reason ID supplied."
         },
         {
