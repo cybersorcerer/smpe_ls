@@ -223,11 +223,13 @@ export class FreeFormPanel {
         this.panel.webview.postMessage({ command: 'progress', message: `Loading HOLD comments for ${entryname}...` });
         try {
             // Step 1: DDDEF query on GLOBAL zone to get SMPPTS dataset name
-            const dddefResult = await this.lastClient.queryDddef(
+            const dddefResult = await this.lastClient.queryFreeForm(
                 this.lastServer,
                 this.lastCredentials,
                 ['GLOBAL'],
-                ['SMPPTS']
+                'DDDEF',
+                ['ENAME', 'DATASET'],
+                "ENAME='SMPPTS'"
             );
 
             let ptsDataset = '';
@@ -235,14 +237,27 @@ export class FreeFormPanel {
                 for (const sub of (entry.subentries || [])) {
                     for (const key of Object.keys(sub)) {
                         if (key === 'DATASET' && sub[key]) {
-                            const val = Array.isArray(sub[key]) ? sub[key][0] : sub[key];
-                            if (typeof val === 'string' && val.length > 0) {
+                            const raw = sub[key];
+                            let val = '';
+                            if (Array.isArray(raw)) {
+                                // Array of strings or objects
+                                val = raw.map((item: any) =>
+                                    typeof item === 'object' && item !== null
+                                        ? Object.values(item).flat().join(',')
+                                        : String(item)
+                                ).join(', ');
+                            } else {
+                                val = String(raw);
+                            }
+                            if (val.length > 0) {
                                 ptsDataset = val;
                             }
                         }
                     }
                 }
             }
+            this.log(`DDDEF SMPPTS raw result: ${JSON.stringify(dddefResult.entries?.slice(0,2))}`);
+
 
             if (!ptsDataset) {
                 vscode.window.showErrorMessage('Could not find SMPPTS dataset in GLOBAL zone DDDEF.');
@@ -253,12 +268,24 @@ export class FreeFormPanel {
             this.log(`SMPPTS dataset: ${ptsDataset}, reading member: ${entryname}`);
 
             // Step 2: Read PTS member
-            const memberText = await this.lastClient.readDataset(
-                this.lastServer,
-                this.lastCredentials,
-                ptsDataset,
-                entryname
-            );
+            let memberText: string;
+            try {
+                memberText = await this.lastClient.readDataset(
+                    this.lastServer,
+                    this.lastCredentials,
+                    ptsDataset,
+                    entryname
+                );
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                if (msg.includes('404')) {
+                    vscode.window.showWarningMessage(`PTF ${entryname} not found in ${ptsDataset} — it may have been accepted already.`);
+                } else {
+                    vscode.window.showErrorMessage(`Failed to read ${entryname} from ${ptsDataset}: ${msg}`);
+                }
+                this.panel.webview.postMessage({ command: 'progress', message: '' });
+                return;
+            }
 
             // Step 3: Parse HOLD blocks via regex
             const holds = parseHoldComments(memberText, entryname);
