@@ -539,13 +539,16 @@ export class FreeFormPanel {
         .toggle-link:hover {
             color: var(--vscode-textLink-activeForeground);
         }
-        .hold-comments-link {
-            margin-left: 4px;
-            text-decoration: none;
-            opacity: 0.7;
+        .hold-btn-cell {
+            width: 1%;
+            white-space: nowrap;
+            padding: 2px 4px;
         }
-        .hold-comments-link:hover {
-            opacity: 1;
+        .hold-comments-btn {
+            font-size: 0.78em;
+            padding: 1px 6px;
+            cursor: pointer;
+            white-space: nowrap;
         }
         .uss-link, .ds-link {
             color: var(--vscode-textLink-foreground);
@@ -872,8 +875,12 @@ export class FreeFormPanel {
                 return;
             }
 
+            // Extra column for HOLD comments button (SYSMOD + HOLDDATA subentry)
+            const showHoldCol = currentEntryType === 'SYSMOD' && subentries.includes('HOLDDATA');
+
             // Build dynamic table
             let html = '<table><thead><tr>';
+            if (showHoldCol) { html += '<th></th>'; }
             html += '<th>Zone</th><th>Entry</th>';
             for (const sub of subentries) {
                 html += '<th>' + escapeHtml(sub) + '</th>';
@@ -882,19 +889,28 @@ export class FreeFormPanel {
 
             for (const entry of entries) {
                 html += '<tr>';
-                html += '<td>' + escapeHtml(entry.zonename || '') + '</td>';
-                html += '<td>' + escapeHtml(entry.entryname || '') + '</td>';
 
                 const subData = extractSubentryData(entry.subentries || []);
                 const isGlobal = (entry.zonename || '').toUpperCase() === 'GLOBAL';
+                const hasHold = isGlobal && (subData['HOLDDATA'] || '').length > 0;
+
+                if (showHoldCol) {
+                    if (hasHold) {
+                        html += '<td class="hold-btn-cell"><button class="hold-comments-btn secondary" data-entryname="' + escapeHtml(entry.entryname || '') + '" title="Show HOLD comments">HOLD</button></td>';
+                    } else {
+                        html += '<td></td>';
+                    }
+                }
+
+                html += '<td>' + escapeHtml(entry.zonename || '') + '</td>';
+                html += '<td>' + escapeHtml(entry.entryname || '') + '</td>';
+
                 for (const sub of subentries) {
                     const val = subData[sub] || '';
                     if (currentEntryType === 'DDDEF' && sub === 'PATH' && val.startsWith('/')) {
                         html += '<td><a href="#" class="uss-link" data-path="' + escapeHtml(val) + '">' + escapeHtml(val) + '</a></td>';
                     } else if (currentEntryType === 'DDDEF' && sub === 'DATASET' && val.length > 0) {
                         html += '<td><a href="#" class="ds-link" data-dataset="' + escapeHtml(val) + '">' + escapeHtml(val) + '</a></td>';
-                    } else if (currentEntryType === 'SYSMOD' && sub === 'HOLDDATA' && val.length > 0 && isGlobal) {
-                        html += '<td><a href="#" class="hold-comments-link" data-entryname="' + escapeHtml(entry.entryname || '') + '" title="Show HOLD comments">💬</a> ' + escapeHtml(val) + '</td>';
                     } else {
                         html += '<td>' + escapeHtml(val) + '</td>';
                     }
@@ -1121,12 +1137,12 @@ export class FreeFormPanel {
             }
         });
 
-        // HOLD comments link in HOLDDATA cells (GLOBAL zone only)
+        // HOLD comments button in extra column (SYSMOD + HOLDDATA, GLOBAL zone only)
         document.addEventListener('click', (e) => {
-            const link = e.target.closest('.hold-comments-link');
-            if (link) {
+            const btn = e.target.closest('.hold-comments-btn');
+            if (btn) {
                 e.preventDefault();
-                vscode.postMessage({ command: 'showHoldComments', entryname: link.dataset.entryname });
+                vscode.postMessage({ command: 'showHoldComments', entryname: btn.dataset.entryname });
             }
         });
 
