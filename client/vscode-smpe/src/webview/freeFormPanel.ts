@@ -9,6 +9,7 @@ import { ZosmfServer, Credentials } from '../zosmf/types';
 import { ZosmfClient } from '../zosmf/client';
 import { UssPanel } from './ussPanel';
 import { DatasetPanel } from './datasetPanel';
+import { HoldCommentsPanel, parseHoldComments } from './holdCommentsPanel';
 
 export class FreeFormPanel {
     public static currentPanel: FreeFormPanel | undefined;
@@ -114,6 +115,9 @@ export class FreeFormPanel {
             case 'openDataset':
                 await this.openDataset(message.dataset);
                 break;
+            case 'showHoldComments':
+                await this.showHoldComments(message.entryname);
+                break;
         }
     }
 
@@ -209,6 +213,65 @@ export class FreeFormPanel {
             return;
         }
         await DatasetPanel.open(this.lastClient, this.lastServer, this.lastCredentials, datasetName);
+    }
+
+    private async showHoldComments(entryname: string): Promise<void> {
+        if (!this.lastClient || !this.lastServer || !this.lastCredentials) {
+            vscode.window.showWarningMessage('No z/OSMF connection available. Please execute a query first.');
+            return;
+        }
+        this.panel.webview.postMessage({ command: 'progress', message: `Loading HOLD comments for ${entryname}...` });
+        try {
+            // Step 1: DDDEF query on GLOBAL zone to get SMPPTS dataset name
+            const dddefResult = await this.lastClient.queryDddef(
+                this.lastServer,
+                this.lastCredentials,
+                ['GLOBAL'],
+                ['SMPPTS']
+            );
+
+            let ptsDataset = '';
+            for (const entry of (dddefResult.entries || [])) {
+                for (const sub of (entry.subentries || [])) {
+                    for (const key of Object.keys(sub)) {
+                        if (key === 'DATASET' && sub[key]) {
+                            const val = Array.isArray(sub[key]) ? sub[key][0] : sub[key];
+                            if (typeof val === 'string' && val.length > 0) {
+                                ptsDataset = val;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!ptsDataset) {
+                vscode.window.showErrorMessage('Could not find SMPPTS dataset in GLOBAL zone DDDEF.');
+                this.panel.webview.postMessage({ command: 'progress', message: '' });
+                return;
+            }
+
+            this.log(`SMPPTS dataset: ${ptsDataset}, reading member: ${entryname}`);
+
+            // Step 2: Read PTS member
+            const memberText = await this.lastClient.readDataset(
+                this.lastServer,
+                this.lastCredentials,
+                ptsDataset,
+                entryname
+            );
+
+            // Step 3: Parse HOLD blocks via regex
+            const holds = parseHoldComments(memberText, entryname);
+
+            // Step 4: Show panel
+            HoldCommentsPanel.open(entryname, holds);
+            this.panel.webview.postMessage({ command: 'progress', message: '' });
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : String(error);
+            this.log(`showHoldComments error: ${msg}`);
+            vscode.window.showErrorMessage(`Failed to load HOLD comments: ${msg}`);
+            this.panel.webview.postMessage({ command: 'progress', message: '' });
+        }
     }
 
     private async exportResults(format: 'json' | 'csv', data: any): Promise<void> {
@@ -449,6 +512,38 @@ export class FreeFormPanel {
         .toggle-link:hover {
             color: var(--vscode-textLink-activeForeground);
         }
+        .holddata-cell {
+            cursor: context-menu;
+            background: var(--vscode-inputOption-activeBackground, rgba(0,120,212,0.1));
+        }
+        .holddata-cell:hover {
+            background: var(--vscode-list-hoverBackground);
+        }
+        #contextMenu {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            background: var(--vscode-menu-background);
+            border: 1px solid var(--vscode-menu-border);
+            border-radius: 4px;
+            padding: 4px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            min-width: 180px;
+        }
+        #contextMenu.visible {
+            display: block;
+        }
+        .context-menu-item {
+            padding: 6px 16px;
+            cursor: pointer;
+            color: var(--vscode-menu-foreground);
+            font-size: var(--vscode-font-size);
+            white-space: nowrap;
+        }
+        .context-menu-item:hover {
+            background: var(--vscode-menu-selectionBackground);
+            color: var(--vscode-menu-selectionForeground);
+        }
         .uss-link, .ds-link {
             color: var(--vscode-textLink-foreground);
             text-decoration: none;
@@ -574,6 +669,9 @@ export class FreeFormPanel {
         </div>
     </div>
 
+    <div id="contextMenu">
+        <div class="context-menu-item" id="contextMenuHoldComments">Show HOLD Comments</div>
+    </div>
     <div id="cellTooltip" class="cell-tooltip"></div>
     <div id="statusBar" class="status-bar" style="display:none;"></div>
 
@@ -788,12 +886,15 @@ export class FreeFormPanel {
                 html += '<td>' + escapeHtml(entry.entryname || '') + '</td>';
 
                 const subData = extractSubentryData(entry.subentries || []);
+                const isGlobal = (entry.zonename || '').toUpperCase() === 'GLOBAL';
                 for (const sub of subentries) {
                     const val = subData[sub] || '';
                     if (currentEntryType === 'DDDEF' && sub === 'PATH' && val.startsWith('/')) {
                         html += '<td><a href="#" class="uss-link" data-path="' + escapeHtml(val) + '">' + escapeHtml(val) + '</a></td>';
                     } else if (currentEntryType === 'DDDEF' && sub === 'DATASET' && val.length > 0) {
                         html += '<td><a href="#" class="ds-link" data-dataset="' + escapeHtml(val) + '">' + escapeHtml(val) + '</a></td>';
+                    } else if (currentEntryType === 'SYSMOD' && sub === 'HOLDDATA' && val.length > 0 && isGlobal) {
+                        html += '<td class="holddata-cell" data-entryname="' + escapeHtml(entry.entryname || '') + '" title="Right-click for HOLD comments">' + escapeHtml(val) + '</td>';
                     } else {
                         html += '<td>' + escapeHtml(val) + '</td>';
                     }
@@ -1017,6 +1118,33 @@ export class FreeFormPanel {
             if (dsLink) {
                 e.preventDefault();
                 vscode.postMessage({ command: 'openDataset', dataset: dsLink.dataset.dataset });
+            }
+        });
+
+        // Context menu for HOLDDATA cells (GLOBAL zone only)
+        const contextMenu = document.getElementById('contextMenu');
+        let contextMenuEntryname = '';
+        document.addEventListener('contextmenu', (e) => {
+            const cell = e.target.closest('.holddata-cell');
+            if (!cell) {
+                contextMenu.classList.remove('visible');
+                return;
+            }
+            e.preventDefault();
+            contextMenuEntryname = cell.dataset.entryname || '';
+            contextMenu.style.left = e.clientX + 'px';
+            contextMenu.style.top = e.clientY + 'px';
+            contextMenu.classList.add('visible');
+        });
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#contextMenu')) {
+                contextMenu.classList.remove('visible');
+            }
+        });
+        document.getElementById('contextMenuHoldComments').addEventListener('click', () => {
+            contextMenu.classList.remove('visible');
+            if (contextMenuEntryname) {
+                vscode.postMessage({ command: 'showHoldComments', entryname: contextMenuEntryname });
             }
         });
 
