@@ -134,7 +134,8 @@ func countParensOutsideQuotes(text string) int {
 // Note: lines passed in are already cleaned of SMP/E comments by the first pass in Parse()
 func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 	var collected []CollectedStatement
-	var currentLines []string
+	var currentLines []string  // original lines (used for position fixing)
+	var parseLines []string    // lines used to build Text: free-text content replaced with ""
 	var startLine int
 	inStatement := false
 	parenDepth := 0
@@ -154,7 +155,7 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 			// Save previous statement if any
 			if inStatement && len(currentLines) > 0 {
 				collected = append(collected, CollectedStatement{
-					Text:             strings.Join(currentLines, " "),
+					Text:             strings.Join(parseLines, " "),
 					StartLine:        startLine,
 					Lines:            currentLines,
 					UnbalancedParens: parenDepth,
@@ -162,6 +163,7 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 			}
 			// Start new statement
 			currentLines = []string{line}
+			parseLines = []string{line}
 			startLine = lineNum
 			inStatement = true
 			inFreeTextBlock = false
@@ -173,22 +175,24 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 			currentLines = append(currentLines, line)
 
 			if inFreeTextBlock {
-				// Inside a free-text operand: all content is opaque free text.
-				// The block ends at the first ')' that appears alone on a line
-				// (i.e. trimmed == ")"). Parentheses within the text are irrelevant.
+				// Inside a free-text operand: content is opaque — omit from parseLines
+				// so that parseOperands never sees it.
+				// The block ends at the first ')' that appears alone on a line.
 				if trimmed == ")" {
 					inFreeTextBlock = false
 					parenDepth-- // the opening '(' of COMMENT( was already counted
+					parseLines = append(parseLines, line) // closing ')' must appear in parse text
+				} else {
+					parseLines = append(parseLines, "") // replace content with empty line
 				}
 			} else {
+				parseLines = append(parseLines, line)
 				parenDepth += countParensOutsideQuotes(line)
 				// Check if this line opens a free-text operand block
 				if len(stmtFreeTextOps) > 0 {
 					for opName := range stmtFreeTextOps {
 						if entersFreeTextBlock(trimmed, opName) {
 							inFreeTextBlock = true
-							// The '(' of COMMENT( was already counted by countParensOutsideQuotes above.
-							// We need to undo any extra parens counted inside that same line after COMMENT(.
 							break
 						}
 					}
@@ -198,13 +202,14 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 			// Check if statement is complete (has terminator and all parens closed)
 			if !inFreeTextBlock && hasTerminatorOutsideParensWithDepth(trimmed, depthBeforeLine) && parenDepth <= 0 {
 				collected = append(collected, CollectedStatement{
-					Text:             strings.Join(currentLines, " "),
+					Text:             strings.Join(parseLines, " "),
 					StartLine:        startLine,
 					Lines:            currentLines,
 					UnbalancedParens: parenDepth,
 					HasTerminator:    true,
 				})
 				currentLines = nil
+				parseLines = nil
 				inStatement = false
 				inFreeTextBlock = false
 				parenDepth = 0
@@ -215,13 +220,14 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 		// Check if statement is complete on the opening line (has terminator and all parens closed)
 		if inStatement && hasTerminatorOutsideParensWithDepth(trimmed, 0) && parenDepth <= 0 {
 			collected = append(collected, CollectedStatement{
-				Text:             strings.Join(currentLines, " "),
+				Text:             strings.Join(parseLines, " "),
 				StartLine:        startLine,
 				Lines:            currentLines,
 				UnbalancedParens: parenDepth,
 				HasTerminator:    true,
 			})
 			currentLines = nil
+			parseLines = nil
 			inStatement = false
 			inFreeTextBlock = false
 			parenDepth = 0
@@ -231,7 +237,7 @@ func (p *Parser) collectStatements(lines []string) []CollectedStatement {
 	// Handle unclosed statement at end
 	if inStatement && len(currentLines) > 0 {
 		collected = append(collected, CollectedStatement{
-			Text:             strings.Join(currentLines, " "),
+			Text:             strings.Join(parseLines, " "),
 			StartLine:        startLine,
 			Lines:            currentLines,
 			UnbalancedParens: parenDepth,
