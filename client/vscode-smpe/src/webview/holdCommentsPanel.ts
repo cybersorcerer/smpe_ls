@@ -11,6 +11,7 @@ export interface HoldBlock {
     fmid: string;
     reason: string;
     comment: string;
+    raw: string;
 }
 
 export class HoldCommentsPanel {
@@ -59,10 +60,6 @@ export class HoldCommentsPanel {
 
         let blocksHtml = '';
         for (const h of holds) {
-            const commentHtml = h.comment
-                ? `<pre class="comment-text">${escapeHtml(h.comment.trim())}</pre>`
-                : `<p class="no-comment">No COMMENT text.</p>`;
-
             blocksHtml += `
             <div class="hold-block">
                 <div class="hold-header">
@@ -70,7 +67,7 @@ export class HoldCommentsPanel {
                     <span class="hold-meta">FMID: <strong>${escapeHtml(h.fmid)}</strong></span>
                     <span class="hold-meta">REASON: <strong>${escapeHtml(h.reason)}</strong></span>
                 </div>
-                ${commentHtml}
+                <pre class="comment-text">${escapeHtml(h.raw.trim())}</pre>
             </div>`;
         }
 
@@ -222,7 +219,7 @@ export function parseHoldComments(text: string, sysmodeId: string): HoldBlock[] 
             comment = block.slice(openIdx, i).trim();
         }
 
-        result.push({ sysmodeId, holdType, fmid, reason, comment });
+        result.push({ sysmodeId, holdType, fmid, reason, comment, raw: block });
     }
 
     return result;
