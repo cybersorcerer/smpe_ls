@@ -6,11 +6,14 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
-- **HOLD Comments Viewer** - Right-clicking the 💬 icon in the HOLDDATA column of a SYSMOD query result (GLOBAL zone only) fetches the PTF member from SMPPTS and displays all `++HOLD` blocks with their COMMENT text in a dedicated side panel. If the PTF has already been accepted and is no longer in SMPPTS, a clear warning is shown instead.
+- **HOLD Comments Viewer** - A dedicated HOLD button column appears in SYSMOD Free Form Query results (GLOBAL zone only, rows with HOLDDATA). Clicking the button fetches the PTF member from SMPPTS via z/OSMF and displays the complete `++HOLD` block text in a dedicated side panel. If the PTF has already been accepted and is no longer in SMPPTS, a clear warning message is shown instead.
+- **Free Form Query: scrollable results table** - The query form and column header row now remain fixed while the result rows scroll independently, making it easy to navigate large result sets without losing context.
 
 ### Fixed
 
 - **CRLF line endings** - z/OS Dataset Members opened via Zowe Explorer are transferred with CRLF line endings. The parser now normalizes `\r\n` to `\n` before processing, fixing false `unknown_operand` diagnostics for `COMMENT` content in `++HOLD` statements.
+- **HOLD Comments: complete block displayed** - The viewer now shows the full `++HOLD` block up to the next MCS statement (`++`), instead of truncating at the first period in the text. This ensures LMOD lists and other multi-line content are fully visible.
+- **HOLD button color** - The HOLD button in the Free Form Query results now uses the same primary button color as the Pick buttons, consistent with the active VSCode color theme.
 
 ## [1.0.1] - 2026-05-05
 

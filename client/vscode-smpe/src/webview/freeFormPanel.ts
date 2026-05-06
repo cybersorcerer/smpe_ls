@@ -436,6 +436,8 @@ export class FreeFormPanel {
         }
         #tableContainer {
             overflow-x: auto;
+            max-height: calc(100vh - 350px);
+            overflow-y: auto;
         }
         table {
             width: 100%;
@@ -452,11 +454,12 @@ export class FreeFormPanel {
             max-width: 300px;
         }
         th {
-            background-color: var(--vscode-keybindingTable-headerBackground, rgba(128, 128, 128, 0.15));
+            background-color: var(--vscode-panel-background, var(--vscode-editor-background));
             color: var(--vscode-foreground);
             font-weight: 600;
             position: sticky;
             top: 0;
+            z-index: 1;
         }
         tbody tr:nth-child(odd) {
             background-color: var(--vscode-keybindingTable-rowsBackground, rgba(128, 128, 128, 0.04));
