@@ -172,19 +172,26 @@ export function parseHoldComments(text: string, sysmodeId: string): HoldBlock[] 
     // Normalize line endings
     const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-    // Split into ++HOLD blocks
-    const blocks = normalized.split(/(?=\+\+HOLD\s*\()/);
+    // Split on any MCS statement boundary (lines starting with ++)
+    const lines = normalized.split('\n');
+    const holdBlocks: string[] = [];
+    let current: string[] | null = null;
+    for (const line of lines) {
+        if (/^\+\+HOLD\b/i.test(line.trimStart())) {
+            if (current) { holdBlocks.push(current.join('\n')); }
+            current = [line];
+        } else if (current && /^\+\+\S/i.test(line.trimStart())) {
+            holdBlocks.push(current.join('\n'));
+            current = null;
+        } else if (current) {
+            current.push(line);
+        }
+    }
+    if (current) { holdBlocks.push(current.join('\n')); }
+
     const result: HoldBlock[] = [];
 
-    for (let block of blocks) {
-        if (!block.trim().startsWith('++HOLD')) { continue; }
-
-        // Truncate at the next MCS statement (anything after the terminator '.')
-        const nextStmtMatch = block.match(/\.\s*\n[\s\S]*$/);
-        if (nextStmtMatch && nextStmtMatch.index !== undefined) {
-            block = block.slice(0, nextStmtMatch.index + 1);
-        }
-
+    for (const block of holdBlocks) {
         // Extract hold type: ERROR|ERR, SYSTEM|SYS, FIXCAT|F6, USER
         let holdType = '';
         if (/\bFIXCAT\b|\bF6\b/i.test(block))       { holdType = 'FIXCAT'; }
