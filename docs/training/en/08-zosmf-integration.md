@@ -107,8 +107,23 @@ Lists all configured zones with their properties.
 
 `Cmd+Shift+P` → `SMP/E: Free Form CSI Query`
 
-Opens an input form for free-form CSI queries: zone, entry type, subentries, and
-filter can be entered freely.
+Opens a full WebUI for free-form CSI queries:
+
+- **Entry type** freely selectable (SYSMOD, DDDEF, MOD, UNIX1, ...)
+- **Subentries** selectable via picker
+- **Filter** as a CSI filter expression (e.g. `ENAME='UA12345'`)
+- **Multiple zones** can be queried simultaneously
+- Results exportable as **JSON** or **CSV**
+- Column headers remain visible while scrolling (sticky header)
+
+### HOLD Comments Viewer
+
+In SYSMOD queries (GLOBAL zone), rows with HOLDDATA show a **HOLD** button.
+Clicking it fetches the PTF member from SMPPTS via z/OSMF and displays the complete
+`++HOLD` block (including the COMMENT text) in a side panel.
+
+If the PTF has already been accepted and is no longer present in SMPPTS, a clear
+error message is shown instead.
 
 ## CodeLens
 
@@ -168,6 +183,8 @@ Default: `["customization"]`. Use `"*"` to search the entire workspace.
 
 - `.smpe-zosmf.yaml` configures z/OSMF access
 - SYSMODs, DDDEFs, and zones can be queried directly from VSCode
+- Free Form CSI Query enables arbitrary CSI queries with export
+- HOLD Comments Viewer shows the complete `++HOLD` block from SMPPTS
 - CodeLens links enable inline queries
 - USS directories and MVS datasets can be browsed
 - `SMP/E: Check Missing Input Members` checks whether all input files are present

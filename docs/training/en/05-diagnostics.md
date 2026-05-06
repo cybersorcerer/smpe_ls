@@ -117,9 +117,16 @@ Full list of settings:
 | `smpe.diagnostics.unknownSubOperand` | `true` |
 | `smpe.diagnostics.subOperandValidation` | `true` |
 
+## Note: z/OS Datasets via Zowe Explorer
+
+z/OS dataset members opened via Zowe Explorer have CRLF line endings. The language
+server normalizes these automatically — no false diagnostics are produced for
+`COMMENT` content in `++HOLD` statements.
+
 ## Summary
 
 - Diagnostics run in real time as you type
 - Four severity levels: Error 🔴, Warning ⚠️, Info ℹ️, Hint 💡
 - All checks are individually configurable
 - Setting changes take effect immediately without restart
+- CRLF line endings (Zowe Explorer) are normalized automatically

@@ -117,9 +117,16 @@ Vollständige Liste aller Einstellungen:
 | `smpe.diagnostics.unknownSubOperand` | `true` |
 | `smpe.diagnostics.subOperandValidation` | `true` |
 
+## Hinweis: z/OS Datasets via Zowe Explorer
+
+z/OS Dataset Members die über Zowe Explorer geöffnet werden, haben CRLF-Zeilenenden.
+Der Language Server normalisiert diese automatisch — es entstehen keine falschen
+Diagnostics für `COMMENT`-Inhalte in `++HOLD`-Statements.
+
 ## Zusammenfassung
 
 - Diagnostics laufen in Echtzeit beim Tippen
 - Vier Schweregrade: Fehler 🔴, Warnung ⚠️, Info ℹ️, Hinweis 💡
 - Alle Checks sind einzeln konfigurierbar
 - Einstellungsänderungen wirken sofort ohne Neustart
+- CRLF-Zeilenenden (Zowe Explorer) werden automatisch normalisiert
