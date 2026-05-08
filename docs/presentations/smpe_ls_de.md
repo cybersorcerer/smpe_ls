@@ -169,9 +169,9 @@ Das **Language Server Protocol (LSP)** ist ein offener Standard von Microsoft, d
 ```
 ┌─────────────────────┐        JSON-RPC         ┌──────────────────────┐
 │   Editor / Client   │ ◄─────────────────────► │   Language Server    │
-│   (VS Code)         │  textDocument/completion │   (smpe_ls)          │
-│                     │  textDocument/hover      │                      │
-│                     │  textDocument/diagnostic │                      │
+│   (VS Code)         │  textDocument/completion│   (smpe_ls)          │
+│                     │  textDocument/hover     │                      │
+│                     │  textDocument/diagnostic│                      │
 └─────────────────────┘                         └──────────────────────┘
 ```
 
@@ -193,10 +193,10 @@ Das **Language Server Protocol (LSP)** ist ein offener Standard von Microsoft, d
 │  │  (TypeScript)  │       │  Language Server (Go) │  │
 │  └───────┬────────┘       └───────────────────────┘  │
 │          │                                           │
-│  ┌───────▼───────────────────────────────────────┐   │
-│  │           z/OSMF Integration                  │   │
-│  │  CSI-Queries · Dataset Browse · HOLD Comments │   │
-│  └───────────────────────────────────────────────┘   │
+│  ┌───────▼────────────────────────────────────────┐  │
+│  │           z/OSMF Integration                   │  │
+│  │  CSI-Queries · Dataset Browse · HOLD Comments  │  │
+│  └────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────┘
 
       ┌─────────────┐         ┌─────────────┐
@@ -839,4 +839,4 @@ Cmd+Shift+P  →  SMP/E: Create z/OSMF Config
 
 **GitHub:** https://github.com/cybersorcerer/smpe_ls
 
-**Ronny Funk — SVA Senior Mainframe Architect**
+**Ronny Funk — Senior Mainframe Architect SVA**
