@@ -139,7 +139,7 @@ style: |
 
 Version 1.2.0
 
-Ronny Funk — SVA Senior Mainframe Architect
+Ronny Funk — Senior Mainframe Architect SVA
 
 ---
 
