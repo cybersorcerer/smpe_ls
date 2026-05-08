@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.2.0] - 2026-05-08
+
+### Added
+
+- **Filter History in Free Form Query** - Filter strings entered in the Free Form Query panel are automatically saved (max. 20 entries, no duplicates). A `▼` button next to the filter input opens a dropdown with saved entries — click to apply. Entries persist across sessions via VSCode global state.
+- **Manage Filter History** - New command `SMP/E: Manage Filter History` (Command Palette) allows editing and deleting individual filter entries or clearing the entire history. Changes are immediately reflected in the open Free Form Query panel.
+
 ## [1.1.0] - 2026-05-05
 
 ### Added

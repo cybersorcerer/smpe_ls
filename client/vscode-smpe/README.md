@@ -2,6 +2,11 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 1.2.0
+
+- **Filter History in Free Form Query** - Filter strings are automatically saved (max. 20, no duplicates). A `▼` button opens a dropdown with saved entries. Entries persist across sessions.
+- **Manage Filter History** - New command `SMP/E: Manage Filter History` to edit, delete, or clear saved filter entries. Open panel updates immediately.
+
 ## What's New in 1.1.0
 
 - **HOLD Comments Viewer** - Right-click the 💬 icon in the HOLDDATA column of a SYSMOD Free Form Query result (GLOBAL zone only) to fetch and display all `++HOLD` COMMENT texts from the SMPPTS member. If the PTF was already accepted, a clear message is shown.
@@ -72,12 +77,12 @@ Download the appropriate `.vsix` file for your platform from the [Release](https
 
 | Platform | File |
 |----------|------|
-| Windows x64 | `smpe-mcs-language-server-win32-x64-1.0.1.vsix` |
-| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-1.0.1.vsix` |
-| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-1.0.1.vsix` |
-| macOS Intel | `smpe-mcs-language-server-darwin-x64-1.0.1.vsix` |
-| Linux x64 | `smpe-mcs-language-server-linux-x64-1.0.1.vsix` |
-| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-1.0.1.vsix` |
+| Windows x64 | `smpe-mcs-language-server-win32-x64-1.2.0.vsix` |
+| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-1.2.0.vsix` |
+| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-1.2.0.vsix` |
+| macOS Intel | `smpe-mcs-language-server-darwin-x64-1.2.0.vsix` |
+| Linux x64 | `smpe-mcs-language-server-linux-x64-1.2.0.vsix` |
+| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-1.2.0.vsix` |
 
 ### Installation in VS Code
 
