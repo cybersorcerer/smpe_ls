@@ -386,14 +386,89 @@ export function activate(context: vscode.ExtensionContext) {
 			queryProvider.queryZones();
 		}),
 		vscode.commands.registerCommand('smpe.zosmf.freeFormQuery', () => {
-			FreeFormPanel.createOrShow(queryProvider, outputChannel);
+			FreeFormPanel.createOrShow(queryProvider, outputChannel, context);
 		}),
 		vscode.commands.registerCommand('smpe.codelens.querySysmod', (...sysmods: string[]) => {
 			queryProvider.querySysmodDirect(sysmods);
 		}),
 		vscode.commands.registerCommand('smpe.codelens.queryDddef', (dddefName: string) => {
 			queryProvider.queryDddefDirect([dddefName]);
-		})
+		}),
+        vscode.commands.registerCommand('smpe.zosmf.manageFilterHistory', async () => {
+            const HISTORY_KEY = 'smpe.filterHistory';
+            const HISTORY_MAX = 20;
+
+            const history = context.globalState.get<string[]>(HISTORY_KEY, []);
+
+            if (history.length === 0) {
+                vscode.window.showInformationMessage('SMP/E: Filter history is empty.');
+                return;
+            }
+
+            const entryItems = history.map((f, i) => ({
+                label: f.length > 60 ? f.slice(0, 57) + '...' : f,
+                description: f.length > 60 ? f : undefined,
+                index: i
+            }));
+            const clearAllItem = { label: '$(trash) Clear All', index: -1 };
+            const separatorItem = { label: '', kind: vscode.QuickPickItemKind.Separator, index: -2 };
+
+            const picked = await vscode.window.showQuickPick(
+                [...entryItems, separatorItem as any, clearAllItem as any],
+                { placeHolder: 'Select a filter entry to edit or delete' }
+            );
+
+            if (!picked) { return; }
+
+            if ((picked as any).index === -1) {
+                const confirm = await vscode.window.showWarningMessage(
+                    'Clear all saved filter history?', { modal: true }, 'Clear All'
+                );
+                if (confirm === 'Clear All') {
+                    await context.globalState.update(HISTORY_KEY, []);
+                    FreeFormPanel.currentPanel?.refreshFilterHistory();
+                    vscode.window.showInformationMessage('SMP/E: Filter history cleared.');
+                }
+                return;
+            }
+
+            const idx: number = (picked as any).index;
+            const current = history[idx];
+
+            const action = await vscode.window.showQuickPick(
+                [
+                    { label: '$(edit) Edit', id: 'edit' },
+                    { label: '$(trash) Delete', id: 'delete' }
+                ],
+                { placeHolder: `Action for: ${current}` }
+            );
+
+            if (!action) { return; }
+
+            if ((action as any).id === 'delete') {
+                history.splice(idx, 1);
+                await context.globalState.update(HISTORY_KEY, history);
+                FreeFormPanel.currentPanel?.refreshFilterHistory();
+                vscode.window.showInformationMessage('SMP/E: Filter entry deleted.');
+            } else {
+                const updated = await vscode.window.showInputBox({
+                    prompt: 'Edit filter',
+                    value: current
+                });
+                if (updated === undefined) { return; }
+                const trimmed = updated.trim();
+                if (!trimmed) {
+                    history.splice(idx, 1);
+                } else {
+                    const withoutDupe = history.filter((f, i) => i === idx || f !== trimmed);
+                    withoutDupe[idx] = trimmed;
+                    history.splice(0, history.length, ...withoutDupe.slice(0, HISTORY_MAX));
+                }
+                await context.globalState.update(HISTORY_KEY, history);
+                FreeFormPanel.currentPanel?.refreshFilterHistory();
+                vscode.window.showInformationMessage('SMP/E: Filter entry updated.');
+            }
+        }),
 	);
 
 	log('z/OSMF Query commands registered');

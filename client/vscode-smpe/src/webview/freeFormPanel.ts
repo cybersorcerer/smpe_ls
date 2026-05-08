@@ -20,15 +20,18 @@ export class FreeFormPanel {
     private lastClient: ZosmfClient | undefined;
     private lastServer: ZosmfServer | undefined;
     private lastCredentials: Credentials | undefined;
+    private readonly context: vscode.ExtensionContext;
 
     private constructor(
         panel: vscode.WebviewPanel,
         queryProvider: QueryProvider,
-        outputChannel: vscode.OutputChannel
+        outputChannel: vscode.OutputChannel,
+        context: vscode.ExtensionContext
     ) {
         this.panel = panel;
         this.queryProvider = queryProvider;
         this.outputChannel = outputChannel;
+        this.context = context;
 
         this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
 
@@ -50,9 +53,28 @@ export class FreeFormPanel {
         this.log(message);
     }
 
+    private static readonly FILTER_HISTORY_KEY = 'smpe.filterHistory';
+    private static readonly FILTER_HISTORY_MAX = 20;
+
+    private getFilterHistory(): string[] {
+        return this.context.globalState.get<string[]>(FreeFormPanel.FILTER_HISTORY_KEY, []);
+    }
+
+    private async saveFilterToHistory(filter: string): Promise<void> {
+        const trimmed = filter.trim();
+        if (!trimmed) { return; }
+        const history = this.getFilterHistory().filter(f => f !== trimmed);
+        history.unshift(trimmed);
+        await this.context.globalState.update(
+            FreeFormPanel.FILTER_HISTORY_KEY,
+            history.slice(0, FreeFormPanel.FILTER_HISTORY_MAX)
+        );
+    }
+
     public static createOrShow(
         queryProvider: QueryProvider,
-        outputChannel: vscode.OutputChannel
+        outputChannel: vscode.OutputChannel,
+        context: vscode.ExtensionContext
     ): FreeFormPanel {
         const column = vscode.ViewColumn.One;
 
@@ -71,14 +93,25 @@ export class FreeFormPanel {
             }
         );
 
-        FreeFormPanel.currentPanel = new FreeFormPanel(panel, queryProvider, outputChannel);
+        FreeFormPanel.currentPanel = new FreeFormPanel(panel, queryProvider, outputChannel, context);
         FreeFormPanel.currentPanel.initPanel();
         return FreeFormPanel.currentPanel;
+    }
+
+    public refreshFilterHistory(): void {
+        this.panel.webview.postMessage({
+            command: 'filterHistory',
+            data: this.getFilterHistory()
+        });
     }
 
     private initPanel(): void {
         this.panel.webview.html = this.getHtmlContent([], undefined);
         this.loadServers();
+        this.panel.webview.postMessage({
+            command: 'filterHistory',
+            data: this.getFilterHistory()
+        });
     }
 
     private loadServers(): void {
@@ -123,6 +156,14 @@ export class FreeFormPanel {
 
     private async executeQuery(message: any): Promise<void> {
         const { serverName, selectedCsi, zones, entryType, subentries, filter } = message;
+
+        // Save non-empty filter strings to history
+        await this.saveFilterToHistory(filter);
+        // Send updated history to WebView
+        this.panel.webview.postMessage({
+            command: 'filterHistory',
+            data: this.getFilterHistory()
+        });
 
         this.log(`Free form query: server=${serverName}, csi=${selectedCsi}, zones=${zones}, entry=${entryType}, subentries=${subentries}, filter=${filter}`);
 
@@ -580,6 +621,30 @@ export class FreeFormPanel {
         .cell-tooltip.visible {
             display: block;
         }
+        .filter-history-picker {
+            display: none;
+            margin-bottom: 8px;
+            padding: 4px 0;
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 2px;
+            background-color: var(--vscode-editor-background);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .filter-history-picker.visible {
+            display: block;
+        }
+        .filter-history-item {
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .filter-history-item:hover {
+            background-color: var(--vscode-list-hoverBackground);
+        }
         /* Entry Type Picker */
         .entrytype-picker {
             display: none;
@@ -671,6 +736,10 @@ export class FreeFormPanel {
         <div class="form-row">
             <label for="filter">Filter</label>
             <input type="text" id="filter" placeholder="ENAME='UA12345' (optional)" />
+            <button id="toggleFilterHistoryBtn" title="Select saved filter">&#9660;</button>
+        </div>
+        <div id="filterHistoryPicker" class="filter-history-picker">
+            <div id="filterHistoryList"></div>
         </div>
         <div class="button-row">
             <button id="executeBtn">Execute Query</button>
@@ -769,6 +838,9 @@ export class FreeFormPanel {
                 case 'progress':
                     showProgress(message.message);
                     break;
+                case 'filterHistory':
+                    updateFilterHistory(event.data.data);
+                    break;
             }
         });
 
@@ -811,6 +883,53 @@ export class FreeFormPanel {
                 updateServerDetails(select.value);
             });
         }
+
+        function selectFilterHistoryItem(div) {
+            document.getElementById('filter').value = div.dataset.value;
+            document.getElementById('filterHistoryPicker').classList.remove('visible');
+            document.getElementById('filter').focus();
+        }
+
+        function updateFilterHistory(history) {
+            const list = document.getElementById('filterHistoryList');
+            list.innerHTML = '';
+            for (const f of history) {
+                const div = document.createElement('div');
+                div.className = 'filter-history-item';
+                div.textContent = f;
+                div.title = f;
+                div.dataset.value = f;
+                div.tabIndex = 0;
+                div.addEventListener('click', () => selectFilterHistoryItem(div));
+                div.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        selectFilterHistoryItem(div);
+                    } else if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        const next = div.nextElementSibling;
+                        if (next) { next.focus(); }
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        const prev = div.previousElementSibling;
+                        if (prev) { prev.focus(); }
+                        else { document.getElementById('filter').focus(); document.getElementById('filterHistoryPicker').classList.remove('visible'); }
+                    } else if (e.key === 'Escape') {
+                        document.getElementById('filterHistoryPicker').classList.remove('visible');
+                        document.getElementById('filter').focus();
+                    }
+                });
+                list.appendChild(div);
+            }
+        }
+
+        document.getElementById('toggleFilterHistoryBtn').addEventListener('click', () => {
+            const picker = document.getElementById('filterHistoryPicker');
+            picker.classList.toggle('visible');
+            if (picker.classList.contains('visible')) {
+                const first = document.getElementById('filterHistoryList').firstElementChild;
+                if (first) { first.focus(); }
+            }
+        });
 
         function executeQuery() {
             const serverName = document.getElementById('server').value;

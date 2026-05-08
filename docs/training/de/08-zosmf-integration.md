@@ -118,6 +118,18 @@ Listet alle konfigurierten Zonen mit ihren Eigenschaften.
 - Ergebnisse exportierbar als **JSON** oder **CSV**
 - Spaltenüberschriften bleiben beim Scrollen sichtbar (Sticky Header)
 
+### Filter History
+
+Eingegebene Filter-Ausdrücke werden automatisch gespeichert (max. 20 Einträge, keine Duplikate). Der **▼**-Button rechts neben dem Filter-Eingabefeld öffnet ein Dropdown mit allen gespeicherten Einträgen — Klick übernimmt den Wert ins Eingabefeld.
+
+Gespeicherte Filter verwalten:
+
+`Cmd+Shift+P` → `SMP/E: Manage Filter History`
+
+- Eintrag auswählen → **Edit** oder **Delete**
+- **Clear All** löscht die gesamte History
+- Änderungen werden sofort im offenen Free Form Query Panel übernommen
+
 ### HOLD Comments Viewer
 
 In SYSMOD-Abfragen (GLOBAL Zone) erscheint in Zeilen mit HOLDDATA ein **HOLD**-Button.
@@ -188,6 +200,7 @@ Standard: `["customization"]`. Mit `"*"` wird der gesamte Workspace durchsucht.
 - `.smpe-zosmf.yaml` konfiguriert den z/OSMF-Zugang
 - SYSMOD, DDDEF und Zonen können direkt aus VSCode abgefragt werden
 - Free Form CSI Query ermöglicht beliebige CSI-Abfragen mit Export
+- Filter History speichert verwendete Filter automatisch (▼-Button, max. 20 Einträge)
 - HOLD Comments Viewer zeigt den vollständigen `++HOLD`-Block aus SMPPTS
 - CodeLens-Links ermöglichen Inline-Queries
 - USS-Verzeichnisse und MVS-Datasets können durchsucht werden

@@ -137,9 +137,9 @@ style: |
 # SMP/E MCS Language Server
 ## Moderne Entwicklungsunterstützung für z/OS Systemprogrammierer
 
-Version 1.1.0
+Version 1.2.0
 
-Ronny Funk — SVA Senior Mainframe Architect
+Ronny Funk — Senior Mainframe Architect SVA
 
 ---
 
@@ -169,9 +169,9 @@ Das **Language Server Protocol (LSP)** ist ein offener Standard von Microsoft, d
 ```
 ┌─────────────────────┐        JSON-RPC         ┌──────────────────────┐
 │   Editor / Client   │ ◄─────────────────────► │   Language Server    │
-│   (VS Code)         │  textDocument/completion │   (smpe_ls)          │
-│                     │  textDocument/hover      │                      │
-│                     │  textDocument/diagnostic │                      │
+│   (VS Code)         │  textDocument/completion│   (smpe_ls)          │
+│                     │  textDocument/hover     │                      │
+│                     │  textDocument/diagnostic│                      │
 └─────────────────────┘                         └──────────────────────┘
 ```
 
@@ -193,10 +193,10 @@ Das **Language Server Protocol (LSP)** ist ein offener Standard von Microsoft, d
 │  │  (TypeScript)  │       │  Language Server (Go) │  │
 │  └───────┬────────┘       └───────────────────────┘  │
 │          │                                           │
-│  ┌───────▼───────────────────────────────────────┐   │
-│  │           z/OSMF Integration                  │   │
-│  │  CSI-Queries · Dataset Browse · HOLD Comments │   │
-│  └───────────────────────────────────────────────┘   │
+│  ┌───────▼────────────────────────────────────────┐  │
+│  │           z/OSMF Integration                   │  │
+│  │  CSI-Queries · Dataset Browse · HOLD Comments  │  │
+│  └────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────┘
 
       ┌─────────────┐         ┌─────────────┐
@@ -622,6 +622,7 @@ Zeigt Linien bei Spalte 72 und 80 — die klassischen Mainframe-Kartengrenzen.
 | `SMP/E: Create z/OSMF Config` | Konfigurationsdatei anlegen |
 | `SMP/E: Clear Stored Password` | Gespeichertes Passwort löschen |
 | `SMP/E: Check Missing Input Members` | Fehlende Input-Member prüfen |
+| `SMP/E: Manage Filter History` | Gespeicherte Filter verwalten |
 
 ## CodeLens
 
@@ -643,6 +644,13 @@ Klickbare Links direkt über SYSMOD- und DDDEF-Namen im Editor:
 - **Mehrere Zonen** gleichzeitig abfragen
 - Export als **JSON** oder **CSV**
 
+## Filter History *(neu in v1.2.0)*
+
+- Filter-Ausdrücke werden **automatisch gespeichert** (max. 20, keine Duplikate)
+- **▼**-Button neben dem Filter-Feld öffnet Dropdown mit gespeicherten Einträgen
+- `SMP/E: Manage Filter History` → Edit / Delete / Clear All
+- Änderungen wirken **sofort** im offenen Panel
+
 ## HOLD Comments Viewer
 
 In SYSMOD-Abfragen (GLOBAL Zone) mit HOLDDATA:
@@ -652,7 +660,7 @@ In SYSMOD-Abfragen (GLOBAL Zone) mit HOLDDATA:
 3. Vollständiger `++HOLD`-Block wird im Seitenpanel angezeigt
 4. Bei bereits akzeptierten PTFs: klare Fehlermeldung
 
-> 🎬 **Live Demo:** Free Form Query, HOLDDATA und HOLD Comments Viewer
+> 🎬 **Live Demo:** Free Form Query, Filter History, HOLDDATA und HOLD Comments Viewer
 
 ---
 
@@ -750,10 +758,10 @@ Von der GitHub Release-Seite die passende Plattform-Version laden:
 
 | Plattform | Datei |
 |-----------|-------|
-| macOS Apple Silicon | `...-darwin-arm64-1.1.0.vsix` |
-| macOS Intel | `...-darwin-x64-1.1.0.vsix` |
-| Windows x64 | `...-win32-x64-1.1.0.vsix` |
-| Linux x64 | `...-linux-x64-1.1.0.vsix` |
+| macOS Apple Silicon | `...-darwin-arm64-1.2.0.vsix` |
+| macOS Intel | `...-darwin-x64-1.2.0.vsix` |
+| Windows x64 | `...-win32-x64-1.2.0.vsix` |
+| Linux x64 | `...-linux-x64-1.2.0.vsix` |
 
 ## 2. In VS Code installieren
 
@@ -839,4 +847,4 @@ Cmd+Shift+P  →  SMP/E: Create z/OSMF Config
 
 **GitHub:** https://github.com/cybersorcerer/smpe_ls
 
-**Ronny Funk — SVA Senior Mainframe Architect**
+**Ronny Funk — Senior Mainframe Architect SVA**

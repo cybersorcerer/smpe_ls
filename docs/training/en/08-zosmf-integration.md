@@ -116,6 +116,18 @@ Opens a full WebUI for free-form CSI queries:
 - Results exportable as **JSON** or **CSV**
 - Column headers remain visible while scrolling (sticky header)
 
+### Filter History
+
+Filter expressions are automatically saved (max. 20 entries, no duplicates). The **▼** button to the right of the filter input opens a dropdown with all saved entries — clicking an entry copies it into the input field.
+
+To manage saved filters:
+
+`Cmd+Shift+P` → `SMP/E: Manage Filter History`
+
+- Select an entry → **Edit** or **Delete**
+- **Clear All** removes the entire history
+- Changes are immediately reflected in the open Free Form Query panel
+
 ### HOLD Comments Viewer
 
 In SYSMOD queries (GLOBAL zone), rows with HOLDDATA show a **HOLD** button.
@@ -184,6 +196,7 @@ Default: `["customization"]`. Use `"*"` to search the entire workspace.
 - `.smpe-zosmf.yaml` configures z/OSMF access
 - SYSMODs, DDDEFs, and zones can be queried directly from VSCode
 - Free Form CSI Query enables arbitrary CSI queries with export
+- Filter History automatically saves used filters (▼ button, max. 20 entries)
 - HOLD Comments Viewer shows the complete `++HOLD` block from SMPPTS
 - CodeLens links enable inline queries
 - USS directories and MVS datasets can be browsed
