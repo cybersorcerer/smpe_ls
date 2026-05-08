@@ -614,6 +614,30 @@ export class FreeFormPanel {
         .cell-tooltip.visible {
             display: block;
         }
+        .filter-history-picker {
+            display: none;
+            margin-bottom: 8px;
+            padding: 4px 0;
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 2px;
+            background-color: var(--vscode-editor-background);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .filter-history-picker.visible {
+            display: block;
+        }
+        .filter-history-item {
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .filter-history-item:hover {
+            background-color: var(--vscode-list-hoverBackground);
+        }
         /* Entry Type Picker */
         .entrytype-picker {
             display: none;
@@ -704,8 +728,11 @@ export class FreeFormPanel {
         </div>
         <div class="form-row">
             <label for="filter">Filter</label>
-            <input type="text" id="filter" list="filterHistoryList" placeholder="ENAME='UA12345' (optional)" />
-            <datalist id="filterHistoryList"></datalist>
+            <input type="text" id="filter" placeholder="ENAME='UA12345' (optional)" />
+            <button id="toggleFilterHistoryBtn" title="Select saved filter">&#9660;</button>
+        </div>
+        <div id="filterHistoryPicker" class="filter-history-picker">
+            <div id="filterHistoryList"></div>
         </div>
         <div class="button-row">
             <button id="executeBtn">Execute Query</button>
@@ -851,14 +878,24 @@ export class FreeFormPanel {
         }
 
         function updateFilterHistory(history) {
-            const dl = document.getElementById('filterHistoryList');
-            dl.innerHTML = '';
+            const list = document.getElementById('filterHistoryList');
+            list.innerHTML = '';
             for (const f of history) {
-                const opt = document.createElement('option');
-                opt.value = f;
-                dl.appendChild(opt);
+                const div = document.createElement('div');
+                div.className = 'filter-history-item';
+                div.textContent = f;
+                div.title = f;
+                div.addEventListener('click', () => {
+                    document.getElementById('filter').value = f;
+                    document.getElementById('filterHistoryPicker').classList.remove('visible');
+                });
+                list.appendChild(div);
             }
         }
+
+        document.getElementById('toggleFilterHistoryBtn').addEventListener('click', () => {
+            document.getElementById('filterHistoryPicker').classList.toggle('visible');
+        });
 
         function executeQuery() {
             const serverName = document.getElementById('server').value;
