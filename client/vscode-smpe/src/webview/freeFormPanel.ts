@@ -53,6 +53,24 @@ export class FreeFormPanel {
         this.log(message);
     }
 
+    private static readonly FILTER_HISTORY_KEY = 'smpe.filterHistory';
+    private static readonly FILTER_HISTORY_MAX = 20;
+
+    private getFilterHistory(): string[] {
+        return this.context.globalState.get<string[]>(FreeFormPanel.FILTER_HISTORY_KEY, []);
+    }
+
+    private async saveFilterToHistory(filter: string): Promise<void> {
+        const trimmed = filter.trim();
+        if (!trimmed) { return; }
+        const history = this.getFilterHistory().filter(f => f !== trimmed);
+        history.unshift(trimmed);
+        await this.context.globalState.update(
+            FreeFormPanel.FILTER_HISTORY_KEY,
+            history.slice(0, FreeFormPanel.FILTER_HISTORY_MAX)
+        );
+    }
+
     public static createOrShow(
         queryProvider: QueryProvider,
         outputChannel: vscode.OutputChannel,
@@ -83,6 +101,10 @@ export class FreeFormPanel {
     private initPanel(): void {
         this.panel.webview.html = this.getHtmlContent([], undefined);
         this.loadServers();
+        this.panel.webview.postMessage({
+            command: 'filterHistory',
+            data: this.getFilterHistory()
+        });
     }
 
     private loadServers(): void {
@@ -127,6 +149,14 @@ export class FreeFormPanel {
 
     private async executeQuery(message: any): Promise<void> {
         const { serverName, selectedCsi, zones, entryType, subentries, filter } = message;
+
+        // Save non-empty filter strings to history
+        await this.saveFilterToHistory(filter);
+        // Send updated history to WebView
+        this.panel.webview.postMessage({
+            command: 'filterHistory',
+            data: this.getFilterHistory()
+        });
 
         this.log(`Free form query: server=${serverName}, csi=${selectedCsi}, zones=${zones}, entry=${entryType}, subentries=${subentries}, filter=${filter}`);
 
