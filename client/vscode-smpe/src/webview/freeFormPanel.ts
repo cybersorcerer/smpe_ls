@@ -98,6 +98,13 @@ export class FreeFormPanel {
         return FreeFormPanel.currentPanel;
     }
 
+    public refreshFilterHistory(): void {
+        this.panel.webview.postMessage({
+            command: 'filterHistory',
+            data: this.getFilterHistory()
+        });
+    }
+
     private initPanel(): void {
         this.panel.webview.html = this.getHtmlContent([], undefined);
         this.loadServers();
@@ -877,6 +884,12 @@ export class FreeFormPanel {
             });
         }
 
+        function selectFilterHistoryItem(div) {
+            document.getElementById('filter').value = div.dataset.value;
+            document.getElementById('filterHistoryPicker').classList.remove('visible');
+            document.getElementById('filter').focus();
+        }
+
         function updateFilterHistory(history) {
             const list = document.getElementById('filterHistoryList');
             list.innerHTML = '';
@@ -885,16 +898,37 @@ export class FreeFormPanel {
                 div.className = 'filter-history-item';
                 div.textContent = f;
                 div.title = f;
-                div.addEventListener('click', () => {
-                    document.getElementById('filter').value = f;
-                    document.getElementById('filterHistoryPicker').classList.remove('visible');
+                div.dataset.value = f;
+                div.tabIndex = 0;
+                div.addEventListener('click', () => selectFilterHistoryItem(div));
+                div.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        selectFilterHistoryItem(div);
+                    } else if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        const next = div.nextElementSibling;
+                        if (next) { next.focus(); }
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        const prev = div.previousElementSibling;
+                        if (prev) { prev.focus(); }
+                        else { document.getElementById('filter').focus(); document.getElementById('filterHistoryPicker').classList.remove('visible'); }
+                    } else if (e.key === 'Escape') {
+                        document.getElementById('filterHistoryPicker').classList.remove('visible');
+                        document.getElementById('filter').focus();
+                    }
                 });
                 list.appendChild(div);
             }
         }
 
         document.getElementById('toggleFilterHistoryBtn').addEventListener('click', () => {
-            document.getElementById('filterHistoryPicker').classList.toggle('visible');
+            const picker = document.getElementById('filterHistoryPicker');
+            picker.classList.toggle('visible');
+            if (picker.classList.contains('visible')) {
+                const first = document.getElementById('filterHistoryList').firstElementChild;
+                if (first) { first.focus(); }
+            }
         });
 
         function executeQuery() {

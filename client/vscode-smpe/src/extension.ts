@@ -426,6 +426,7 @@ export function activate(context: vscode.ExtensionContext) {
                 );
                 if (confirm === 'Clear All') {
                     await context.globalState.update(HISTORY_KEY, []);
+                    FreeFormPanel.currentPanel?.refreshFilterHistory();
                     vscode.window.showInformationMessage('SMP/E: Filter history cleared.');
                 }
                 return;
@@ -447,6 +448,7 @@ export function activate(context: vscode.ExtensionContext) {
             if ((action as any).id === 'delete') {
                 history.splice(idx, 1);
                 await context.globalState.update(HISTORY_KEY, history);
+                FreeFormPanel.currentPanel?.refreshFilterHistory();
                 vscode.window.showInformationMessage('SMP/E: Filter entry deleted.');
             } else {
                 const updated = await vscode.window.showInputBox({
@@ -463,6 +465,7 @@ export function activate(context: vscode.ExtensionContext) {
                     history.splice(0, history.length, ...withoutDupe.slice(0, HISTORY_MAX));
                 }
                 await context.globalState.update(HISTORY_KEY, history);
+                FreeFormPanel.currentPanel?.refreshFilterHistory();
                 vscode.window.showInformationMessage('SMP/E: Filter entry updated.');
             }
         }),
