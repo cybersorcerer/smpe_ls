@@ -386,7 +386,7 @@ export function activate(context: vscode.ExtensionContext) {
 			queryProvider.queryZones();
 		}),
 		vscode.commands.registerCommand('smpe.zosmf.freeFormQuery', () => {
-			FreeFormPanel.createOrShow(queryProvider, outputChannel);
+			FreeFormPanel.createOrShow(queryProvider, outputChannel, context);
 		}),
 		vscode.commands.registerCommand('smpe.codelens.querySysmod', (...sysmods: string[]) => {
 			queryProvider.querySysmodDirect(sysmods);

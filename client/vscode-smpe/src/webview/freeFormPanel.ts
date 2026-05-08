@@ -20,15 +20,18 @@ export class FreeFormPanel {
     private lastClient: ZosmfClient | undefined;
     private lastServer: ZosmfServer | undefined;
     private lastCredentials: Credentials | undefined;
+    private readonly context: vscode.ExtensionContext;
 
     private constructor(
         panel: vscode.WebviewPanel,
         queryProvider: QueryProvider,
-        outputChannel: vscode.OutputChannel
+        outputChannel: vscode.OutputChannel,
+        context: vscode.ExtensionContext
     ) {
         this.panel = panel;
         this.queryProvider = queryProvider;
         this.outputChannel = outputChannel;
+        this.context = context;
 
         this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
 
@@ -52,7 +55,8 @@ export class FreeFormPanel {
 
     public static createOrShow(
         queryProvider: QueryProvider,
-        outputChannel: vscode.OutputChannel
+        outputChannel: vscode.OutputChannel,
+        context: vscode.ExtensionContext
     ): FreeFormPanel {
         const column = vscode.ViewColumn.One;
 
@@ -71,7 +75,7 @@ export class FreeFormPanel {
             }
         );
 
-        FreeFormPanel.currentPanel = new FreeFormPanel(panel, queryProvider, outputChannel);
+        FreeFormPanel.currentPanel = new FreeFormPanel(panel, queryProvider, outputChannel, context);
         FreeFormPanel.currentPanel.initPanel();
         return FreeFormPanel.currentPanel;
     }
