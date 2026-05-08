@@ -705,6 +705,9 @@ export class FreeFormPanel {
         <div class="form-row">
             <label for="filter">Filter</label>
             <input type="text" id="filter" placeholder="ENAME='UA12345' (optional)" />
+            <select id="filterHistory" title="Saved filters">
+                <option value="">-- History --</option>
+            </select>
         </div>
         <div class="button-row">
             <button id="executeBtn">Execute Query</button>
@@ -803,6 +806,9 @@ export class FreeFormPanel {
                 case 'progress':
                     showProgress(message.message);
                     break;
+                case 'filterHistory':
+                    updateFilterHistory(event.data.data);
+                    break;
             }
         });
 
@@ -845,6 +851,25 @@ export class FreeFormPanel {
                 updateServerDetails(select.value);
             });
         }
+
+        function updateFilterHistory(history) {
+            const sel = document.getElementById('filterHistory');
+            sel.innerHTML = '<option value="">-- History --</option>';
+            for (const f of history) {
+                const opt = document.createElement('option');
+                opt.value = f;
+                opt.textContent = f.length > 60 ? f.slice(0, 57) + '...' : f;
+                opt.title = f;
+                sel.appendChild(opt);
+            }
+        }
+
+        document.getElementById('filterHistory').addEventListener('change', function() {
+            if (this.value) {
+                document.getElementById('filter').value = this.value;
+                this.selectedIndex = 0;
+            }
+        });
 
         function executeQuery() {
             const serverName = document.getElementById('server').value;
