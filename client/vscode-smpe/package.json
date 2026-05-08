@@ -258,6 +258,11 @@
       {
         "command": "smpe.checkMissingInputMembers",
         "title": "SMP/E: Check Missing Input Members"
+      },
+      {
+        "command": "smpe.zosmf.manageFilterHistory",
+        "title": "SMP/E: Manage Filter History",
+        "category": "SMP/E"
       }
     ],
     "menus": {
