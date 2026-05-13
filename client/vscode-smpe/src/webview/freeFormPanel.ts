@@ -937,10 +937,6 @@ export class FreeFormPanel {
             document.getElementById('savedQueriesChips').style.display = savedQueriesExpanded ? 'flex' : 'none';
         }
 
-        function escapeHtml(str) {
-            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-        }
-
         function renderSavedQueryChips(queries) {
             savedQueries = queries;
             const container = document.getElementById('savedQueriesChips');
