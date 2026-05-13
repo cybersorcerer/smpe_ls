@@ -659,7 +659,13 @@ Klickbare Links direkt über SYSMOD- und DDDEF-Namen im Editor:
 - Aufklappbarer **Saved Queries**-Bereich unterhalb des Eingabeformulars
 - Klick auf Eintrag lädt die Abfrage zurück ins Formular
 
-## HOLD Comments Viewer
+> 🎬 **Live Demo:** Free Form Query, Filter History, Saved Queries
+
+---
+
+# HOLD Comments Viewer
+
+## PTF HOLD-Texte direkt im Editor
 
 In SYSMOD-Abfragen (GLOBAL Zone) mit HOLDDATA:
 
@@ -668,7 +674,7 @@ In SYSMOD-Abfragen (GLOBAL Zone) mit HOLDDATA:
 3. Vollständiger `++HOLD`-Block wird im Seitenpanel angezeigt
 4. Bei bereits akzeptierten PTFs: klare Fehlermeldung
 
-> 🎬 **Live Demo:** Free Form Query, Filter History, HOLDDATA und HOLD Comments Viewer
+> 🎬 **Live Demo:** HOLDDATA und HOLD Comments Viewer
 
 ---
 
@@ -839,7 +845,7 @@ Cmd+Shift+P  →  SMP/E: Create z/OSMF Config
 
 # Zusammenfassung
 
-## smpe_ls bringt moderne IDE-Unterstützung auf das Mainframe
+## smpe_ls bringt moderne IDE-Unterstützung für z/OS SMP/E MCS Statemets
 
 - **Echtzeit-Validierung** — Fehler sofort sehen, nicht erst beim SMP/E APPLY
 - **IntelliSense** — Kein Nachschlagen im SMP/E Reference Manual
