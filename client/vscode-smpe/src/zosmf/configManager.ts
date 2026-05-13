@@ -204,7 +204,7 @@ export class ConfigManager {
                 }
             }
 
-            this.log(`Loaded config with ${config.servers.length} server(s)`);
+            this.log(`Loaded config from ${configPath} with ${config.servers.length} server(s)`);
             return config;
         } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);

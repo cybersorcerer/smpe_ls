@@ -128,6 +128,12 @@ To manage saved filters:
 - **Clear All** removes the entire history
 - Changes are immediately reflected in the open Free Form Query panel
 
+### Saved Queries
+
+Complete CSI queries can be saved and reused. Queries are persisted in `.smpe-saved-queries.yaml` in the workspace root.
+
+A collapsible **Saved Queries** section below the input form lists all saved queries. Clicking an entry restores zone, entry type, subentries, and filter back into the form.
+
 ### HOLD Comments Viewer
 
 In SYSMOD queries (GLOBAL zone), rows with HOLDDATA show a **HOLD** button.
@@ -197,6 +203,8 @@ Default: `["customization"]`. Use `"*"` to search the entire workspace.
 - SYSMODs, DDDEFs, and zones can be queried directly from VSCode
 - Free Form CSI Query enables arbitrary CSI queries with export
 - Filter History automatically saves used filters (▼ button, max. 20 entries)
+- Saved Queries persists complete queries in `.smpe-saved-queries.yaml`
+- `smpe.editor.autoDetectLanguage: false` prevents the extension from overriding manual language mode changes
 - HOLD Comments Viewer shows the complete `++HOLD` block from SMPPTS
 - CodeLens links enable inline queries
 - USS directories and MVS datasets can be browsed

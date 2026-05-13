@@ -216,3 +216,27 @@ export interface DatasetMemberListing {
     totalRows: number;
     JSONversion: number;
 }
+
+// ============================================================================
+// Saved Queries Types
+// ============================================================================
+
+/**
+ * One saved Free Form Query entry stored in .smpe-saved-queries.yaml
+ */
+export interface SavedQuery {
+    name: string;
+    server: string;
+    csi: string;
+    zones: string;
+    entryType: string;
+    subentries: string;
+    filter: string;
+}
+
+/**
+ * Root structure of .smpe-saved-queries.yaml
+ */
+export interface SavedQueriesConfig {
+    queries: SavedQuery[];
+}

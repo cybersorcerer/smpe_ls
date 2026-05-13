@@ -52,3 +52,4 @@ smpe_outl.md
 docs/superpowers/
 test-files/.zosmf-mcp-config.yaml
 test-files/.smpe-zosmf.yaml
+.superpowers/

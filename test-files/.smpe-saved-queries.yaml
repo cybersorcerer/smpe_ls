@@ -1,0 +1,8 @@
+queries:
+  - name: UI mit Hold Data
+    server: Maint
+    csi: ZOS31.SMPE.GLOBAL.CSI
+    zones: MVS?100, GLOBAL
+    entryType: SYSMOD
+    subentries: APPID,APPLY,ERROR,HOLDDATA,INSTALLDATE,INSTALLTIME,LASTUPD,PRE,RECDATE,RECTIME,REQ,REWORK,SUPBY,SUPING
+    filter: ename='UI97850'

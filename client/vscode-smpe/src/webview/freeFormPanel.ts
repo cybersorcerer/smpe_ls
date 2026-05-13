@@ -10,6 +10,7 @@ import { ZosmfClient } from '../zosmf/client';
 import { UssPanel } from './ussPanel';
 import { DatasetPanel } from './datasetPanel';
 import { HoldCommentsPanel, parseHoldComments } from './holdCommentsPanel';
+import { SavedQueriesManager } from '../zosmf/savedQueriesManager';
 
 export class FreeFormPanel {
     public static currentPanel: FreeFormPanel | undefined;
@@ -21,6 +22,7 @@ export class FreeFormPanel {
     private lastServer: ZosmfServer | undefined;
     private lastCredentials: Credentials | undefined;
     private readonly context: vscode.ExtensionContext;
+    private readonly savedQueriesManager: SavedQueriesManager;
 
     private constructor(
         panel: vscode.WebviewPanel,
@@ -32,6 +34,7 @@ export class FreeFormPanel {
         this.queryProvider = queryProvider;
         this.outputChannel = outputChannel;
         this.context = context;
+        this.savedQueriesManager = new SavedQueriesManager(outputChannel);
 
         this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
 
@@ -112,6 +115,10 @@ export class FreeFormPanel {
             command: 'filterHistory',
             data: this.getFilterHistory()
         });
+        this.panel.webview.postMessage({
+            command: 'savedQueries',
+            data: this.savedQueriesManager.loadQueries()
+        });
     }
 
     private loadServers(): void {
@@ -150,6 +157,28 @@ export class FreeFormPanel {
                 break;
             case 'showHoldComments':
                 await this.showHoldComments(message.entryname);
+                break;
+            case 'saveQuery':
+                this.savedQueriesManager.saveQuery({
+                    name: message.name,
+                    server: message.serverName,
+                    csi: message.selectedCsi,
+                    zones: message.zones,
+                    entryType: message.entryType,
+                    subentries: message.subentries,
+                    filter: message.filter
+                });
+                this.panel.webview.postMessage({
+                    command: 'savedQueries',
+                    data: this.savedQueriesManager.loadQueries()
+                });
+                break;
+            case 'deleteQuery':
+                this.savedQueriesManager.deleteQuery(message.name);
+                this.panel.webview.postMessage({
+                    command: 'savedQueries',
+                    data: this.savedQueriesManager.loadQueries()
+                });
                 break;
         }
     }
@@ -686,10 +715,139 @@ export class FreeFormPanel {
             flex: none;
             margin: 0;
         }
+        .saved-queries-section {
+            margin-bottom: 12px;
+            padding: 8px 10px;
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 4px;
+            background-color: var(--vscode-panel-background);
+        }
+        .saved-queries-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8em;
+            color: var(--vscode-descriptionForeground);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0;
+            cursor: pointer;
+            user-select: none;
+        }
+        .saved-queries-chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 6px;
+        }
+        .query-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background-color: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+            border: none;
+            border-radius: 2px;
+            padding: 3px 6px 3px 8px;
+            font-size: var(--vscode-font-size);
+            font-family: var(--vscode-font-family);
+            cursor: pointer;
+        }
+        .query-chip:hover {
+            background-color: var(--vscode-button-secondaryHoverBackground);
+        }
+        .chip-name {
+            cursor: pointer;
+        }
+        .chip-delete {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--vscode-descriptionForeground);
+            font-size: 13px;
+            line-height: 1;
+            padding: 0 2px;
+            border-radius: 2px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: var(--vscode-font-family);
+        }
+        .chip-delete:hover {
+            color: var(--vscode-testing-iconFailed, #f14c4c);
+            background-color: rgba(241, 76, 76, 0.15);
+        }
+        .save-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background-color: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            border: none;
+            border-radius: 2px;
+            padding: 3px 8px;
+            font-size: var(--vscode-font-size);
+            font-family: var(--vscode-font-family);
+            cursor: pointer;
+        }
+        .save-chip:hover {
+            background-color: var(--vscode-button-hoverBackground);
+        }
+        .save-name-input {
+            padding: 2px 6px;
+            background-color: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            border: 1px solid var(--vscode-focusBorder);
+            border-radius: 2px;
+            font-size: var(--vscode-font-size);
+            font-family: var(--vscode-font-family);
+            width: 140px;
+        }
+        .delete-confirm {
+            display: none;
+            gap: 6px;
+            align-items: center;
+            padding: 6px 10px;
+            background-color: var(--vscode-panel-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 2px;
+            font-size: 0.9em;
+            margin-top: 6px;
+        }
+        .delete-confirm.visible {
+            display: flex;
+        }
+        .delete-confirm button {
+            padding: 2px 8px;
+            font-size: 0.85em;
+        }
+        .delete-confirm button.danger {
+            background-color: var(--vscode-testing-iconFailed, #c72e2e);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <h2>SMP/E Free Form CSI Query</h2>
+
+    <div class="saved-queries-section" id="savedQueriesSection">
+        <div class="saved-queries-header" id="savedQueriesHeader">
+            <span id="savedQueriesArrow">▸</span>
+            <span>Gespeicherte Queries</span>
+        </div>
+        <div class="saved-queries-chips" id="savedQueriesChips" style="display:none">
+            <button class="save-chip" id="saveQueryBtn">+ Speichern</button>
+        </div>
+        <div class="delete-confirm" id="deleteConfirm">
+            <span id="deleteConfirmMsg">Query löschen?</span>
+            <button class="danger" id="deleteConfirmYes">Löschen</button>
+            <button class="secondary" id="deleteConfirmNo">Abbrechen</button>
+        </div>
+    </div>
 
     <div class="form-section">
         <div class="form-row">
@@ -768,6 +926,119 @@ export class FreeFormPanel {
         let currentSubentries = [];
         let currentEntryType = '';
 
+        // Saved Queries State
+        let savedQueries = [];
+        let pendingDeleteName = null;
+        let savedQueriesExpanded = false;
+
+        function toggleSavedQueries() {
+            savedQueriesExpanded = !savedQueriesExpanded;
+            document.getElementById('savedQueriesArrow').textContent = savedQueriesExpanded ? '▾' : '▸';
+            document.getElementById('savedQueriesChips').style.display = savedQueriesExpanded ? 'flex' : 'none';
+        }
+
+        function renderSavedQueryChips(queries) {
+            savedQueries = queries;
+            const container = document.getElementById('savedQueriesChips');
+            const saveBtn = document.getElementById('saveQueryBtn');
+            container.innerHTML = '';
+            queries.forEach(q => {
+                const chip = document.createElement('span');
+                chip.className = 'query-chip';
+                chip.innerHTML =
+                    '<span class="chip-name" title="Klick: Felder laden">' + escapeHtml(q.name) + '</span>' +
+                    '<button class="chip-delete" title="Löschen">✕</button>';
+                chip.querySelector('.chip-name').addEventListener('click', () => loadSavedQuery(q));
+                chip.querySelector('.chip-delete').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showDeleteConfirmDialog(q.name);
+                });
+                container.appendChild(chip);
+            });
+            container.appendChild(saveBtn);
+        }
+
+        function loadSavedQuery(q) {
+            const serverSel = document.getElementById('server');
+            for (let i = 0; i < serverSel.options.length; i++) {
+                if (serverSel.options[i].value === q.server) {
+                    serverSel.selectedIndex = i;
+                    serverSel.dispatchEvent(new Event('change'));
+                    break;
+                }
+            }
+            setTimeout(() => {
+                const csiSel = document.getElementById('csi');
+                for (let i = 0; i < csiSel.options.length; i++) {
+                    if (csiSel.options[i].value === q.csi) {
+                        csiSel.selectedIndex = i;
+                        break;
+                    }
+                }
+            }, 50);
+            document.getElementById('zones').value = q.zones;
+            document.getElementById('entryType').value = q.entryType;
+            document.getElementById('subentries').value = q.subentries;
+            document.getElementById('filter').value = q.filter;
+        }
+
+        function showDeleteConfirmDialog(name) {
+            pendingDeleteName = name;
+            document.getElementById('deleteConfirmMsg').textContent = 'Query "' + escapeHtml(name) + '" löschen?';
+            document.getElementById('deleteConfirm').classList.add('visible');
+        }
+
+        function hideDeleteConfirmDialog() {
+            pendingDeleteName = null;
+            document.getElementById('deleteConfirm').classList.remove('visible');
+        }
+
+        function confirmDeleteQuery() {
+            if (!pendingDeleteName) { return; }
+            vscode.postMessage({ command: 'deleteQuery', name: pendingDeleteName });
+            hideDeleteConfirmDialog();
+        }
+
+        function showSaveQueryInput() {
+            const container = document.getElementById('savedQueriesChips');
+            const saveBtn = document.getElementById('saveQueryBtn');
+            if (document.getElementById('saveNameInput')) { return; }
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'save-name-input';
+            input.placeholder = 'Query-Name...';
+            input.id = 'saveNameInput';
+            container.insertBefore(input, saveBtn);
+            input.focus();
+
+            let committed = false;
+            function commitSave() {
+                if (committed) { return; }
+                committed = true;
+                const name = input.value.trim();
+                input.remove();
+                if (!name) { return; }
+                const serverSel = document.getElementById('server');
+                const csiSel = document.getElementById('csi');
+                vscode.postMessage({
+                    command: 'saveQuery',
+                    name: name,
+                    serverName: serverSel.value,
+                    selectedCsi: csiSel.value,
+                    zones: document.getElementById('zones').value,
+                    entryType: document.getElementById('entryType').value,
+                    subentries: document.getElementById('subentries').value,
+                    filter: document.getElementById('filter').value
+                });
+            }
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { commitSave(); }
+                if (e.key === 'Escape') { committed = true; input.remove(); }
+            });
+            input.addEventListener('blur', commitSave);
+        }
+
         // Valid subentries per entry type (IBM z/OS 3.1 SMP/E Reference)
         const SUBENTRIES_BY_TYPE = {
             SYSMOD: ['ACCEPT','ACCID','APPID','APPLY','ASSEM','BYPASS','CIFREQ','DELBY','DELETE','DELLMOD','DESCRIPTION','DLMOD','ELEMENT','ELEMMOV','EMOVE','ENAME','ERROR','FEATURE','FESN','FMID','HOLDDATA','IFREQ','INSTALLDATE','INSTALLTIME','JAR','JARUPD','JCLIN','LASTSUP','LASTUPD','LASTUPDTYPE','MAC','MACUPD','MOD','NPRE','PRE','PROGRAM','RECDATE','RECTIME','REGEN','RENLMOD','REQ','RESDATE','RESTIME','RESTORE','REWORK','RLMOD','SMODTYPE','SOURCEID','SRC','SRCUPD','SREL','SUPBY','SUPING','SZAP','TLIBPREFIX','UCLDATE','UCLTIME','VERSION','XZAP'],
@@ -840,6 +1111,9 @@ export class FreeFormPanel {
                     break;
                 case 'filterHistory':
                     updateFilterHistory(event.data.data);
+                    break;
+                case 'savedQueries':
+                    renderSavedQueryChips(message.data || []);
                     break;
             }
         });
@@ -930,6 +1204,14 @@ export class FreeFormPanel {
                 if (first) { first.focus(); }
             }
         });
+
+        document.getElementById('savedQueriesHeader').addEventListener('click', toggleSavedQueries);
+        document.getElementById('saveQueryBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            showSaveQueryInput();
+        });
+        document.getElementById('deleteConfirmYes').addEventListener('click', confirmDeleteQuery);
+        document.getElementById('deleteConfirmNo').addEventListener('click', hideDeleteConfirmDialog);
 
         function executeQuery() {
             const serverName = document.getElementById('server').value;

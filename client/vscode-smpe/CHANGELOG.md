@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.0] - 2026-05-13
+
+### Added
+
+- **Saved Queries in Free Form Query** - Save and reuse complete CSI queries directly from the Free Form Query panel. Queries are persisted in `.smpe-saved-queries.yaml` in the workspace root. A collapsible saved queries section appears below the input form with load and delete actions.
+- **`smpe.editor.autoDetectLanguage` setting** - New boolean setting (default: `true`) to control whether the extension automatically sets the SMP/E language mode based on file content or z/OS dataset LLQ. Set to `false` to allow manual language mode overrides (e.g. switching a `.smpe` buffer to REXX) without the extension reverting the change.
+- **`SMP/E: Toggle Auto-Detect Language Mode` command** - New command in the Command Palette to toggle `smpe.editor.autoDetectLanguage` on/off without opening settings.
+
 ## [1.2.0] - 2026-05-08
 
 ### Added

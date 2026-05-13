@@ -2,6 +2,11 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 1.3.0
+
+- **Saved Queries in Free Form Query** - Save and reuse complete CSI queries. Queries are stored in `.smpe-saved-queries.yaml` in the workspace root. The Free Form Query panel shows a collapsible saved queries section below the input form.
+- **Auto-Detect Language Mode Toggle** - New setting `smpe.editor.autoDetectLanguage` (default: `true`) and command `SMP/E: Toggle Auto-Detect Language Mode`. When disabled, manual language mode changes (e.g. switching a `.smpe` buffer to REXX) are preserved and no longer overridden by the extension.
+
 ## What's New in 1.2.0
 
 - **Filter History in Free Form Query** - Filter strings are automatically saved (max. 20, no duplicates). A `▼` button opens a dropdown with saved entries. Entries persist across sessions.
