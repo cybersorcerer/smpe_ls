@@ -137,7 +137,7 @@ style: |
 # SMP/E MCS Language Server
 ## Moderne Entwicklungsunterstützung für z/OS Systemprogrammierer
 
-Version 1.2.0
+Version 1.3.0
 
 Ronny Funk — Senior Mainframe Architect SVA
 
@@ -623,6 +623,7 @@ Zeigt Linien bei Spalte 72 und 80 — die klassischen Mainframe-Kartengrenzen.
 | `SMP/E: Clear Stored Password` | Gespeichertes Passwort löschen |
 | `SMP/E: Check Missing Input Members` | Fehlende Input-Member prüfen |
 | `SMP/E: Manage Filter History` | Gespeicherte Filter verwalten |
+| `SMP/E: Toggle Auto-Detect Language Mode` | Automatische Spracherkennung ein/aus |
 
 ## CodeLens
 
@@ -644,12 +645,19 @@ Klickbare Links direkt über SYSMOD- und DDDEF-Namen im Editor:
 - **Mehrere Zonen** gleichzeitig abfragen
 - Export als **JSON** oder **CSV**
 
-## Filter History *(neu in v1.2.0)*
+## Filter History
 
 - Filter-Ausdrücke werden **automatisch gespeichert** (max. 20, keine Duplikate)
 - **▼**-Button neben dem Filter-Feld öffnet Dropdown mit gespeicherten Einträgen
 - `SMP/E: Manage Filter History` → Edit / Delete / Clear All
 - Änderungen wirken **sofort** im offenen Panel
+
+## Saved Queries *(neu in v1.3.0)*
+
+- Vollständige CSI-Abfragen (Zone, Entry Type, Subentries, Filter) **speichern und wiederverwenden**
+- Queries werden in `.smpe-saved-queries.yaml` im Workspace-Root gespeichert
+- Aufklappbarer **Saved Queries**-Bereich unterhalb des Eingabeformulars
+- Klick auf Eintrag lädt die Abfrage zurück ins Formular
 
 ## HOLD Comments Viewer
 
@@ -758,10 +766,10 @@ Von der GitHub Release-Seite die passende Plattform-Version laden:
 
 | Plattform | Datei |
 |-----------|-------|
-| macOS Apple Silicon | `...-darwin-arm64-1.2.0.vsix` |
-| macOS Intel | `...-darwin-x64-1.2.0.vsix` |
-| Windows x64 | `...-win32-x64-1.2.0.vsix` |
-| Linux x64 | `...-linux-x64-1.2.0.vsix` |
+| macOS Apple Silicon | `...-darwin-arm64-1.3.0.vsix` |
+| macOS Intel | `...-darwin-x64-1.3.0.vsix` |
+| Windows x64 | `...-win32-x64-1.3.0.vsix` |
+| Linux x64 | `...-linux-x64-1.3.0.vsix` |
 
 ## 2. In VS Code installieren
 
@@ -791,6 +799,7 @@ Cmd+Shift+P  →  SMP/E: Create z/OSMF Config
 | `smpe.zosDatasetsLlq` | `["MCS"]` | LLQ für Spracherkennung |
 | `smpe.zosmf.queryTimeoutSeconds` | `300` | Query-Timeout (30–600s) |
 | `smpe.checkMissingInputMembers.searchFolders` | `["customization"]` | Suchordner |
+| `smpe.editor.autoDetectLanguage` | `true` | Automatische Spracherkennung (deaktivieren für manuelle Sprachauswahl) |
 
 ---
 
