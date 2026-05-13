@@ -2,7 +2,7 @@
   "name": "smpe-mcs-language-server",
   "displayName": "SMP/E MCS Language Server",
   "description": "Language support for SMP/E MCS statements",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "publisher": "cybersorcerer",
   "license": "AGPL-3.0",
   "repository": {
@@ -204,6 +204,11 @@
           "items": { "type": "string" },
           "default": ["customization"],
           "description": "Folders (relative to workspace root) to search for input member files. Use '*' to search recursively in the entire workspace."
+        },
+        "smpe.editor.autoDetectLanguage": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically detect and set the SMP/E language mode for files containing SMP/E control statements (lines starting with '++') or matching configured z/OS dataset LLQs. Disable to allow manual language mode overrides."
         }
       }
     },
@@ -262,6 +267,11 @@
       {
         "command": "smpe.zosmf.manageFilterHistory",
         "title": "SMP/E: Manage Filter History",
+        "category": "SMP/E"
+      },
+      {
+        "command": "smpe.editor.toggleAutoDetectLanguage",
+        "title": "SMP/E: Toggle Auto-Detect Language Mode",
         "category": "SMP/E"
       }
     ],

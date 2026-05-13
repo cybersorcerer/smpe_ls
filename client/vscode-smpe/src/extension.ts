@@ -214,6 +214,8 @@ export function activate(context: vscode.ExtensionContext) {
 	// Register BEFORE starting the client so detection runs before LSP activation
 	const detectSmpeLanguage = (doc: vscode.TextDocument) => {
 		if (doc.languageId === 'smpe') return;
+		const autoDetect = vscode.workspace.getConfiguration('smpe').get<boolean>('editor.autoDetectLanguage', true);
+		if (!autoDetect) return;
 
 		if (doc.uri.scheme === 'zowe-ds') {
 			const llqRaw = vscode.workspace.getConfiguration('smpe').get('zosDatasetsLlq', ['MCS']);
@@ -472,6 +474,17 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	log('z/OSMF Query commands registered');
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('smpe.editor.toggleAutoDetectLanguage', async () => {
+			const config = vscode.workspace.getConfiguration('smpe');
+			const current = config.get<boolean>('editor.autoDetectLanguage', true);
+			await config.update('editor.autoDetectLanguage', !current, vscode.ConfigurationTarget.Global);
+			const state = !current ? 'enabled' : 'disabled';
+			log(`Auto-detect language mode ${state}`);
+			vscode.window.showInformationMessage(`SMP/E: Auto-detect language mode ${state}.`);
+		})
+	);
 
 	// Resolve smpe_outl binary path (same priority order as smpe_ls)
 	const resolveOutlPath = (): string => {
