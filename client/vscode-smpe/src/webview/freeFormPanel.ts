@@ -10,6 +10,7 @@ import { ZosmfClient } from '../zosmf/client';
 import { UssPanel } from './ussPanel';
 import { DatasetPanel } from './datasetPanel';
 import { HoldCommentsPanel, parseHoldComments } from './holdCommentsPanel';
+import { SavedQueriesManager } from '../zosmf/savedQueriesManager';
 
 export class FreeFormPanel {
     public static currentPanel: FreeFormPanel | undefined;
@@ -21,6 +22,7 @@ export class FreeFormPanel {
     private lastServer: ZosmfServer | undefined;
     private lastCredentials: Credentials | undefined;
     private readonly context: vscode.ExtensionContext;
+    private readonly savedQueriesManager: SavedQueriesManager;
 
     private constructor(
         panel: vscode.WebviewPanel,
@@ -32,6 +34,7 @@ export class FreeFormPanel {
         this.queryProvider = queryProvider;
         this.outputChannel = outputChannel;
         this.context = context;
+        this.savedQueriesManager = new SavedQueriesManager(outputChannel);
 
         this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
 
@@ -112,6 +115,10 @@ export class FreeFormPanel {
             command: 'filterHistory',
             data: this.getFilterHistory()
         });
+        this.panel.webview.postMessage({
+            command: 'savedQueries',
+            data: this.savedQueriesManager.loadQueries()
+        });
     }
 
     private loadServers(): void {
@@ -150,6 +157,28 @@ export class FreeFormPanel {
                 break;
             case 'showHoldComments':
                 await this.showHoldComments(message.entryname);
+                break;
+            case 'saveQuery':
+                this.savedQueriesManager.saveQuery({
+                    name: message.name,
+                    server: message.serverName,
+                    csi: message.selectedCsi,
+                    zones: message.zones,
+                    entryType: message.entryType,
+                    subentries: message.subentries,
+                    filter: message.filter
+                });
+                this.panel.webview.postMessage({
+                    command: 'savedQueries',
+                    data: this.savedQueriesManager.loadQueries()
+                });
+                break;
+            case 'deleteQuery':
+                this.savedQueriesManager.deleteQuery(message.name);
+                this.panel.webview.postMessage({
+                    command: 'savedQueries',
+                    data: this.savedQueriesManager.loadQueries()
+                });
                 break;
         }
     }
