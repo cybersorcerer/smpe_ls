@@ -18,6 +18,17 @@ type Provider struct {
 }
 
 // NewProvider creates a new completion provider with shared data
+// isUpperOnly reports whether s consists only of uppercase A-Z letters.
+// Used to detect `++STATEMENT_PREFIX` typing (e.g. ++S, ++SR, ++SRC).
+func isUpperOnly(s string) bool {
+	for _, c := range s {
+		if c < 'A' || c > 'Z' {
+			return false
+		}
+	}
+	return true
+}
+
 func NewProvider(store *data.Store) *Provider {
 	return &Provider{
 		statements: store.Statements,
@@ -55,9 +66,14 @@ func (p *Provider) GetCompletionsAST(doc *parser.Document, text string, line, ch
 		}
 	}
 
-	// If we're typing + or ++, offer MCS completions (but NOT on continuation lines)
-	// This check comes BEFORE inline data check because ++ at line start is a new statement
-	if !isContinuationLine && (trimmedBefore == "" || (strings.HasPrefix(trimmedBefore, "+") && len(trimmedBefore) <= 2)) {
+	// If we're typing + / ++ / ++STATEMENT_PREFIX, offer MCS completions
+	// (but NOT on continuation lines). This must trigger even after the user
+	// typed multiple letters after ++ (e.g. ++S, ++SR) so the menu stays
+	// open and filters down to ++SRC, ++SHELLSCR, etc.
+	isTypingMCS := strings.HasPrefix(trimmedBefore, "+") &&
+		(len(trimmedBefore) <= 2 ||
+			(strings.HasPrefix(trimmedBefore, "++") && isUpperOnly(trimmedBefore[2:])))
+	if !isContinuationLine && (trimmedBefore == "" || isTypingMCS) {
 		// Calculate how many + characters were typed
 		plusCount := 0
 		for i := len(textBefore) - 1; i >= 0 && textBefore[i] == '+'; i-- {
