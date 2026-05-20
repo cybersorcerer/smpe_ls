@@ -17,6 +17,48 @@ type Provider struct {
 	statements map[string]data.MCSStatement
 }
 
+// isUpperOnly reports whether s consists only of uppercase A-Z letters.
+// Used to detect that the cursor sits at the end of a typed MCS-statement
+// prefix (`++`, `++S`, `++SR`, `++SRC`, …). A trailing space, paren, etc.
+// would fail the check and fall through to operand completion.
+func isUpperOnly(s string) bool {
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c < 'A' || c > 'Z' {
+			return false
+		}
+	}
+	return true
+}
+
+// isTypingMCSPrefix reports whether textBefore (the line content up to the
+// cursor) consists of optional leading whitespace followed by one or two
+// `+` characters and then zero or more uppercase A-Z letters — i.e. the
+// user is typing or about to type an MCS statement name and the cursor is
+// directly at the end of that prefix.
+//
+//	"+"          → true
+//	"++"         → true
+//	"++S"        → true
+//	"++ASSIGN"   → true
+//	"++ASSIGN "  → false (trailing space)
+//	"++++"       → false (too many +)
+//	"abc"        → false
+func isTypingMCSPrefix(textBefore string) bool {
+	leftTrimmed := strings.TrimLeft(textBefore, " \t")
+	if leftTrimmed == "" || leftTrimmed[0] != '+' {
+		return false
+	}
+	plusCount := 0
+	for plusCount < len(leftTrimmed) && leftTrimmed[plusCount] == '+' {
+		plusCount++
+	}
+	if plusCount < 1 || plusCount > 2 {
+		return false
+	}
+	return isUpperOnly(leftTrimmed[plusCount:])
+}
+
 // NewProvider creates a new completion provider with shared data
 func NewProvider(store *data.Store) *Provider {
 	return &Provider{
@@ -55,17 +97,27 @@ func (p *Provider) GetCompletionsAST(doc *parser.Document, text string, line, ch
 		}
 	}
 
-	// If we're typing + or ++, offer MCS completions (but NOT on continuation lines)
-	// This check comes BEFORE inline data check because ++ at line start is a new statement
-	if !isContinuationLine && (trimmedBefore == "" || (strings.HasPrefix(trimmedBefore, "+") && len(trimmedBefore) <= 2)) {
-		// Calculate how many + characters were typed
-		plusCount := 0
-		for i := len(textBefore) - 1; i >= 0 && textBefore[i] == '+'; i-- {
-			plusCount++
+	// If we're typing + / ++ / ++STATEMENT_PREFIX, offer MCS completions
+	// (but NOT on continuation lines). This must keep the menu open while
+	// the user is filtering by typing more letters (++S → ++SRC, ++SHELLSCR …).
+	// Cursor must sit directly at the end of the prefix — once a space or
+	// paren follows we are past the statement name and operand completion
+	// takes over.
+	if !isContinuationLine && (trimmedBefore == "" || isTypingMCSPrefix(textBefore)) {
+		// Compute the range we want the client to replace when an item is
+		// accepted: the leading `+` chars PLUS any uppercase letters
+		// already typed after them. Without including the letters the
+		// inserted statement would be appended instead of replacing the
+		// in-progress prefix.
+		startChar := character
+		for startChar > 0 {
+			c := currentLine[startChar-1]
+			if c == '+' || (c >= 'A' && c <= 'Z') {
+				startChar--
+			} else {
+				break
+			}
 		}
-
-		// Calculate the range to replace (the + characters)
-		startChar := character - plusCount
 		replaceRange := lsp.Range{
 			Start: lsp.Position{Line: line, Character: startChar},
 			End:   lsp.Position{Line: line, Character: character},

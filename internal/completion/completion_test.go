@@ -1,6 +1,7 @@
 package completion
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/cybersorcerer/smpe_ls/internal/data"
@@ -106,6 +107,276 @@ func TestCompletionMCSStatements(t *testing.T) {
 	}
 	if !foundMac {
 		t.Error("Expected ++MAC in completions")
+	}
+}
+
+// Test: typing any partial MCS statement name (++X, ++XY, …) keeps the
+// MCS completion list open so the client can filter locally. Operand
+// completion may only kick in once a non-MCS character (space, paren,
+// digit, …) follows.
+func TestCompletionMCSPrefixKeepsMenuOpen(t *testing.T) {
+	_, p, cp := createTestProviders()
+
+	mcsCases := []string{
+		"+",
+		"++",
+		"++U",
+		"++US",
+		"++USER",
+		"++USERMOD",
+		"  ++",
+		"  ++US",
+		"++V",
+		"++M",
+		"++MA",
+	}
+
+	for _, text := range mcsCases {
+		t.Run("mcs:"+text, func(t *testing.T) {
+			doc := p.Parse(text)
+			items := cp.GetCompletionsAST(doc, text, 0, len(text))
+
+			if len(items) == 0 {
+				t.Fatalf("Expected MCS completions for %q, got none", text)
+			}
+			for _, item := range items {
+				if !strings.HasPrefix(item.Label, "++") {
+					t.Errorf("Expected only ++ items for %q, got non-MCS item %q", text, item.Label)
+				}
+			}
+		})
+	}
+}
+
+// Test: operand-name filtering keeps the menu open while the user is
+// typing an operand prefix (e.g. ++USERMOD(LJS2012) RE → REWORK). The
+// server returns the full operand list; the client filters locally.
+func TestCompletionOperandPrefixKeepsMenuOpen(t *testing.T) {
+	_, p, cp := createTestProviders()
+
+	operandCases := []struct {
+		text   string
+		expect string // one operand name that MUST be in the result
+	}{
+		{"++USERMOD(LJS2012) ", "REWORK"},
+		{"++USERMOD(LJS2012) R", "REWORK"},
+		{"++USERMOD(LJS2012) RE", "REWORK"},
+		{"++USERMOD(LJS2012) D", "DESC"},
+		{"++USERMOD(LJS2012) DE", "DESC"},
+		{"++USERMOD(LJS2012) REWORK(123) D", "DESC"},
+	}
+
+	for _, tc := range operandCases {
+		t.Run("operand:"+tc.text, func(t *testing.T) {
+			doc := p.Parse(tc.text)
+			items := cp.GetCompletionsAST(doc, tc.text, 0, len(tc.text))
+
+			if len(items) == 0 {
+				t.Fatalf("Expected operand completions for %q, got none", tc.text)
+			}
+
+			found := false
+			for _, item := range items {
+				if strings.HasPrefix(item.Label, "++") {
+					t.Errorf("Unexpected MCS item %q in operand context %q",
+						item.Label, tc.text)
+				}
+				if item.Label == tc.expect {
+					found = true
+				}
+			}
+			if !found {
+				t.Errorf("Expected operand %q in completions for %q",
+					tc.expect, tc.text)
+			}
+		})
+	}
+}
+
+// Test: sub-operand name filtering inside operand parens (e.g.
+// FROMDS(D → DSN; FROMDS(U → UNIT). Server returns full sub-operand
+// list; client filters locally by the typed prefix.
+func TestCompletionSubOperandPrefixKeepsMenuOpen(t *testing.T) {
+	_, p, cp := createTestProviders()
+
+	cases := []struct {
+		text   string
+		expect string
+	}{
+		{"++MAC(MYMAC) FROMDS(", "DSN"},
+		{"++MAC(MYMAC) FROMDS(D", "DSN"},
+		{"++MAC(MYMAC) FROMDS(DS", "DSN"},
+		{"++MAC(MYMAC) FROMDS(V", "VOL"},
+		{"++MAC(MYMAC) FROMDS(U", "UNIT"},
+		{"++MAC(MYMAC) FROMDS(N", "NUMBER"},
+	}
+
+	for _, tc := range cases {
+		t.Run("subop:"+tc.text, func(t *testing.T) {
+			doc := p.Parse(tc.text)
+			items := cp.GetCompletionsAST(doc, tc.text, 0, len(tc.text))
+
+			if len(items) == 0 {
+				t.Fatalf("Expected sub-operand completions for %q, got none", tc.text)
+			}
+			found := false
+			for _, item := range items {
+				if strings.HasPrefix(item.Label, "++") {
+					t.Errorf("Unexpected MCS item %q in sub-operand context %q",
+						item.Label, tc.text)
+				}
+				if item.Label == tc.expect {
+					found = true
+				}
+			}
+			if !found {
+				t.Errorf("Expected sub-operand %q in completions for %q",
+					tc.expect, tc.text)
+			}
+		})
+	}
+}
+
+// Test: multi-line scenarios — statement on line 0, operand or
+// sub-operand prefix typed on a continuation line that starts with
+// whitespace. The server must recognize the context and return the
+// appropriate operand/sub-operand list.
+func TestCompletionMultilineContexts(t *testing.T) {
+	_, p, cp := createTestProviders()
+
+	cases := []struct {
+		name     string
+		text     string
+		line     int
+		col      int
+		expect   string
+		mustHave string // "operand" | "subop"
+	}{
+		{
+			name:   "operand-full-list-after-newline",
+			text:   "++USERMOD(LJS2012)\n  ",
+			line:   1,
+			col:    2,
+			expect: "REWORK",
+		},
+		{
+			name:   "operand-prefix-after-newline",
+			text:   "++USERMOD(LJS2012)\n  RE",
+			line:   1,
+			col:    4,
+			expect: "REWORK",
+		},
+		{
+			name:   "operand-prefix-after-newline-D",
+			text:   "++USERMOD(LJS2012)\n  D",
+			line:   1,
+			col:    3,
+			expect: "DESC",
+		},
+		{
+			name:   "subop-after-newline",
+			text:   "++MAC(MYMAC)\n  FROMDS(",
+			line:   1,
+			col:    9,
+			expect: "DSN",
+		},
+		{
+			name:   "subop-prefix-after-newline",
+			text:   "++MAC(MYMAC)\n  FROMDS(D",
+			line:   1,
+			col:    10,
+			expect: "DSN",
+		},
+		{
+			name:   "operand-after-multiple-continuation-lines",
+			text:   "++USERMOD(LJS2012) REWORK(2022056)\n  ",
+			line:   1,
+			col:    2,
+			expect: "DESC",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			doc := p.Parse(tc.text)
+			items := cp.GetCompletionsAST(doc, tc.text, tc.line, tc.col)
+
+			if len(items) == 0 {
+				t.Fatalf("Expected completions for %q at (%d,%d), got none",
+					tc.text, tc.line, tc.col)
+			}
+			found := false
+			for _, item := range items {
+				if strings.HasPrefix(item.Label, "++") {
+					t.Errorf("Unexpected MCS item %q in multi-line context",
+						item.Label)
+				}
+				if item.Label == tc.expect {
+					found = true
+				}
+			}
+			if !found {
+				t.Errorf("Expected %q in completions for %q at (%d,%d)",
+					tc.expect, tc.text, tc.line, tc.col)
+			}
+		})
+	}
+}
+
+// Test: operand-name filtering on continuation lines (line 2+ that
+// starts with whitespace and contains operand prefix).
+func TestCompletionOperandPrefixOnContinuationLine(t *testing.T) {
+	_, p, cp := createTestProviders()
+
+	text := "++USERMOD(LJS2012)\n  RE"
+	doc := p.Parse(text)
+	// Cursor on line 1 (zero-indexed), after the "RE"
+	items := cp.GetCompletionsAST(doc, text, 1, 4)
+
+	if len(items) == 0 {
+		t.Fatal("Expected operand completions on continuation line, got none")
+	}
+	for _, item := range items {
+		if strings.HasPrefix(item.Label, "++") {
+			t.Errorf("Unexpected MCS item %q on continuation line", item.Label)
+		}
+	}
+	// REWORK must be present (matches RE prefix; server returns full list)
+	foundRework := false
+	for _, item := range items {
+		if item.Label == "REWORK" {
+			foundRework = true
+		}
+	}
+	if !foundRework {
+		t.Error("Expected REWORK in continuation-line operand completions")
+	}
+}
+
+// Test: regression guard — once a non-MCS char (space, '(') follows the
+// statement name, the result must NOT be the MCS list anymore. Operand
+// completion takes over.
+func TestCompletionNonMCSAfterStatement(t *testing.T) {
+	_, p, cp := createTestProviders()
+
+	nonMcsCases := []string{
+		"++USERMOD ",          // trailing space (cursor after space)
+		"++USERMOD(",          // opened paren
+		"++USERMOD(LJS2012) ", // operand-completion position
+	}
+
+	for _, text := range nonMcsCases {
+		t.Run("nonmcs:"+text, func(t *testing.T) {
+			doc := p.Parse(text)
+			items := cp.GetCompletionsAST(doc, text, 0, len(text))
+
+			for _, item := range items {
+				if strings.HasPrefix(item.Label, "++") {
+					t.Errorf("For %q expected non-MCS items, but got MCS item %q",
+						text, item.Label)
+				}
+			}
+		})
 	}
 }
 
