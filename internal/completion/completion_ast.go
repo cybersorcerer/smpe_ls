@@ -887,6 +887,7 @@ func (p *Provider) getMCSCompletions(replaceRange *lsp.Range) []lsp.CompletionIt
 			}
 			snippetItem := lsp.CompletionItem{
 				Label:            name + " …",
+				FilterText:       name,
 				Kind:             lsp.CompletionItemKindSnippet,
 				Detail:           "Boilerplate",
 				Documentation:    stmt.Description,

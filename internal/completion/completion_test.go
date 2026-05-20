@@ -353,6 +353,63 @@ func TestCompletionOperandPrefixOnContinuationLine(t *testing.T) {
 	}
 }
 
+// Test: MCS-statement boilerplate snippets are offered alongside the
+// keyword items, both at "++" and while typing a longer prefix. The
+// snippet items must carry FilterText so VSCode's prefix matcher (which
+// ignores '+' as a word character) still matches them.
+func TestCompletionMCSSnippetsAreOffered(t *testing.T) {
+	statements := map[string]data.MCSStatement{
+		"++USERMOD": {
+			Name:        "++USERMOD",
+			Description: "Identifies a user modification",
+			Parameter:   "usermod_name",
+			Snippet:     "++USERMOD($1) /* yyyyddd */ .",
+			Type:        "MCS",
+		},
+	}
+	store := &data.Store{
+		Statements: statements,
+		List:       []data.MCSStatement{statements["++USERMOD"]},
+	}
+	p := parser.NewParser(statements)
+	cp := NewProvider(store)
+
+	prefixes := []string{"++", "++U", "++USER", "++USERMOD"}
+	for _, prefix := range prefixes {
+		t.Run("prefix:"+prefix, func(t *testing.T) {
+			doc := p.Parse(prefix)
+			items := cp.GetCompletionsAST(doc, prefix, 0, len(prefix))
+
+			hasKeyword := false
+			hasSnippet := false
+			for _, item := range items {
+				if item.Kind == lsp.CompletionItemKindKeyword && item.Label == "++USERMOD" {
+					hasKeyword = true
+				}
+				if item.Kind == lsp.CompletionItemKindSnippet {
+					hasSnippet = true
+					if item.FilterText == "" {
+						t.Errorf("snippet item for %q missing FilterText", prefix)
+					}
+					if strings.Contains(item.FilterText, " ") {
+						t.Errorf("snippet FilterText %q contains whitespace — won't match VSCode/blink prefix filter",
+							item.FilterText)
+					}
+					if !strings.HasPrefix(item.Label, "++USERMOD") {
+						t.Errorf("snippet item label %q should start with ++USERMOD", item.Label)
+					}
+				}
+			}
+			if !hasKeyword {
+				t.Errorf("Expected keyword item ++USERMOD for prefix %q", prefix)
+			}
+			if !hasSnippet {
+				t.Errorf("Expected snippet item (Kind=Snippet) for prefix %q", prefix)
+			}
+		})
+	}
+}
+
 // Test: regression guard — once a non-MCS char (space, '(') follows the
 // statement name, the result must NOT be the MCS list anymore. Operand
 // completion takes over.

@@ -73,6 +73,7 @@ type TextEdit struct {
 // CompletionItem represents a completion item
 type CompletionItem struct {
 	Label            string    `json:"label"`
+	FilterText       string    `json:"filterText,omitempty"`
 	Kind             int       `json:"kind,omitempty"`
 	Detail           string    `json:"detail,omitempty"`
 	Documentation    string    `json:"documentation,omitempty"`
