@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as vscode from 'vscode';
 
 type FileMap = string | { de: string; en: string };
@@ -48,13 +49,39 @@ export async function openTraining(context: vscode.ExtensionContext): Promise<vo
     }
 
     const filename = resolveFilename(picked.entry, lang);
-    const uri = vscode.Uri.joinPath(context.extensionUri, 'training', lang, filename);
+    const uri = resolveTrainingUri(context, lang, filename);
+
+    if (!uri) {
+        vscode.window.showErrorMessage(
+            `Training module not found: ${filename}`,
+        );
+        return;
+    }
 
     try {
         await vscode.commands.executeCommand('markdown.showPreview', uri);
     } catch (err) {
         vscode.window.showErrorMessage(
-            `Training module not found or could not be opened: ${filename}`,
+            `Training module could not be opened: ${filename}`,
         );
     }
+}
+
+function resolveTrainingUri(
+    context: vscode.ExtensionContext,
+    lang: 'de' | 'en',
+    filename: string,
+): vscode.Uri | undefined {
+    const candidates = [
+        vscode.Uri.joinPath(context.extensionUri, 'training', lang, filename),
+        vscode.Uri.joinPath(context.extensionUri, '..', '..', 'docs', 'training', lang, filename),
+    ];
+
+    for (const candidate of candidates) {
+        if (fs.existsSync(candidate.fsPath)) {
+            return candidate;
+        }
+    }
+
+    return undefined;
 }
