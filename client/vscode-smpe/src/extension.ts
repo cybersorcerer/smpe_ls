@@ -14,6 +14,7 @@ import { DatasetPanel, DatasetContentProvider } from './webview/datasetPanel';
 import { FreeFormPanel } from './webview/freeFormPanel';
 import { MissingMemberChecker } from './workspace/missingMemberChecker';
 import { MissingMemberPanel } from './webview/missingMemberPanel';
+import { openTraining } from './training/openTraining';
 
 let client: LanguageClient;
 let outputChannel: vscode.OutputChannel;
@@ -395,6 +396,9 @@ export function activate(context: vscode.ExtensionContext) {
 		}),
 		vscode.commands.registerCommand('smpe.codelens.queryDddef', (dddefName: string) => {
 			queryProvider.queryDddefDirect([dddefName]);
+		}),
+		vscode.commands.registerCommand('smpe.openTraining', () => {
+			openTraining(context);
 		}),
         vscode.commands.registerCommand('smpe.zosmf.manageFilterHistory', async () => {
             const HISTORY_KEY = 'smpe.filterHistory';

@@ -1,6 +1,6 @@
 # SMP/E Language Server — Training Materials
 
-**Version:** 0.9.5  
+**Version:** 1.3.1  
 **Target Audience:** SMP/E developers new to VSCode
 
 ## Prerequisites
@@ -8,6 +8,17 @@
 - Visual Studio Code version 1.75 or later
 - The correct VSIX file for your platform (see Module 01)
 - Basic knowledge of SMP/E MCS syntax is assumed
+
+## Open the training directly inside VSCode
+
+Starting with version 1.3.1, this training is bundled with the extension. You no longer need to clone the repository or download the files from GitHub.
+
+1. Press `Cmd+Shift+P` (macOS) or `Ctrl+Shift+P` (Windows/Linux)
+2. Run the command `SMP/E: Open Training`
+3. Choose the module you want from the picker
+4. The module opens in VSCode's Markdown preview
+
+The language is selected automatically based on your VSCode UI language (German or English, with English as the fallback).
 
 ## Modules
 

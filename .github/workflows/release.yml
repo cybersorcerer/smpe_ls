@@ -194,6 +194,9 @@ jobs:
       - name: Copy data files
         run: cp data/smpe.json client/vscode-smpe/
 
+      - name: Copy training docs
+        run: cp -R docs/training client/vscode-smpe/training
+
       - name: Install dependencies
         run: cd client/vscode-smpe && npm install
 

@@ -273,6 +273,11 @@
         "command": "smpe.editor.toggleAutoDetectLanguage",
         "title": "SMP/E: Toggle Auto-Detect Language Mode",
         "category": "SMP/E"
+      },
+      {
+        "command": "smpe.openTraining",
+        "title": "SMP/E: Open Training",
+        "category": "SMP/E"
       }
     ],
     "menus": {

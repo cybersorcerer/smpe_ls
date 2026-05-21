@@ -4,10 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## [1.3.1] - 2026-05-20
 
+### Added
+
+- **Training material bundled with the extension** - The full training (DE and EN, 11 modules) is now shipped inside the VSIX. A new command `SMP/E: Open Training` opens a module picker; the selected module renders in VSCode's built-in Markdown preview. Language is auto-detected from the VSCode UI language (`vscode.env.language`); falls back to English.
+
 ### Fixed
 
 - **MCS completion menu stays open while typing `++STATEMENT` prefix** - Typing `++S`, `++SR`, `++SRC`, … no longer dismisses the completion list. The completion menu remains open and continues to filter MCS statements as more characters are typed.
 - **Snippet completion items carry `filterText`** - Boilerplate snippet items now include an explicit `filterText` so VSCode and blink-cmp (Neovim) apply their prefix filter correctly. Snippets are no longer hidden when typing `++P`, `++PT`, etc.
+- **Saved Query subentries now reflected in subentry picker** - Loading a saved query in the Free Form Query panel now rebuilds the subentry checkbox grid based on the stored subentries. Previously the picker remained empty (or showed stale defaults) because programmatic value changes did not trigger the `input` event listener on the entry type field.
 
 ## [1.3.0] - 2026-05-13
 

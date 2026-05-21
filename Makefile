@@ -247,11 +247,15 @@ package-windows: vscode-deps
 	GOOS=windows GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_outl.exe ./cmd/smpe_outl
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
+	@echo "Copying training docs..."
+	@rm -rf client/vscode-smpe/training
+	@cp -R docs/training client/vscode-smpe/training
 	@echo "Creating VSIX package for Windows..."
 	cd client/vscode-smpe && npx --yes @vscode/vsce package --target win32-x64
 	@echo ""
 	@echo "VSIX package created in client/vscode-smpe/"
 	@rm -f client/vscode-smpe/smpe_ls.exe client/vscode-smpe/smpe_lint.exe client/vscode-smpe/smpe_outl.exe
+	@rm -rf client/vscode-smpe/training
 
 package-windows-arm64: vscode-deps
 	@echo "Building Windows ARM64 binaries (commit: $(COMMIT))..."
@@ -260,11 +264,15 @@ package-windows-arm64: vscode-deps
 	GOOS=windows GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_outl.exe ./cmd/smpe_outl
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
+	@echo "Copying training docs..."
+	@rm -rf client/vscode-smpe/training
+	@cp -R docs/training client/vscode-smpe/training
 	@echo "Creating VSIX package for Windows ARM64..."
 	cd client/vscode-smpe && npx --yes @vscode/vsce package --target win32-arm64
 	@echo ""
 	@echo "VSIX package created in client/vscode-smpe/"
 	@rm -f client/vscode-smpe/smpe_ls.exe client/vscode-smpe/smpe_lint.exe client/vscode-smpe/smpe_outl.exe
+	@rm -rf client/vscode-smpe/training
 
 package-linux: vscode-deps
 	@echo "Building Linux AMD64 binaries (commit: $(COMMIT))..."
@@ -273,11 +281,15 @@ package-linux: vscode-deps
 	GOOS=linux GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_outl ./cmd/smpe_outl
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
+	@echo "Copying training docs..."
+	@rm -rf client/vscode-smpe/training
+	@cp -R docs/training client/vscode-smpe/training
 	@echo "Creating VSIX package for Linux..."
 	cd client/vscode-smpe && npx --yes @vscode/vsce package --target linux-x64
 	@echo ""
 	@echo "VSIX package created in client/vscode-smpe/"
 	@rm -f client/vscode-smpe/smpe_ls client/vscode-smpe/smpe_lint client/vscode-smpe/smpe_outl
+	@rm -rf client/vscode-smpe/training
 
 package-linux-arm64: vscode-deps
 	@echo "Building Linux ARM64 binaries (commit: $(COMMIT))..."
@@ -286,11 +298,15 @@ package-linux-arm64: vscode-deps
 	GOOS=linux GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_outl ./cmd/smpe_outl
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
+	@echo "Copying training docs..."
+	@rm -rf client/vscode-smpe/training
+	@cp -R docs/training client/vscode-smpe/training
 	@echo "Creating VSIX package for Linux ARM64..."
 	cd client/vscode-smpe && npx --yes @vscode/vsce package --target linux-arm64
 	@echo ""
 	@echo "VSIX package created in client/vscode-smpe/"
 	@rm -f client/vscode-smpe/smpe_ls client/vscode-smpe/smpe_lint client/vscode-smpe/smpe_outl
+	@rm -rf client/vscode-smpe/training
 
 package-macos: vscode-deps
 	@echo "Building macOS ARM64 (Apple Silicon) binaries (commit: $(COMMIT))..."
@@ -299,11 +315,15 @@ package-macos: vscode-deps
 	GOOS=darwin GOARCH=arm64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_outl ./cmd/smpe_outl
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
+	@echo "Copying training docs..."
+	@rm -rf client/vscode-smpe/training
+	@cp -R docs/training client/vscode-smpe/training
 	@echo "Creating VSIX package for macOS ARM64..."
 	cd client/vscode-smpe && npx --yes @vscode/vsce package --target darwin-arm64
 	@echo ""
 	@echo "VSIX package created in client/vscode-smpe/"
 	@rm -f client/vscode-smpe/smpe_ls client/vscode-smpe/smpe_lint client/vscode-smpe/smpe_outl
+	@rm -rf client/vscode-smpe/training
 
 package-macos-x64: vscode-deps
 	@echo "Building macOS AMD64 (Intel) binaries (commit: $(COMMIT))..."
@@ -312,11 +332,15 @@ package-macos-x64: vscode-deps
 	GOOS=darwin GOARCH=amd64 go build -ldflags="$(LDFLAGS)" -o client/vscode-smpe/smpe_outl ./cmd/smpe_outl
 	@echo "Copying data files..."
 	@cp $(DATA_DIR)/smpe.json client/vscode-smpe/
+	@echo "Copying training docs..."
+	@rm -rf client/vscode-smpe/training
+	@cp -R docs/training client/vscode-smpe/training
 	@echo "Creating VSIX package for macOS Intel..."
 	cd client/vscode-smpe && npx --yes @vscode/vsce package --target darwin-x64
 	@echo ""
 	@echo "VSIX package created in client/vscode-smpe/"
 	@rm -f client/vscode-smpe/smpe_ls client/vscode-smpe/smpe_lint client/vscode-smpe/smpe_outl
+	@rm -rf client/vscode-smpe/training
 
 package-all: vscode-deps
 	@echo "═══════════════════════════════════════════════════════════════"

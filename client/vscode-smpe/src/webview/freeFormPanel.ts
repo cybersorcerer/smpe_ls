@@ -980,6 +980,7 @@ export class FreeFormPanel {
             document.getElementById('entryType').value = q.entryType;
             document.getElementById('subentries').value = q.subentries;
             document.getElementById('filter').value = q.filter;
+            updateSubentryGrid();
         }
 
         function showDeleteConfirmDialog(name) {
