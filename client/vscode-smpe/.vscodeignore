@@ -5,6 +5,7 @@ src/**
 tsconfig.json
 **/*.map
 **/*.ts
+images/icon-source.png
 !out/**/*.js
 !smpe_ls
 !smpe_ls.exe
