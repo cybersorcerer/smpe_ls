@@ -28,6 +28,7 @@ type Diagnostic struct {
 	Code     string `json:"code,omitempty"`
 	Source   string `json:"source,omitempty"`
 	Message  string `json:"message"`
+	Data     any    `json:"data,omitempty"`
 }
 
 // DiagnosticSeverity levels
@@ -68,6 +69,33 @@ type TextDocumentContentChangeEvent struct {
 type TextEdit struct {
 	Range   Range  `json:"range"`
 	NewText string `json:"newText"`
+}
+
+// CodeActionParams is the request payload for textDocument/codeAction
+type CodeActionParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+	Range        Range                  `json:"range"`
+	Context      CodeActionContext       `json:"context"`
+}
+
+// CodeActionContext carries the diagnostics relevant to the requested range
+type CodeActionContext struct {
+	Diagnostics []Diagnostic `json:"diagnostics"`
+	Only        []string     `json:"only,omitempty"`
+}
+
+// CodeAction represents a single quick fix
+type CodeAction struct {
+	Title       string         `json:"title"`
+	Kind        string         `json:"kind,omitempty"`
+	Diagnostics []Diagnostic   `json:"diagnostics,omitempty"`
+	Edit        *WorkspaceEdit `json:"edit,omitempty"`
+	IsPreferred bool           `json:"isPreferred,omitempty"`
+}
+
+// WorkspaceEdit groups text edits per document URI
+type WorkspaceEdit struct {
+	Changes map[string][]TextEdit `json:"changes"`
 }
 
 // CompletionItem represents a completion item
@@ -137,6 +165,7 @@ type ServerCapabilities struct {
 	DocumentSymbolProvider          bool                   `json:"documentSymbolProvider,omitempty"`
 	DefinitionProvider              bool                   `json:"definitionProvider,omitempty"`
 	ReferencesProvider              bool                   `json:"referencesProvider,omitempty"`
+	CodeActionProvider              bool                   `json:"codeActionProvider,omitempty"`
 	CodeLensProvider                *CodeLensOptions       `json:"codeLensProvider,omitempty"`
 	FoldingRangeProvider            bool                   `json:"foldingRangeProvider,omitempty"`
 	WorkspaceSymbolProvider         bool                   `json:"workspaceSymbolProvider,omitempty"`
