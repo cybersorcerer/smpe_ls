@@ -22,6 +22,7 @@ func NewProvider() *Provider {
 // It never returns nil (serializes as [] not null).
 func (p *Provider) GetCodeActions(uri string, ctx lsp.CodeActionContext) []lsp.CodeAction {
 	actions := []lsp.CodeAction{}
+	var missingOperand []lsp.Diagnostic
 	for _, d := range ctx.Diagnostics {
 		switch d.Code {
 		case diagnostics.CodeMissingTerminator:
@@ -30,9 +31,51 @@ func (p *Provider) GetCodeActions(uri string, ctx lsp.CodeActionContext) []lsp.C
 			if a, ok := p.reworkFix(uri, d); ok {
 				actions = append(actions, a)
 			}
+		case diagnostics.CodeMissingRequiredOperand:
+			if name := operandName(d); name != "" {
+				actions = append(actions, p.operandFix(uri, d, name))
+				missingOperand = append(missingOperand, d)
+			}
 		}
 	}
+	if len(missingOperand) >= 2 {
+		actions = append(actions, p.insertAllOperandsFix(uri, missingOperand))
+	}
 	return actions
+}
+
+// operandFix inserts a single missing operand skeleton after the statement start.
+func (p *Provider) operandFix(uri string, d lsp.Diagnostic, name string) lsp.CodeAction {
+	pos := d.Range.End
+	edit := lsp.TextEdit{
+		Range:   lsp.Range{Start: pos, End: pos},
+		NewText: "\n    " + name + "()",
+	}
+	return lsp.CodeAction{
+		Title:       "Insert operand " + name,
+		Kind:        "quickfix",
+		Diagnostics: []lsp.Diagnostic{d},
+		Edit:        &lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{uri: {edit}}},
+	}
+}
+
+// insertAllOperandsFix inserts skeletons for all missing required operands at once.
+func (p *Provider) insertAllOperandsFix(uri string, diags []lsp.Diagnostic) lsp.CodeAction {
+	var sb strings.Builder
+	for _, d := range diags {
+		sb.WriteString("\n    " + operandName(d) + "()")
+	}
+	pos := diags[0].Range.End
+	edit := lsp.TextEdit{
+		Range:   lsp.Range{Start: pos, End: pos},
+		NewText: sb.String(),
+	}
+	return lsp.CodeAction{
+		Title:       "Insert all required operands",
+		Kind:        "quickfix",
+		Diagnostics: diags,
+		Edit:        &lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{uri: {edit}}},
+	}
 }
 
 // operandName reads the operand name from the diagnostic Data payload.

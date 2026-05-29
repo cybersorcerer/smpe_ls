@@ -73,3 +73,50 @@ func TestEmptyOperandNonReworkNoFix(t *testing.T) {
 		t.Errorf("expected no actions for non-REWORK empty operand, got %d", len(got))
 	}
 }
+
+func TestSingleMissingOperandFix(t *testing.T) {
+	p := NewProvider()
+	uri := "file:///t.smpe"
+	ctx := lsp.CodeActionContext{
+		Diagnostics: []lsp.Diagnostic{
+			diag(diagnostics.CodeMissingRequiredOperand, map[string]any{"operand": "SOURCEID"}, 0, 0, 8),
+		},
+	}
+	actions := p.GetCodeActions(uri, ctx)
+	if len(actions) != 1 {
+		t.Fatalf("expected 1 action, got %d", len(actions))
+	}
+	if actions[0].Title != "Insert operand SOURCEID" {
+		t.Errorf("unexpected title: %q", actions[0].Title)
+	}
+	if got := actions[0].Edit.Changes[uri][0].NewText; got != "\n    SOURCEID()" {
+		t.Errorf("unexpected edit text: %q", got)
+	}
+}
+
+func TestMultipleMissingOperandsAddInsertAll(t *testing.T) {
+	p := NewProvider()
+	uri := "file:///t.smpe"
+	ctx := lsp.CodeActionContext{
+		Diagnostics: []lsp.Diagnostic{
+			diag(diagnostics.CodeMissingRequiredOperand, map[string]any{"operand": "SOURCEID"}, 0, 0, 8),
+			diag(diagnostics.CodeMissingRequiredOperand, map[string]any{"operand": "TO"}, 0, 0, 8),
+		},
+	}
+	actions := p.GetCodeActions(uri, ctx)
+	if len(actions) != 3 { // 2 single + 1 insert-all
+		t.Fatalf("expected 3 actions, got %d", len(actions))
+	}
+	var all *lsp.CodeAction
+	for i := range actions {
+		if actions[i].Title == "Insert all required operands" {
+			all = &actions[i]
+		}
+	}
+	if all == nil {
+		t.Fatal("missing 'Insert all required operands' action")
+	}
+	if got := all.Edit.Changes[uri][0].NewText; got != "\n    SOURCEID()\n    TO()" {
+		t.Errorf("unexpected insert-all text: %q", got)
+	}
+}
