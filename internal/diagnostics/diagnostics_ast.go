@@ -190,10 +190,12 @@ func (p *Provider) analyzeStatementWithConfig(stmt *parser.Node, config *Config)
 
 	// Check for missing terminator (only if parens are balanced)
 	if config.MissingTerminator && !stmt.HasTerminator && stmt.UnbalancedParens == 0 {
-		diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+		diagnostics = append(diagnostics, p.createDiagnosticWithCode(
 			stmt,
 			lsp.SeverityError,
 			"Statement must be terminated with '.'",
+			CodeMissingTerminator,
+			nil,
 		))
 	}
 
@@ -323,10 +325,12 @@ func (p *Provider) validateOperandsASTWithConfig(stmt *parser.Node, operands map
 					}
 
 					if !hasParam {
-						diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+						diagnostics = append(diagnostics, p.createDiagnosticWithCode(
 							opNode,
 							lsp.SeverityError,
 							"Operand '"+name+"' requires a parameter: "+op.Parameter,
+							CodeEmptyOperandParameter,
+							map[string]string{"operand": name},
 						))
 					}
 				}
@@ -421,10 +425,12 @@ func (p *Provider) validateOperandsASTWithConfig(stmt *parser.Node, operands map
 			}
 
 			if !found && !isRequiredGroup {
-				diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+				diagnostics = append(diagnostics, p.createDiagnosticWithCode(
 					stmt,
 					lsp.SeverityWarning,
 					"Missing required operand: "+requiredOp,
+					CodeMissingRequiredOperand,
+					map[string]string{"operand": requiredOp},
 				))
 			}
 		}
@@ -1037,6 +1043,22 @@ func (p *Provider) validateSubOperandsASTWithConfig(operandNode *parser.Node, su
 	}
 
 	return diagnostics
+}
+
+// Diagnostic codes used by code actions (quick fixes).
+const (
+	CodeMissingTerminator      = "missing_terminator"
+	CodeMissingRequiredOperand = "missing_required_operand"
+	CodeEmptyOperandParameter  = "empty_operand_parameter"
+)
+
+// createDiagnosticWithCode builds a diagnostic like createDiagnosticFromNode but
+// attaches a stable Code and optional Data payload for code actions.
+func (p *Provider) createDiagnosticWithCode(node *parser.Node, severity int, message, code string, data any) lsp.Diagnostic {
+	d := p.createDiagnosticFromNode(node, severity, message)
+	d.Code = code
+	d.Data = data
+	return d
 }
 
 // createDiagnosticFromNode creates a diagnostic from an AST node
