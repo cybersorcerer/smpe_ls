@@ -2,15 +2,30 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-1.3.1-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-1.3.2-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
+
+The project provides a Go-based language server plus a **VSCode extension** (*IBM z/OS SMP/E MCS Tools*) that delivers rich editing support for SMP/E MCS files: syntax highlighting, context-aware completion, real-time diagnostics, hover documentation, navigation, formatting, and integrated z/OSMF CSI queries. Two companion CLI tools (`smpe_lint`, `smpe_outl`) bring the same validation and outline capabilities to CI/CD pipelines.
+
+## 🧩 VSCode Extension
+
+The extension bundles the language server — no separate installation required.
+
+**Install from the VSCode Marketplace:**
+
+[**IBM z/OS SMP/E MCS Tools** on the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=Cybersorcerer66.cybersorcerer66-smpe-mcs)
+
+Or from within VSCode: open the Extensions view (`Cmd+Shift+X` / `Ctrl+Shift+X`), search for **SMP/E MCS**, and click **Install**.
+
+Alternatively, install a platform-specific `.vsix` from the [releases page](https://github.com/cybersorcerer/smpe_ls/releases), or build from source (see [Quick Start](#-quick-start)).
 
 ## ✨ Features
 
 - **🎨 Syntax Highlighting** - Color coding for MCS statements, operands, and comments
 - **💡 Intelligent Code Completion** - Context-aware completion for statements and operands
 - **🔍 Real-time Diagnostics** - Instant validation of SMP/E syntax and semantics
+- **💡 Code Actions (Quick Fixes)** - One-click fixes for missing terminators, missing required operands, and empty `REWORK()` (current date)
 - **🔧 Command-Line Linter** - CI/CD-ready linter with configurable diagnostics (`smpe_lint`)
 - **🗂️ Command-Line Outline** - Document outline tool for CI/CD inventory and reporting (`smpe_outl`)
 - **📖 Hover Documentation** - Inline documentation from IBM SMP/E Reference
@@ -22,6 +37,10 @@ A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Mod
 - **📝 Document Formatting** - Auto-format SMP/E statements
 - **🔭 CodeLens** - Inline z/OSMF CSI queries for SYSMODs and DDDEFs
 - **🌐 z/OSMF Integration** - Query CSI, browse USS directories and MVS datasets via z/OSMF REST API
+- **📥 Check Missing Input Members** - Scan the workspace for missing MCS input files, results shown in a filterable/sortable Webview table
+- **💾 Saved & Reusable Queries** - Save, manage and reuse complete CSI queries plus a persistent filter history in the Free Form Query panel
+- **📏 Column Rulers** - Visual guides at columns 72 and 80 for mainframe card boundaries
+- **📚 Training Documentation** - 22 Markdown training modules (DE + EN) covering installation, all extension features, CLI tools, and z/OSMF integration (`SMP/E: Open Training`)
 - **🌍 Multi-platform** - Native binaries for Linux, macOS, and Windows (AMD64 & ARM64)
 - **⚡ Fast & Lightweight** - Written in Go with zero external dependencies
 
@@ -152,8 +171,6 @@ See [cmd/smpe_outl/README.md](cmd/smpe_outl/README.md) for full documentation.
 
 ## 🎯 Supported MCS Statements
 
-### Version 0.9.4 (Current)
-
 **Control MCS (25 statements with full diagnostics):**
 
 | Statement | Description | Diagnostics |
@@ -244,7 +261,16 @@ make release
 
 ## 📋 What's New
 
-### Version 1.3.1 (Latest)
+### Version 1.3.2 (Latest)
+
+**New Features:**
+
+- 💡 **Code Actions (Quick Fixes)** - The editor lightbulb (`Cmd+.` / `Ctrl+.`) now offers one-click fixes for diagnostics:
+  - **Add statement terminator** - inserts the missing `.`
+  - **Insert operand X** / **Insert all required operands** - inserts skeletons for missing required operands
+  - **Set REWORK to current date** - fills an empty `REWORK()` with today's Julian date (`yyyyddd`)
+
+### Version 1.3.1
 
 **Bug Fixes:**
 
@@ -257,6 +283,13 @@ make release
 
 - ✨ **Saved Queries in Free Form Query** - Save, manage and reuse CSI queries. Queries are stored in `.smpe-saved-queries.yaml` in the workspace root. The Free Form Query panel shows a collapsible saved queries section below the input form.
 - ⚙️ **Auto-Detect Language Mode Toggle** - New setting `smpe.editor.autoDetectLanguage` (default: `true`) and command `SMP/E: Toggle Auto-Detect Language Mode`. When disabled, manual language mode changes (e.g. switching a `.smpe` buffer to REXX) are preserved.
+
+### Version 1.2.0
+
+**New Features:**
+
+- ✨ **Filter History in Free Form Query** - Filter strings are automatically saved (max. 20, no duplicates). A `▼` button opens a dropdown with saved entries. Entries persist across sessions.
+- ⚙️ **Manage Filter History** - New command `SMP/E: Manage Filter History` to edit, delete, or clear saved filter entries.
 
 ### Version 1.1.0
 
@@ -288,6 +321,19 @@ make release
 - 🐛 **Content beyond column 72 false positive in inline data** - The column 72 diagnostic no longer fires for lines that are inline data (e.g. JCL after `++JCLIN`, source after `++SRC`). Inline data regions are now excluded from the check, consistent with all other diagnostics.
 - 🐛 **Free Form CSI Query: default subentries** - Entry type selection now pre-fills the subentries field with a default set for SYSMOD, DDDEF, GLOBALZONE, TARGETZONE, DLIBZONE, and DLIB. The picker pre-selects the matching checkboxes. Entry types without a defined default still clear the field on change.
 - 🐛 **Parser Fix: SYMPATH in `++HFS`** - Quoted path strings (e.g. `'../IVP/eqadrest.env'`) no longer cause premature statement termination. Dots and parentheses inside `'...'` are now correctly ignored by the terminator and parenthesis depth logic.
+
+### Version 0.9.6
+
+**New Features:**
+
+- 📚 **Training Documentation** - 22 Markdown training modules (DE + EN) covering installation, all VSCode extension features, CLI tools (`smpe_lint`, `smpe_outl`), and z/OSMF integration. Available under `docs/training/`.
+
+### Version 0.9.5
+
+**New Features:**
+
+- 📥 **Check Missing Input Members** - New command (`SMP/E: Check Missing Input Members`) checks whether all referenced input member files exist in the workspace. Results displayed in a filterable/sortable Webview table. Available in Command Palette and via right-click on `.smpe` files.
+- ⚙️ **`smpe.checkMissingInputMembers.searchFolders`** - Configures which folders are searched for input member files (default: `["customization"]`). Use `"*"` to search the entire workspace.
 
 ### Version 0.9.4
 
@@ -703,7 +749,9 @@ See [LICENSE](LICENSE) file for the full license text.
 
 ## 🗺️ Roadmap
 
-- [ ] Code Actions
+- [x] Code Actions (Quick Fixes)
+- [ ] Rename (SYSMOD/FMID)
+- [ ] Signature Help
 
 ---
 
