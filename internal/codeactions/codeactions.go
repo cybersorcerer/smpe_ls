@@ -2,6 +2,10 @@
 package codeactions
 
 import (
+	"fmt"
+	"strings"
+	"time"
+
 	"github.com/cybersorcerer/smpe_ls/internal/diagnostics"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
@@ -22,9 +26,42 @@ func (p *Provider) GetCodeActions(uri string, ctx lsp.CodeActionContext) []lsp.C
 		switch d.Code {
 		case diagnostics.CodeMissingTerminator:
 			actions = append(actions, p.terminatorFix(uri, d))
+		case diagnostics.CodeEmptyOperandParameter:
+			if a, ok := p.reworkFix(uri, d); ok {
+				actions = append(actions, a)
+			}
 		}
 	}
 	return actions
+}
+
+// operandName reads the operand name from the diagnostic Data payload.
+// Data round-trips through JSON as map[string]interface{}.
+func operandName(d lsp.Diagnostic) string {
+	m, ok := d.Data.(map[string]interface{})
+	if !ok {
+		return ""
+	}
+	name, _ := m["operand"].(string)
+	return name
+}
+
+// reworkFix replaces an empty REWORK() operand with the current Julian date.
+// Returns false when the empty operand is not REWORK.
+func (p *Provider) reworkFix(uri string, d lsp.Diagnostic) (lsp.CodeAction, bool) {
+	if !strings.EqualFold(operandName(d), "REWORK") {
+		return lsp.CodeAction{}, false
+	}
+	now := time.Now()
+	newText := fmt.Sprintf("REWORK(%d%03d)", now.Year(), now.YearDay())
+	edit := lsp.TextEdit{Range: d.Range, NewText: newText}
+	return lsp.CodeAction{
+		Title:       "Set REWORK to current date",
+		Kind:        "quickfix",
+		Diagnostics: []lsp.Diagnostic{d},
+		Edit:        &lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{uri: {edit}}},
+		IsPreferred: true,
+	}, true
 }
 
 // terminatorFix inserts a '.' at the end of the statement range.
