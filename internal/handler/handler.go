@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/cybersorcerer/smpe_ls/internal/codelens"
+	"github.com/cybersorcerer/smpe_ls/internal/codeactions"
 	"github.com/cybersorcerer/smpe_ls/internal/completion"
 	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/diagnostics"
@@ -80,6 +81,7 @@ type Handler struct {
 	referencesProvider  *references.Provider
 	codeLensProvider    *codelens.Provider
 	foldingProvider     *folding.Provider
+	codeActionsProvider *codeactions.Provider
 	server              *lsp.Server
 	rootURI             string
 	diagnosticsConfig   *DiagnosticsConfig
@@ -108,6 +110,7 @@ func New(version string, commit string, dataPath string) (*Handler, error) {
 	referencesProvider := references.NewProvider()
 	codeLensProvider := codelens.NewProvider()
 	foldingProvider := folding.NewProvider()
+	codeActionsProvider := codeactions.NewProvider()
 
 	return &Handler{
 		version:             version,
@@ -124,6 +127,7 @@ func New(version string, commit string, dataPath string) (*Handler, error) {
 		referencesProvider:  referencesProvider,
 		codeLensProvider:    codeLensProvider,
 		foldingProvider:     foldingProvider,
+		codeActionsProvider: codeActionsProvider,
 		diagnosticsConfig:   DefaultDiagnosticsConfig(),
 	}, nil
 }
@@ -205,6 +209,7 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 			ReferencesProvider:              true,
 			CodeLensProvider:                &lsp.CodeLensOptions{},
 			FoldingRangeProvider:            true,
+			CodeActionProvider:              true,
 			WorkspaceSymbolProvider:         true,
 			SemanticTokensProvider: &lsp.SemanticTokensOptions{
 				Legend: lsp.SemanticTokensLegend{
@@ -725,6 +730,12 @@ func (h *Handler) TextDocumentFoldingRange(params lsp.FoldingRangeParams) ([]lsp
 	logger.Debug("Folding ranges returned %d ranges", len(ranges))
 
 	return ranges, nil
+}
+
+// TextDocumentCodeAction handles code action (quick fix) requests
+func (h *Handler) TextDocumentCodeAction(params lsp.CodeActionParams) ([]lsp.CodeAction, error) {
+	logger.Debug("CodeAction requested for: %s", params.TextDocument.URI)
+	return h.codeActionsProvider.GetCodeActions(params.TextDocument.URI, params.Context), nil
 }
 
 // WorkspaceSymbol handles workspace/symbol requests
