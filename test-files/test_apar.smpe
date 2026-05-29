@@ -1,45 +1,44 @@
-/* Test file for ++APAR MCS statement */
-
-/* Valid: Minimal ++APAR */
-++APAR(UZ12345).
-
-/* Valid: With DESCRIPTION */
+++APAR(UZ12345)
+  /* Test file for ++APAR MCS statement */
+  /* Valid: Minimal ++APAR */
+.
 ++APAR(UZ12346)
-          DESCRIPTION('Test APAR for bug fix').
-
-/* Valid: With FILES */
+  /* Valid: With DESCRIPTION */
+    DESCRIPTION('Test APAR for bug fix')
+.
 ++APAR(UZ12347)
-          FILES(100).
-
-/* Valid: With RFDSNPFX */
+  /* Valid: With FILES */
+    FILES(100)
+.
 ++APAR(UZ12348)
-          FILES(50)
-          RFDSNPFX(MY.APAR).
-
-/* Valid: With REWORK */
+  /* Valid: With RFDSNPFX */
+    FILES(50)
+    RFDSNPFX(MY.APAR)
+.
 ++APAR(UZ12349)
-          REWORK(2024365).
-
-/* Valid: All operands */
+  /* Valid: With REWORK */
+    REWORK(2024365)
+.
 ++APAR(UZ12350)
-          DESCRIPTION('Complete APAR')
-          FILES(200)
-          RFDSNPFX(FULL.APAR)
-          REWORK(2024366).
-
-/* INVALID: RFDSNPFX without FILES */
+  /* Valid: All operands */
+    DESCRIPTION('Complete APAR')
+    FILES(200)
+    RFDSNPFX(FULL.APAR)
+    REWORK(2024366)
+.
 ++APAR(BADAPAR01)
-          RFDSNPFX(BAD.APAR).
-
-/* INVALID: Unknown operand */
+  /* INVALID: RFDSNPFX without FILES */
+    RFDSNPFX(BAD.APAR)
+.
 ++APAR(BADAPAR02)
-          BADOPER(VALUE).
-
-/* INVALID: Duplicate DESCRIPTION */
+  /* INVALID: Unknown operand */
+    BADOPER(VALUE)
+.
 ++APAR(BADAPAR03)
-          DESCRIPTION('First')
-          DESCRIPTION('Second').
-
-/* INVALID: Missing terminator */
+  /* INVALID: Duplicate DESCRIPTION */
+    DESCRIPTION('First')
+    DESCRIPTION('Second')
+.
 ++APAR(BADAPAR04)
-          DESCRIPTION('No terminator')
+  /* INVALID: Missing terminator */
+    DESCRIPTION('No terminator')
