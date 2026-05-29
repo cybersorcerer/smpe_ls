@@ -21,8 +21,9 @@ func NewProvider() *Provider {
 }
 
 // GetCodeActions returns quick fixes for the diagnostics in the request context.
+// text is the full document text; it is used to locate parentheses for operand fixes.
 // It never returns nil (serializes as [] not null).
-func (p *Provider) GetCodeActions(uri string, ctx lsp.CodeActionContext) []lsp.CodeAction {
+func (p *Provider) GetCodeActions(uri, text string, ctx lsp.CodeActionContext) []lsp.CodeAction {
 	actions := []lsp.CodeAction{}
 	var missingOperand []lsp.Diagnostic
 	for _, d := range ctx.Diagnostics {
@@ -30,7 +31,7 @@ func (p *Provider) GetCodeActions(uri string, ctx lsp.CodeActionContext) []lsp.C
 		case diagnostics.CodeMissingTerminator:
 			actions = append(actions, p.terminatorFix(uri, d))
 		case diagnostics.CodeEmptyOperandParameter:
-			if a, ok := p.reworkFix(uri, d); ok {
+			if a, ok := p.reworkFix(uri, text, d); ok {
 				actions = append(actions, a)
 			}
 		case diagnostics.CodeMissingRequiredOperand:
@@ -93,15 +94,43 @@ func operandName(d lsp.Diagnostic) string {
 	return name
 }
 
-// reworkFix replaces an empty REWORK() operand with the current Julian date.
-// Returns false when the empty operand is not REWORK.
-func (p *Provider) reworkFix(uri string, d lsp.Diagnostic) (lsp.CodeAction, bool) {
+// reworkFix inserts the current Julian date inside the existing REWORK() parens.
+// The diagnostic Range covers only the operand name; we locate the '(' and ')'
+// in the document text at d.Range.End.Line to build a precise TextEdit.
+// Returns false when the empty operand is not REWORK or parens cannot be found.
+func (p *Provider) reworkFix(uri, text string, d lsp.Diagnostic) (lsp.CodeAction, bool) {
 	if !strings.EqualFold(operandName(d), "REWORK") {
 		return lsp.CodeAction{}, false
 	}
+
+	// Locate the '(' and ')' on the operand's line in the document.
+	lines := strings.Split(text, "\n")
+	lineIdx := d.Range.End.Line
+	if lineIdx >= len(lines) {
+		return lsp.CodeAction{}, false
+	}
+	ln := lines[lineIdx]
+	endChar := d.Range.End.Character
+
+	openIdx := strings.Index(ln[endChar:], "(")
+	if openIdx < 0 {
+		return lsp.CodeAction{}, false
+	}
+	openCol := endChar + openIdx
+	closeIdx := strings.Index(ln[openCol:], ")")
+	if closeIdx < 0 {
+		return lsp.CodeAction{}, false
+	}
+	closeCol := openCol + closeIdx
+
+	// Build an edit that replaces the content between '(' and ')' with the Julian date.
 	now := time.Now()
-	newText := fmt.Sprintf("REWORK(%d%03d)", now.Year(), now.YearDay())
-	edit := lsp.TextEdit{Range: d.Range, NewText: newText}
+	julian := fmt.Sprintf("%d%03d", now.Year(), now.YearDay())
+	editRange := lsp.Range{
+		Start: lsp.Position{Line: lineIdx, Character: openCol + 1},
+		End:   lsp.Position{Line: lineIdx, Character: closeCol},
+	}
+	edit := lsp.TextEdit{Range: editRange, NewText: julian}
 	return lsp.CodeAction{
 		Title:       "Set REWORK to current date",
 		Kind:        kindQuickFix,

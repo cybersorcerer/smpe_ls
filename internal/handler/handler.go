@@ -735,7 +735,12 @@ func (h *Handler) TextDocumentFoldingRange(params lsp.FoldingRangeParams) ([]lsp
 // TextDocumentCodeAction handles code action (quick fix) requests
 func (h *Handler) TextDocumentCodeAction(params lsp.CodeActionParams) ([]lsp.CodeAction, error) {
 	logger.Debug("CodeAction requested for: %s", params.TextDocument.URI)
-	return h.codeActionsProvider.GetCodeActions(params.TextDocument.URI, params.Context), nil
+
+	h.documentsMutex.RLock()
+	text := h.documents[params.TextDocument.URI]
+	h.documentsMutex.RUnlock()
+
+	return h.codeActionsProvider.GetCodeActions(params.TextDocument.URI, text, params.Context), nil
 }
 
 // WorkspaceSymbol handles workspace/symbol requests
