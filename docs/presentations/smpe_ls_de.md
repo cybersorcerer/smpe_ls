@@ -137,7 +137,7 @@ style: |
 # SMP/E MCS Language Server
 ## Moderne Entwicklungsunterstützung für z/OS Systemprogrammierer
 
-Version 1.3.1
+Version 1.3.2
 
 Ronny Funk — Senior Mainframe Architect SVA
 
@@ -523,6 +523,24 @@ Der Language Server validiert MCS-Dateien **beim Tippen** und markiert Probleme 
 
 ---
 
+# Code Actions (Quick Fixes)
+
+## 💡 Automatische Korrekturen direkt im Editor
+
+Klick auf die Glühbirne (oder `Cmd+.` / `Ctrl+.`) öffnet das Quick-Fix-Menü.
+
+## Verfügbare Fixes
+
+| Fix | Wirkung |
+|-----|---------|
+| **Statement-Terminator einfügen** | Setzt den fehlenden `.` ans Ende des Statements |
+| **Operand einfügen** / **Alle einfügen** | Fügt Gerüste wie `SOURCEID()` für fehlende Pflicht-Operanden ein |
+| **REWORK auf aktuelles Datum setzen** | Füllt leeres `REWORK()` mit julianischem Datum (`jjjjddd`) |
+
+> Reine Texteinfügungen — keine Konfiguration nötig, automatisch aktiv.
+
+---
+
 # Formatierung
 
 ## Auto-Format von MCS Statements
@@ -772,10 +790,10 @@ Von der GitHub Release-Seite die passende Plattform-Version laden:
 
 | Plattform | Datei |
 |-----------|-------|
-| macOS Apple Silicon | `...-darwin-arm64-1.3.1.vsix` |
-| macOS Intel | `...-darwin-x64-1.3.1.vsix` |
-| Windows x64 | `...-win32-x64-1.3.1.vsix` |
-| Linux x64 | `...-linux-x64-1.3.1.vsix` |
+| macOS Apple Silicon | `...-darwin-arm64-1.3.2.vsix` |
+| macOS Intel | `...-darwin-x64-1.3.2.vsix` |
+| Windows x64 | `...-win32-x64-1.3.2.vsix` |
+| Linux x64 | `...-linux-x64-1.3.2.vsix` |
 
 ## 2. In VS Code installieren
 

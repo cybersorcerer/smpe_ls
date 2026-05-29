@@ -117,6 +117,26 @@ Full list of settings:
 | `smpe.diagnostics.unknownSubOperand` | `true` |
 | `smpe.diagnostics.subOperandValidation` | `true` |
 
+## Code Actions (Quick Fixes)
+
+💡 When a diagnostic is shown, a lightbulb appears in the editor gutter. Click it
+(or press `Cmd+.` on macOS / `Ctrl+.` on Windows/Linux) to open the Quick Fix menu.
+
+### Available Quick Fixes
+
+- **Add statement terminator** — inserts the missing `.` at the end of the statement
+  (for the "missing terminator" diagnostic).
+- **Insert operand** / **Insert all required operands** — inserts a skeleton such as
+  `SOURCEID()` for each missing required operand. When two or more operands are missing
+  at once, an additional "insert all" action adds them all in one step.
+- **Set REWORK to current date** — fills an empty `REWORK()` with today's Julian date
+  in `yyyyddd` format.
+
+### Notes
+
+- The fixes are plain-text edits applied directly in the editor — no extra configuration needed.
+- They are enabled automatically with no additional settings required.
+
 ## Note: z/OS Datasets via Zowe Explorer
 
 z/OS dataset members opened via Zowe Explorer have CRLF line endings. The language
@@ -130,3 +150,4 @@ server normalizes these automatically — no false diagnostics are produced for
 - All checks are individually configurable
 - Setting changes take effect immediately without restart
 - CRLF line endings (Zowe Explorer) are normalized automatically
+- Quick Fixes (💡) automatically correct a missing terminator, missing required operands, and an empty REWORK

@@ -117,6 +117,26 @@ Vollständige Liste aller Einstellungen:
 | `smpe.diagnostics.unknownSubOperand` | `true` |
 | `smpe.diagnostics.subOperandValidation` | `true` |
 
+## Code Actions (Quick Fixes)
+
+💡 Wenn eine Diagnostic angezeigt wird, erscheint im Editor eine Glühbirne. Klick darauf
+(oder `Cmd+.` auf macOS / `Ctrl+.` auf Windows/Linux) öffnet das Quick-Fix-Menü.
+
+### Verfügbare Quick Fixes
+
+- **Statement-Terminator einfügen** — setzt den fehlenden Punkt `.` ans Ende des Statements
+  (für die Diagnostic „Fehlender Terminator").
+- **Operand einfügen** / **Alle fehlenden Operanden einfügen** — fügt ein Gerüst wie
+  `SOURCEID()` für jeden fehlenden Pflicht-Operanden ein. Sind zwei oder mehr Operanden
+  gleichzeitig offen, erscheint zusätzlich die Aktion „Alle einfügen", die alle auf einmal ergänzt.
+- **REWORK auf aktuelles Datum setzen** — füllt ein leeres `REWORK()` mit dem aktuellen
+  julianischen Datum im Format `jjjjddd`.
+
+### Hinweise
+
+- Die Fixes sind reine Texteinfügungen im Editor — keine externe Konfiguration nötig.
+- Sie sind ohne weitere Einstellungen automatisch aktiv.
+
 ## Hinweis: z/OS Datasets via Zowe Explorer
 
 z/OS Dataset Members die über Zowe Explorer geöffnet werden, haben CRLF-Zeilenenden.
@@ -130,3 +150,4 @@ Diagnostics für `COMMENT`-Inhalte in `++HOLD`-Statements.
 - Alle Checks sind einzeln konfigurierbar
 - Einstellungsänderungen wirken sofort ohne Neustart
 - CRLF-Zeilenenden (Zowe Explorer) werden automatisch normalisiert
+- Quick Fixes (💡) beheben fehlenden Terminator, fehlende Pflicht-Operanden und leeres REWORK automatisch
