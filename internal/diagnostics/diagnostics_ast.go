@@ -16,6 +16,13 @@ import (
 // Columns 73-80 are ignored by SMP/E
 const MaxColumn = 72
 
+// Diagnostic codes used by code actions (quick fixes).
+const (
+	CodeMissingTerminator      = "missing_terminator"
+	CodeMissingRequiredOperand = "missing_required_operand"
+	CodeEmptyOperandParameter  = "empty_operand_parameter"
+)
+
 // Config holds the configuration for which diagnostics to enable/disable
 type Config struct {
 	UnknownStatement            bool
@@ -1044,13 +1051,6 @@ func (p *Provider) validateSubOperandsASTWithConfig(operandNode *parser.Node, su
 
 	return diagnostics
 }
-
-// Diagnostic codes used by code actions (quick fixes).
-const (
-	CodeMissingTerminator      = "missing_terminator"
-	CodeMissingRequiredOperand = "missing_required_operand"
-	CodeEmptyOperandParameter  = "empty_operand_parameter"
-)
 
 // createDiagnosticWithCode builds a diagnostic like createDiagnosticFromNode but
 // attaches a stable Code and optional Data payload for code actions.
