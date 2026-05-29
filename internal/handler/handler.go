@@ -4,8 +4,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/cybersorcerer/smpe_ls/internal/codelens"
 	"github.com/cybersorcerer/smpe_ls/internal/codeactions"
+	"github.com/cybersorcerer/smpe_ls/internal/codelens"
 	"github.com/cybersorcerer/smpe_ls/internal/completion"
 	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/diagnostics"
@@ -149,20 +149,20 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 	if params.InitializationOptions != nil && params.InitializationOptions.Diagnostics != nil {
 		opts := params.InitializationOptions.Diagnostics
 		h.diagnosticsConfig = &DiagnosticsConfig{
-			UnknownStatement:       opts.UnknownStatement,
-			InvalidLanguageId:      opts.InvalidLanguageId,
-			UnbalancedParentheses:  opts.UnbalancedParentheses,
-			MissingTerminator:      opts.MissingTerminator,
-			MissingParameter:       opts.MissingParameter,
-			UnknownOperand:         opts.UnknownOperand,
-			DuplicateOperand:       opts.DuplicateOperand,
-			EmptyOperandParameter:  opts.EmptyOperandParameter,
-			MissingRequiredOperand: opts.MissingRequiredOperand,
-			DependencyViolation:    opts.DependencyViolation,
-			MutuallyExclusive:      opts.MutuallyExclusive,
-			RequiredGroup:          opts.RequiredGroup,
-			MissingInlineData:      opts.MissingInlineData,
-			UnknownSubOperand:      opts.UnknownSubOperand,
+			UnknownStatement:            opts.UnknownStatement,
+			InvalidLanguageId:           opts.InvalidLanguageId,
+			UnbalancedParentheses:       opts.UnbalancedParentheses,
+			MissingTerminator:           opts.MissingTerminator,
+			MissingParameter:            opts.MissingParameter,
+			UnknownOperand:              opts.UnknownOperand,
+			DuplicateOperand:            opts.DuplicateOperand,
+			EmptyOperandParameter:       opts.EmptyOperandParameter,
+			MissingRequiredOperand:      opts.MissingRequiredOperand,
+			DependencyViolation:         opts.DependencyViolation,
+			MutuallyExclusive:           opts.MutuallyExclusive,
+			RequiredGroup:               opts.RequiredGroup,
+			MissingInlineData:           opts.MissingInlineData,
+			UnknownSubOperand:           opts.UnknownSubOperand,
 			SubOperandValidation:        opts.SubOperandValidation,
 			ContentBeyondColumn72:       opts.ContentBeyondColumn72,
 			StandaloneCommentBetweenMCS: opts.StandaloneCommentBetweenMCS,
@@ -439,20 +439,20 @@ func (h *Handler) WorkspaceDidChangeConfiguration(params lsp.DidChangeConfigurat
 	if params.Settings != nil && params.Settings.Smpe != nil && params.Settings.Smpe.Diagnostics != nil {
 		opts := params.Settings.Smpe.Diagnostics
 		h.diagnosticsConfig = &DiagnosticsConfig{
-			UnknownStatement:       opts.UnknownStatement,
-			InvalidLanguageId:      opts.InvalidLanguageId,
-			UnbalancedParentheses:  opts.UnbalancedParentheses,
-			MissingTerminator:      opts.MissingTerminator,
-			MissingParameter:       opts.MissingParameter,
-			UnknownOperand:         opts.UnknownOperand,
-			DuplicateOperand:       opts.DuplicateOperand,
-			EmptyOperandParameter:  opts.EmptyOperandParameter,
-			MissingRequiredOperand: opts.MissingRequiredOperand,
-			DependencyViolation:    opts.DependencyViolation,
-			MutuallyExclusive:      opts.MutuallyExclusive,
-			RequiredGroup:          opts.RequiredGroup,
-			MissingInlineData:      opts.MissingInlineData,
-			UnknownSubOperand:      opts.UnknownSubOperand,
+			UnknownStatement:            opts.UnknownStatement,
+			InvalidLanguageId:           opts.InvalidLanguageId,
+			UnbalancedParentheses:       opts.UnbalancedParentheses,
+			MissingTerminator:           opts.MissingTerminator,
+			MissingParameter:            opts.MissingParameter,
+			UnknownOperand:              opts.UnknownOperand,
+			DuplicateOperand:            opts.DuplicateOperand,
+			EmptyOperandParameter:       opts.EmptyOperandParameter,
+			MissingRequiredOperand:      opts.MissingRequiredOperand,
+			DependencyViolation:         opts.DependencyViolation,
+			MutuallyExclusive:           opts.MutuallyExclusive,
+			RequiredGroup:               opts.RequiredGroup,
+			MissingInlineData:           opts.MissingInlineData,
+			UnknownSubOperand:           opts.UnknownSubOperand,
 			SubOperandValidation:        opts.SubOperandValidation,
 			ContentBeyondColumn72:       opts.ContentBeyondColumn72,
 			StandaloneCommentBetweenMCS: opts.StandaloneCommentBetweenMCS,

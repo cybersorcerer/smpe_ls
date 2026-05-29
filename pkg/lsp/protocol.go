@@ -75,7 +75,7 @@ type TextEdit struct {
 type CodeActionParams struct {
 	TextDocument TextDocumentIdentifier `json:"textDocument"`
 	Range        Range                  `json:"range"`
-	Context      CodeActionContext       `json:"context"`
+	Context      CodeActionContext      `json:"context"`
 }
 
 // CodeActionContext carries the diagnostics relevant to the requested range
@@ -295,7 +295,7 @@ type FormattingOptions struct {
 
 // DocumentFormattingParams represents textDocument/formatting request params
 type DocumentFormattingParams struct {
-	TextDocument TextDocumentIdentifier `json:"textDocument"`
+	TextDocument TextDocumentIdentifier   `json:"textDocument"`
 	Options      FormattingRequestOptions `json:"options"`
 }
 
