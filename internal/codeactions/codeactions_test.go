@@ -94,6 +94,18 @@ func TestSingleMissingOperandFix(t *testing.T) {
 	}
 }
 
+func TestMissingOperandNilDataNoFix(t *testing.T) {
+	p := NewProvider()
+	ctx := lsp.CodeActionContext{
+		Diagnostics: []lsp.Diagnostic{
+			diag(diagnostics.CodeMissingRequiredOperand, nil, 0, 0, 8),
+		},
+	}
+	if got := p.GetCodeActions("file:///t.smpe", ctx); len(got) != 0 {
+		t.Errorf("expected no actions for missing-operand with nil Data, got %d", len(got))
+	}
+}
+
 func TestMultipleMissingOperandsAddInsertAll(t *testing.T) {
 	p := NewProvider()
 	uri := "file:///t.smpe"

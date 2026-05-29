@@ -10,6 +10,8 @@ import (
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
+const kindQuickFix = "quickfix"
+
 // Provider builds code actions from diagnostics.
 type Provider struct{}
 
@@ -53,13 +55,15 @@ func (p *Provider) operandFix(uri string, d lsp.Diagnostic, name string) lsp.Cod
 	}
 	return lsp.CodeAction{
 		Title:       "Insert operand " + name,
-		Kind:        "quickfix",
+		Kind:        kindQuickFix,
 		Diagnostics: []lsp.Diagnostic{d},
 		Edit:        &lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{uri: {edit}}},
 	}
 }
 
 // insertAllOperandsFix inserts skeletons for all missing required operands at once.
+// All missing-operand diagnostics for one statement share that statement's range,
+// so anchoring at the first diagnostic's end inserts every skeleton at the statement.
 func (p *Provider) insertAllOperandsFix(uri string, diags []lsp.Diagnostic) lsp.CodeAction {
 	var sb strings.Builder
 	for _, d := range diags {
@@ -72,7 +76,7 @@ func (p *Provider) insertAllOperandsFix(uri string, diags []lsp.Diagnostic) lsp.
 	}
 	return lsp.CodeAction{
 		Title:       "Insert all required operands",
-		Kind:        "quickfix",
+		Kind:        kindQuickFix,
 		Diagnostics: diags,
 		Edit:        &lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{uri: {edit}}},
 	}
@@ -100,7 +104,7 @@ func (p *Provider) reworkFix(uri string, d lsp.Diagnostic) (lsp.CodeAction, bool
 	edit := lsp.TextEdit{Range: d.Range, NewText: newText}
 	return lsp.CodeAction{
 		Title:       "Set REWORK to current date",
-		Kind:        "quickfix",
+		Kind:        kindQuickFix,
 		Diagnostics: []lsp.Diagnostic{d},
 		Edit:        &lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{uri: {edit}}},
 		IsPreferred: true,
@@ -116,7 +120,7 @@ func (p *Provider) terminatorFix(uri string, d lsp.Diagnostic) lsp.CodeAction {
 	}
 	return lsp.CodeAction{
 		Title:       "Add statement terminator",
-		Kind:        "quickfix",
+		Kind:        kindQuickFix,
 		Diagnostics: []lsp.Diagnostic{d},
 		Edit:        &lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{uri: {edit}}},
 		IsPreferred: true,
