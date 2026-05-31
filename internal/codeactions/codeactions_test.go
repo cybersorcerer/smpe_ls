@@ -1,6 +1,7 @@
 package codeactions
 
 import (
+	"encoding/json"
 	"regexp"
 	"strings"
 	"testing"
@@ -259,6 +260,53 @@ func TestMultipleMissingOperandsAddInsertAll(t *testing.T) {
 	}
 	if got := all.Edit.Changes[uri][0].NewText; got != "\n    SOURCEID()\n    TO()" {
 		t.Errorf("unexpected insert-all text: %q", got)
+	}
+}
+
+// TestMoveInsertOperandsJSONRoundtrip verifies the fix payload survives a JSON
+// marshal/unmarshal cycle, which mirrors the real LSP wire path: the server
+// sends diagnostics as JSON and the client echoes them back in the codeAction
+// request, where Data is decoded into []interface{}/map[string]interface{}.
+// The native-typed table tests do not exercise that decoded shape.
+func TestMoveInsertOperandsJSONRoundtrip(t *testing.T) {
+	uri := "file:///t.smpe"
+	src := "++MOVE(M1)\n."
+	// Build a diagnostic the way the diagnostics provider does (native types).
+	d := diag(diagnostics.CodeMoveInsertOperands, map[string]any{
+		"endLine": 0,
+		"fixes": []map[string]any{
+			{"title": "Insert DISTLIB mode operands", "operands": []map[string]any{
+				{"name": "DISTLIB", "parens": true},
+				{"name": "TODISTLIB", "parens": true},
+				{"name": "MAC", "parens": false},
+			}},
+			{"title": "Insert SYSLIB mode operands", "operands": []map[string]any{
+				{"name": "SYSLIB", "parens": true},
+				{"name": "TOSYSLIB", "parens": true},
+				{"name": "MAC", "parens": false},
+			}},
+		},
+	}, 0, 0, 6)
+
+	// Round-trip the diagnostic through JSON, as happens over the LSP wire.
+	raw, err := json.Marshal(d)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	var wired lsp.Diagnostic
+	if err := json.Unmarshal(raw, &wired); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	p := NewProvider()
+	actions := p.GetCodeActions(uri, src, lsp.CodeActionContext{Diagnostics: []lsp.Diagnostic{wired}})
+	if len(actions) != 2 {
+		t.Fatalf("expected 2 actions after JSON roundtrip, got %d", len(actions))
+	}
+	got := applyEdit(src, actions[0].Edit.Changes[uri][0])
+	want := "++MOVE(M1)\n    DISTLIB()\n    TODISTLIB()\n    MAC\n."
+	if got != want {
+		t.Errorf("roundtrip edit wrong\n got: %q\nwant: %q", got, want)
 	}
 }
 
