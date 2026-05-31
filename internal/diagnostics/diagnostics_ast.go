@@ -21,6 +21,7 @@ const (
 	CodeMissingTerminator      = "missing_terminator"
 	CodeMissingRequiredOperand = "missing_required_operand"
 	CodeEmptyOperandParameter  = "empty_operand_parameter"
+	CodeMoveInsertOperands     = "move_insert_operands"
 )
 
 // Config holds the configuration for which diagnostics to enable/disable
