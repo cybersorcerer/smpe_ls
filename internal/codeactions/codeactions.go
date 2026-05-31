@@ -2,6 +2,7 @@
 package codeactions
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -39,6 +40,8 @@ func (p *Provider) GetCodeActions(uri, text string, ctx lsp.CodeActionContext) [
 				actions = append(actions, p.operandFix(uri, text, d, name))
 				missingOperand = append(missingOperand, d)
 			}
+		case diagnostics.CodeMoveInsertOperands:
+			actions = append(actions, p.moveOperandFixes(uri, text, d)...)
 		}
 	}
 	if len(missingOperand) >= 2 {
@@ -96,6 +99,67 @@ func (p *Provider) insertAllOperandsFix(uri, text string, diags []lsp.Diagnostic
 		Diagnostics: diags,
 		Edit:        &lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{uri: {edit}}},
 	}
+}
+
+// moveOperandPayload mirrors the ++MOVE fix payload attached to the diagnostic.
+// Numbers, slices and maps round-trip through JSON; re-marshaling d.Data and
+// decoding into these structs accepts both native test payloads and the
+// JSON-decoded runtime shape.
+type moveOperandPayload struct {
+	Fixes []moveFix `json:"fixes"`
+}
+
+type moveFix struct {
+	Title    string         `json:"title"`
+	Operands []moveOperandS `json:"operands"`
+}
+
+type moveOperandS struct {
+	Name   string `json:"name"`
+	Parens bool   `json:"parens"`
+}
+
+// moveOperandFixes builds one code action per payload "fixes" entry, each
+// inserting its operands at the statement header end. Operands with parens
+// insert "NAME()"; boolean flag operands insert "NAME". Fixes with an empty
+// title, no operands or empty resulting text are skipped. Never returns nil.
+func (p *Provider) moveOperandFixes(uri, text string, d lsp.Diagnostic) []lsp.CodeAction {
+	actions := []lsp.CodeAction{}
+	raw, err := json.Marshal(d.Data)
+	if err != nil {
+		return actions
+	}
+	var payload moveOperandPayload
+	if err := json.Unmarshal(raw, &payload); err != nil {
+		return actions
+	}
+	pos := operandInsertPos(text, d)
+	for _, fix := range payload.Fixes {
+		if fix.Title == "" || len(fix.Operands) == 0 {
+			continue
+		}
+		var sb strings.Builder
+		for _, op := range fix.Operands {
+			sb.WriteString("\n    " + op.Name)
+			if op.Parens {
+				sb.WriteString("()")
+			}
+		}
+		if sb.Len() == 0 {
+			continue
+		}
+		edit := lsp.TextEdit{
+			Range:   lsp.Range{Start: pos, End: pos},
+			NewText: sb.String(),
+		}
+		actions = append(actions, lsp.CodeAction{
+			Title:       fix.Title,
+			Kind:        kindQuickFix,
+			Diagnostics: []lsp.Diagnostic{d},
+			Edit:        &lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{uri: {edit}}},
+		})
+	}
+	return actions
 }
 
 // lineLength returns the rune length of the given 0-based line in text,

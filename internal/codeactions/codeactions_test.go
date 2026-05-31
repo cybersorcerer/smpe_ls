@@ -261,3 +261,100 @@ func TestMultipleMissingOperandsAddInsertAll(t *testing.T) {
 		t.Errorf("unexpected insert-all text: %q", got)
 	}
 }
+
+// TestMoveInsertOperandsFixes verifies move quick fixes: one CodeAction per
+// payload "fixes" entry, each inserting its operands at the statement header end.
+// Boolean flag operands (parens=false) insert without "()".
+func TestMoveInsertOperandsFixes(t *testing.T) {
+	uri := "file:///t.smpe"
+	mkFix := func(title string, ops ...[2]any) map[string]any {
+		var list []map[string]any
+		for _, o := range ops {
+			list = append(list, map[string]any{"name": o[0], "parens": o[1]})
+		}
+		return map[string]any{"title": title, "operands": list}
+	}
+	tests := []struct {
+		name      string
+		src       string
+		endLine   int
+		fixes     []map[string]any
+		wantCount int
+		applyIdx  int
+		expected  string
+	}{
+		{
+			name:    "no mode: two complete fixes",
+			src:     "++MOVE(M1)\n.",
+			endLine: 0,
+			fixes: []map[string]any{
+				mkFix("Insert DISTLIB mode operands",
+					[2]any{"DISTLIB", true}, [2]any{"TODISTLIB", true}, [2]any{"MAC", false}),
+				mkFix("Insert SYSLIB mode operands",
+					[2]any{"SYSLIB", true}, [2]any{"TOSYSLIB", true}, [2]any{"MAC", false}),
+			},
+			wantCount: 2,
+			applyIdx:  0,
+			expected:  "++MOVE(M1)\n    DISTLIB()\n    TODISTLIB()\n    MAC\n.",
+		},
+		{
+			name:    "missing TODISTLIB: single fix",
+			src:     "++MOVE(M1)\n    DISTLIB(D1)\n.",
+			endLine: 1,
+			fixes: []map[string]any{
+				mkFix("Insert operand TODISTLIB", [2]any{"TODISTLIB", true}),
+			},
+			wantCount: 1,
+			applyIdx:  0,
+			expected:  "++MOVE(M1)\n    DISTLIB(D1)\n    TODISTLIB()\n.",
+		},
+		{
+			name:    "missing element: three flag fixes without parens",
+			src:     "++MOVE(M1)\n    DISTLIB(D1) TODISTLIB(T1)\n.",
+			endLine: 1,
+			fixes: []map[string]any{
+				mkFix("Insert operand MAC", [2]any{"MAC", false}),
+				mkFix("Insert operand MOD", [2]any{"MOD", false}),
+				mkFix("Insert operand SRC", [2]any{"SRC", false}),
+			},
+			wantCount: 3,
+			applyIdx:  0,
+			expected:  "++MOVE(M1)\n    DISTLIB(D1) TODISTLIB(T1)\n    MAC\n.",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			p := NewProvider()
+			ctx := lsp.CodeActionContext{
+				Diagnostics: []lsp.Diagnostic{
+					diag(diagnostics.CodeMoveInsertOperands,
+						map[string]any{"endLine": float64(tc.endLine), "fixes": tc.fixes},
+						0, 0, 6),
+				},
+			}
+			actions := p.GetCodeActions(uri, tc.src, ctx)
+			if len(actions) != tc.wantCount {
+				t.Fatalf("expected %d actions, got %d", tc.wantCount, len(actions))
+			}
+			edit := actions[tc.applyIdx].Edit.Changes[uri][0]
+			if got := applyEdit(tc.src, edit); got != tc.expected {
+				t.Errorf("wrong edit\n got: %q\nwant: %q", got, tc.expected)
+			}
+		})
+	}
+}
+
+// TestMoveInsertOperandsEmptyNoFix verifies an empty/absent fixes payload
+// produces no actions.
+func TestMoveInsertOperandsEmptyNoFix(t *testing.T) {
+	p := NewProvider()
+	ctx := lsp.CodeActionContext{
+		Diagnostics: []lsp.Diagnostic{
+			diag(diagnostics.CodeMoveInsertOperands,
+				map[string]any{"endLine": float64(0), "fixes": []map[string]any{}}, 0, 0, 6),
+		},
+	}
+	if got := p.GetCodeActions("file:///t.smpe", "++MOVE(M1)\n.", ctx); len(got) != 0 {
+		t.Errorf("expected no actions for empty fixes, got %d", len(got))
+	}
+}
