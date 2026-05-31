@@ -47,12 +47,29 @@ func createTestProviders() (*data.Store, *parser.Parser, *Provider) {
 				},
 			},
 		},
+		"++MOVE": {
+			Name:        "++MOVE",
+			Description: "Moves an element",
+			Parameter:   "element_name",
+			Operands: []data.Operand{
+				{Name: "DISTLIB", Parameter: "dataset_name", Description: "Distribution library"},
+				{Name: "SYSLIB", Parameter: "dataset_name", Description: "Target library"},
+				{Name: "TODISTLIB", Parameter: "dataset_name", Description: "Target distribution library"},
+				{Name: "TOSYSLIB", Parameter: "dataset_name", Description: "Target system library"},
+				{Name: "FMID", Parameter: "fmid", Description: "Function MID"},
+				{Name: "MAC", Description: "Macro"},
+				{Name: "MOD", Description: "Module"},
+				{Name: "SRC", Description: "Source"},
+				{Name: "LMOD", Description: "Load module"},
+			},
+		},
 	}
 
 	statementList := []data.MCSStatement{
 		statements["++USERMOD"],
 		statements["++VER"],
 		statements["++MAC"],
+		statements["++MOVE"],
 	}
 
 	store := &data.Store{
@@ -91,6 +108,37 @@ func TestDiagnosticsMissingTerminator(t *testing.T) {
 
 	if !found {
 		t.Error("Expected diagnostic for missing terminator")
+	}
+}
+
+// Test: Missing terminator on a multi-line statement carries the statement
+// end position (last operand) in Data, not the statement header position.
+func TestDiagnosticsMissingTerminatorEndPosition(t *testing.T) {
+	_, p, dp := createTestProviders()
+
+	// ++USERMOD header on line 0; REWORK operand on line 1 is the last content.
+	input := "++USERMOD(LJS2012)\n    REWORK(2024366)"
+	doc := p.Parse(input)
+	diags := dp.AnalyzeAST(doc)
+
+	var term *lsp.Diagnostic
+	for i := range diags {
+		if diags[i].Code == CodeMissingTerminator {
+			term = &diags[i]
+			break
+		}
+	}
+	if term == nil {
+		t.Fatal("expected missing_terminator diagnostic")
+	}
+
+	m, ok := term.Data.(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected Data map, got %T", term.Data)
+	}
+	// REWORK(2024366) is on line 1; the end line must be 1, not the header's 0.
+	if line, _ := m["endLine"].(int); line != 1 {
+		t.Errorf("expected endLine 1, got %v", m["endLine"])
 	}
 }
 
@@ -576,5 +624,39 @@ func TestDiagnosticsAparMultiline(t *testing.T) {
 		for _, diag := range diags {
 			t.Logf("  - %s", diag.Message)
 		}
+	}
+}
+
+// TestMoveNoModeDiagnosticHasFixPayload verifies that "++MOVE(M1)" (no mode)
+// emits a move_insert_operands diagnostic carrying two complete-mode fixes.
+func TestMoveNoModeDiagnosticHasFixPayload(t *testing.T) {
+	_, p, dp := createTestProviders()
+	input := "++MOVE(M1)\n."
+	doc := p.Parse(input)
+	diags := dp.AnalyzeAST(doc)
+
+	var found *lsp.Diagnostic
+	for i := range diags {
+		if diags[i].Code == CodeMoveInsertOperands {
+			found = &diags[i]
+			break
+		}
+	}
+	if found == nil {
+		t.Fatal("expected a move_insert_operands diagnostic")
+	}
+	m, ok := found.Data.(map[string]any)
+	if !ok {
+		t.Fatalf("expected map[string]any payload, got %T", found.Data)
+	}
+	fixes, ok := m["fixes"].([]map[string]any)
+	if !ok {
+		t.Fatalf("expected []map[string]any fixes, got %T", m["fixes"])
+	}
+	if len(fixes) != 2 {
+		t.Fatalf("expected 2 mode fixes, got %d", len(fixes))
+	}
+	if fixes[0]["title"] != "Insert DISTLIB mode operands" {
+		t.Errorf("unexpected first fix title: %v", fixes[0]["title"])
 	}
 }

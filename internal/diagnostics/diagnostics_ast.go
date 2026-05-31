@@ -21,6 +21,7 @@ const (
 	CodeMissingTerminator      = "missing_terminator"
 	CodeMissingRequiredOperand = "missing_required_operand"
 	CodeEmptyOperandParameter  = "empty_operand_parameter"
+	CodeMoveInsertOperands     = "move_insert_operands"
 )
 
 // Config holds the configuration for which diagnostics to enable/disable
@@ -197,12 +198,18 @@ func (p *Provider) analyzeStatementWithConfig(stmt *parser.Node, config *Config)
 
 	// Check for missing terminator (only if parens are balanced)
 	if config.MissingTerminator && !stmt.HasTerminator && stmt.UnbalancedParens == 0 {
+		// The terminator belongs at the end of the statement, which may span
+		// multiple lines. Pass the end line via Data so the quick fix can
+		// insert '.' on a new line after the statement, not after its name.
+		// Only the line matters; the fix inserts at that line's end.
 		diagnostics = append(diagnostics, p.createDiagnosticWithCode(
 			stmt,
 			lsp.SeverityError,
 			"Statement must be terminated with '.'",
 			CodeMissingTerminator,
-			nil,
+			map[string]interface{}{
+				"endLine": statementEndLine(stmt),
+			},
 		))
 	}
 
@@ -437,7 +444,7 @@ func (p *Provider) validateOperandsASTWithConfig(stmt *parser.Node, operands map
 					lsp.SeverityWarning,
 					"Missing required operand: "+requiredOp,
 					CodeMissingRequiredOperand,
-					map[string]string{"operand": requiredOp},
+					map[string]any{"operand": requiredOp, "endLine": statementEndLine(stmt)},
 				))
 			}
 		}
@@ -563,23 +570,41 @@ func (p *Provider) validateOperandsASTWithConfig(stmt *parser.Node, operands map
 		hasDistlib := operands["DISTLIB"] != nil
 		hasSyslib := operands["SYSLIB"] != nil
 
+		// Local builders for the quick-fix payload (see CodeMoveInsertOperands).
+		endLine := statementEndLine(stmt)
+		op := func(name string, parens bool) map[string]any { return map[string]any{"name": name, "parens": parens} }
+		fix := func(title string, ops ...map[string]any) map[string]any {
+			return map[string]any{"title": title, "operands": ops}
+		}
+		payload := func(fixes ...map[string]any) map[string]any {
+			return map[string]any{"endLine": endLine, "fixes": fixes}
+		}
+
 		// DISTLIB mode validation
 		if hasDistlib {
 			// TODISTLIB is required when DISTLIB is present
 			if operands["TODISTLIB"] == nil {
-				diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+				diagnostics = append(diagnostics, p.createDiagnosticWithCode(
 					stmt,
 					lsp.SeverityError,
 					"TODISTLIB is required when DISTLIB is specified",
+					CodeMoveInsertOperands,
+					payload(fix("Insert operand TODISTLIB", op("TODISTLIB", true))),
 				))
 			}
 
 			// One of MAC, MOD, or SRC is required in DISTLIB mode
 			if operands["MAC"] == nil && operands["MOD"] == nil && operands["SRC"] == nil {
-				diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+				diagnostics = append(diagnostics, p.createDiagnosticWithCode(
 					stmt,
 					lsp.SeverityError,
 					"One of MAC, MOD, or SRC is required when DISTLIB is specified",
+					CodeMoveInsertOperands,
+					payload(
+						fix("Insert operand MAC", op("MAC", false)),
+						fix("Insert operand MOD", op("MOD", false)),
+						fix("Insert operand SRC", op("SRC", false)),
+					),
 				))
 			}
 		}
@@ -588,29 +613,43 @@ func (p *Provider) validateOperandsASTWithConfig(stmt *parser.Node, operands map
 		if hasSyslib {
 			// TOSYSLIB is required when SYSLIB is present
 			if operands["TOSYSLIB"] == nil {
-				diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+				diagnostics = append(diagnostics, p.createDiagnosticWithCode(
 					stmt,
 					lsp.SeverityError,
 					"TOSYSLIB is required when SYSLIB is specified",
+					CodeMoveInsertOperands,
+					payload(fix("Insert operand TOSYSLIB", op("TOSYSLIB", true))),
 				))
 			}
 
 			// One of MAC, SRC, LMOD, or FMID is required in SYSLIB mode
 			if operands["MAC"] == nil && operands["SRC"] == nil && operands["LMOD"] == nil && operands["FMID"] == nil {
-				diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+				diagnostics = append(diagnostics, p.createDiagnosticWithCode(
 					stmt,
 					lsp.SeverityError,
 					"One of MAC, SRC, LMOD, or FMID is required when SYSLIB is specified",
+					CodeMoveInsertOperands,
+					payload(
+						fix("Insert operand MAC", op("MAC", false)),
+						fix("Insert operand SRC", op("SRC", false)),
+						fix("Insert operand LMOD", op("LMOD", false)),
+						fix("Insert operand FMID", op("FMID", true)),
+					),
 				))
 			}
 		}
 
 		// At least one mode must be specified (DISTLIB or SYSLIB)
 		if !hasDistlib && !hasSyslib {
-			diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+			diagnostics = append(diagnostics, p.createDiagnosticWithCode(
 				stmt,
 				lsp.SeverityError,
 				"Either DISTLIB or SYSLIB must be specified",
+				CodeMoveInsertOperands,
+				payload(
+					fix("Insert DISTLIB mode operands", op("DISTLIB", true), op("TODISTLIB", true), op("MAC", false)),
+					fix("Insert SYSLIB mode operands", op("SYSLIB", true), op("TOSYSLIB", true), op("MAC", false)),
+				),
 			))
 		}
 	}
@@ -1054,6 +1093,27 @@ func (p *Provider) validateSubOperandsASTWithConfig(operandNode *parser.Node, su
 
 // createDiagnosticWithCode builds a diagnostic like createDiagnosticFromNode but
 // attaches a stable Code and optional Data payload for code actions.
+// statementEndLine returns the last line a statement occupies, walking all
+// descendants to find the furthest one. A statement may span multiple lines
+// (operands on continuation lines), so the end line is the deepest/latest
+// node's line, not the statement header's line.
+func statementEndLine(stmt *parser.Node) int {
+	line := stmt.Position.Line
+
+	var walk func(n *parser.Node)
+	walk = func(n *parser.Node) {
+		for _, child := range n.Children {
+			if child.Position.Line > line {
+				line = child.Position.Line
+			}
+			walk(child)
+		}
+	}
+	walk(stmt)
+
+	return line
+}
+
 func (p *Provider) createDiagnosticWithCode(node *parser.Node, severity int, message, code string, data any) lsp.Diagnostic {
 	d := p.createDiagnosticFromNode(node, severity, message)
 	d.Code = code
