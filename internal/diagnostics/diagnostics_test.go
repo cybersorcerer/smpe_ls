@@ -47,12 +47,29 @@ func createTestProviders() (*data.Store, *parser.Parser, *Provider) {
 				},
 			},
 		},
+		"++MOVE": {
+			Name:        "++MOVE",
+			Description: "Moves an element",
+			Parameter:   "element_name",
+			Operands: []data.Operand{
+				{Name: "DISTLIB", Parameter: "dataset_name", Description: "Distribution library"},
+				{Name: "SYSLIB", Parameter: "dataset_name", Description: "Target library"},
+				{Name: "TODISTLIB", Parameter: "dataset_name", Description: "Target distribution library"},
+				{Name: "TOSYSLIB", Parameter: "dataset_name", Description: "Target system library"},
+				{Name: "FMID", Parameter: "fmid", Description: "Function MID"},
+				{Name: "MAC", Description: "Macro"},
+				{Name: "MOD", Description: "Module"},
+				{Name: "SRC", Description: "Source"},
+				{Name: "LMOD", Description: "Load module"},
+			},
+		},
 	}
 
 	statementList := []data.MCSStatement{
 		statements["++USERMOD"],
 		statements["++VER"],
 		statements["++MAC"],
+		statements["++MOVE"],
 	}
 
 	store := &data.Store{
@@ -607,5 +624,39 @@ func TestDiagnosticsAparMultiline(t *testing.T) {
 		for _, diag := range diags {
 			t.Logf("  - %s", diag.Message)
 		}
+	}
+}
+
+// TestMoveNoModeDiagnosticHasFixPayload verifies that "++MOVE(M1)" (no mode)
+// emits a move_insert_operands diagnostic carrying two complete-mode fixes.
+func TestMoveNoModeDiagnosticHasFixPayload(t *testing.T) {
+	_, p, dp := createTestProviders()
+	input := "++MOVE(M1)\n."
+	doc := p.Parse(input)
+	diags := dp.AnalyzeAST(doc)
+
+	var found *lsp.Diagnostic
+	for i := range diags {
+		if diags[i].Code == CodeMoveInsertOperands {
+			found = &diags[i]
+			break
+		}
+	}
+	if found == nil {
+		t.Fatal("expected a move_insert_operands diagnostic")
+	}
+	m, ok := found.Data.(map[string]any)
+	if !ok {
+		t.Fatalf("expected map[string]any payload, got %T", found.Data)
+	}
+	fixes, ok := m["fixes"].([]map[string]any)
+	if !ok {
+		t.Fatalf("expected []map[string]any fixes, got %T", m["fixes"])
+	}
+	if len(fixes) != 2 {
+		t.Fatalf("expected 2 mode fixes, got %d", len(fixes))
+	}
+	if fixes[0]["title"] != "Insert DISTLIB mode operands" {
+		t.Errorf("unexpected first fix title: %v", fixes[0]["title"])
 	}
 }

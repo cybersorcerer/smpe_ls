@@ -570,23 +570,41 @@ func (p *Provider) validateOperandsASTWithConfig(stmt *parser.Node, operands map
 		hasDistlib := operands["DISTLIB"] != nil
 		hasSyslib := operands["SYSLIB"] != nil
 
+		// Local builders for the quick-fix payload (see CodeMoveInsertOperands).
+		endLine := statementEndLine(stmt)
+		op := func(name string, parens bool) map[string]any { return map[string]any{"name": name, "parens": parens} }
+		fix := func(title string, ops ...map[string]any) map[string]any {
+			return map[string]any{"title": title, "operands": ops}
+		}
+		payload := func(fixes ...map[string]any) map[string]any {
+			return map[string]any{"endLine": endLine, "fixes": fixes}
+		}
+
 		// DISTLIB mode validation
 		if hasDistlib {
 			// TODISTLIB is required when DISTLIB is present
 			if operands["TODISTLIB"] == nil {
-				diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+				diagnostics = append(diagnostics, p.createDiagnosticWithCode(
 					stmt,
 					lsp.SeverityError,
 					"TODISTLIB is required when DISTLIB is specified",
+					CodeMoveInsertOperands,
+					payload(fix("Insert operand TODISTLIB", op("TODISTLIB", true))),
 				))
 			}
 
 			// One of MAC, MOD, or SRC is required in DISTLIB mode
 			if operands["MAC"] == nil && operands["MOD"] == nil && operands["SRC"] == nil {
-				diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+				diagnostics = append(diagnostics, p.createDiagnosticWithCode(
 					stmt,
 					lsp.SeverityError,
 					"One of MAC, MOD, or SRC is required when DISTLIB is specified",
+					CodeMoveInsertOperands,
+					payload(
+						fix("Insert operand MAC", op("MAC", false)),
+						fix("Insert operand MOD", op("MOD", false)),
+						fix("Insert operand SRC", op("SRC", false)),
+					),
 				))
 			}
 		}
@@ -595,29 +613,43 @@ func (p *Provider) validateOperandsASTWithConfig(stmt *parser.Node, operands map
 		if hasSyslib {
 			// TOSYSLIB is required when SYSLIB is present
 			if operands["TOSYSLIB"] == nil {
-				diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+				diagnostics = append(diagnostics, p.createDiagnosticWithCode(
 					stmt,
 					lsp.SeverityError,
 					"TOSYSLIB is required when SYSLIB is specified",
+					CodeMoveInsertOperands,
+					payload(fix("Insert operand TOSYSLIB", op("TOSYSLIB", true))),
 				))
 			}
 
 			// One of MAC, SRC, LMOD, or FMID is required in SYSLIB mode
 			if operands["MAC"] == nil && operands["SRC"] == nil && operands["LMOD"] == nil && operands["FMID"] == nil {
-				diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+				diagnostics = append(diagnostics, p.createDiagnosticWithCode(
 					stmt,
 					lsp.SeverityError,
 					"One of MAC, SRC, LMOD, or FMID is required when SYSLIB is specified",
+					CodeMoveInsertOperands,
+					payload(
+						fix("Insert operand MAC", op("MAC", false)),
+						fix("Insert operand SRC", op("SRC", false)),
+						fix("Insert operand LMOD", op("LMOD", false)),
+						fix("Insert operand FMID", op("FMID", true)),
+					),
 				))
 			}
 		}
 
 		// At least one mode must be specified (DISTLIB or SYSLIB)
 		if !hasDistlib && !hasSyslib {
-			diagnostics = append(diagnostics, p.createDiagnosticFromNode(
+			diagnostics = append(diagnostics, p.createDiagnosticWithCode(
 				stmt,
 				lsp.SeverityError,
 				"Either DISTLIB or SYSLIB must be specified",
+				CodeMoveInsertOperands,
+				payload(
+					fix("Insert DISTLIB mode operands", op("DISTLIB", true), op("TODISTLIB", true), op("MAC", false)),
+					fix("Insert SYSLIB mode operands", op("SYSLIB", true), op("TOSYSLIB", true), op("MAC", false)),
+				),
 			))
 		}
 	}
