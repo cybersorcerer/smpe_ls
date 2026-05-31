@@ -33,6 +33,7 @@ func applyEdit(text string, e lsp.TextEdit) string {
 func TestMissingTerminatorFix(t *testing.T) {
 	p := NewProvider()
 	uri := "file:///t.smpe"
+	// No Data payload: falls back to the diagnostic range end (statement header).
 	ctx := lsp.CodeActionContext{
 		Diagnostics: []lsp.Diagnostic{diag(diagnostics.CodeMissingTerminator, nil, 0, 0, 6)},
 	}
@@ -44,8 +45,38 @@ func TestMissingTerminatorFix(t *testing.T) {
 		t.Errorf("unexpected title: %q", actions[0].Title)
 	}
 	edits := actions[0].Edit.Changes[uri]
-	if len(edits) != 1 || edits[0].NewText != "." {
-		t.Errorf("expected single '.' edit, got %+v", edits)
+	if len(edits) != 1 || edits[0].NewText != "\n." {
+		t.Errorf("expected single newline '.' edit, got %+v", edits)
+	}
+	if edits[0].Range.Start != (lsp.Position{Line: 0, Character: 6}) {
+		t.Errorf("expected fallback at line 0 char 6, got %+v", edits[0].Range.Start)
+	}
+}
+
+// TestMissingTerminatorFixMultiline verifies the '.' is inserted on a new
+// line at the end of the statement's last line (from Data), not after the
+// statement header.
+func TestMissingTerminatorFixMultiline(t *testing.T) {
+	p := NewProvider()
+	uri := "file:///t.smpe"
+	src := "++USERMOD(U1)\n    REWORK(2024366)"
+	// Statement header on line 0; last operand is on line 1.
+	data := map[string]interface{}{"endLine": float64(1)}
+	ctx := lsp.CodeActionContext{
+		Diagnostics: []lsp.Diagnostic{diag(diagnostics.CodeMissingTerminator, data, 0, 0, 6)},
+	}
+	actions := p.GetCodeActions(uri, src, ctx)
+	if len(actions) != 1 {
+		t.Fatalf("expected 1 action, got %d", len(actions))
+	}
+	edits := actions[0].Edit.Changes[uri]
+	if len(edits) != 1 || edits[0].NewText != "\n." {
+		t.Fatalf("expected single newline '.' edit, got %+v", edits)
+	}
+	// Inserted at the end of line 1 (length of "    REWORK(2024366)" = 19).
+	want := lsp.Position{Line: 1, Character: 19}
+	if edits[0].Range.Start != want {
+		t.Errorf("expected edit at %+v, got %+v", want, edits[0].Range.Start)
 	}
 }
 
@@ -126,6 +157,69 @@ func TestSingleMissingOperandFix(t *testing.T) {
 	}
 	if got := actions[0].Edit.Changes[uri][0].NewText; got != "\n    SOURCEID()" {
 		t.Errorf("unexpected edit text: %q", got)
+	}
+}
+
+// TestSingleMissingOperandFixPosition verifies the operand skeleton is inserted
+// after the full statement header (after the name operand, e.g. "(S1)"), not
+// after the statement name token (e.g. "++SRC"). The diagnostic Range covers
+// only the name token, so the fix must rely on the endLine Data payload. This
+// is generic across all element MCS that take an inline name operand
+// (++HELP(member), ++BOOK(member), …) and multi-line statements.
+func TestSingleMissingOperandFixPosition(t *testing.T) {
+	uri := "file:///t.smpe"
+	tests := []struct {
+		name     string
+		src      string
+		operand  string
+		nameLen  int // length of the statement name token (diagnostic Range)
+		endLine  int
+		expected string
+	}{
+		{
+			name:     "++SRC inline name operand",
+			src:      "++SRC(S1)\n.",
+			operand:  "DISTLIB",
+			nameLen:  5,
+			endLine:  0,
+			expected: "++SRC(S1)\n    DISTLIB()\n.",
+		},
+		{
+			name:     "++HELP element mcs",
+			src:      "++HELP(MEMBER1)\n.",
+			operand:  "DISTLIB",
+			nameLen:  6,
+			endLine:  0,
+			expected: "++HELP(MEMBER1)\n    DISTLIB()\n.",
+		},
+		{
+			name:     "++ASSIGN with operand on continuation line",
+			src:      "++ASSIGN\n    SOURCEID(ID1)\n.",
+			operand:  "TO",
+			nameLen:  8,
+			endLine:  1,
+			expected: "++ASSIGN\n    SOURCEID(ID1)\n    TO()\n.",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			p := NewProvider()
+			ctx := lsp.CodeActionContext{
+				Diagnostics: []lsp.Diagnostic{
+					diag(diagnostics.CodeMissingRequiredOperand,
+						map[string]any{"operand": tc.operand, "endLine": float64(tc.endLine)},
+						0, 0, tc.nameLen),
+				},
+			}
+			actions := p.GetCodeActions(uri, tc.src, ctx)
+			if len(actions) != 1 {
+				t.Fatalf("expected 1 action, got %d", len(actions))
+			}
+			edit := actions[0].Edit.Changes[uri][0]
+			if got := applyEdit(tc.src, edit); got != tc.expected {
+				t.Errorf("operand inserted at wrong position\n got: %q\nwant: %q", got, tc.expected)
+			}
+		})
 	}
 }
 

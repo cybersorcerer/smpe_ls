@@ -197,12 +197,18 @@ func (p *Provider) analyzeStatementWithConfig(stmt *parser.Node, config *Config)
 
 	// Check for missing terminator (only if parens are balanced)
 	if config.MissingTerminator && !stmt.HasTerminator && stmt.UnbalancedParens == 0 {
+		// The terminator belongs at the end of the statement, which may span
+		// multiple lines. Pass the end line via Data so the quick fix can
+		// insert '.' on a new line after the statement, not after its name.
+		// Only the line matters; the fix inserts at that line's end.
 		diagnostics = append(diagnostics, p.createDiagnosticWithCode(
 			stmt,
 			lsp.SeverityError,
 			"Statement must be terminated with '.'",
 			CodeMissingTerminator,
-			nil,
+			map[string]interface{}{
+				"endLine": statementEndLine(stmt),
+			},
 		))
 	}
 
@@ -437,7 +443,7 @@ func (p *Provider) validateOperandsASTWithConfig(stmt *parser.Node, operands map
 					lsp.SeverityWarning,
 					"Missing required operand: "+requiredOp,
 					CodeMissingRequiredOperand,
-					map[string]string{"operand": requiredOp},
+					map[string]any{"operand": requiredOp, "endLine": statementEndLine(stmt)},
 				))
 			}
 		}
@@ -1054,6 +1060,27 @@ func (p *Provider) validateSubOperandsASTWithConfig(operandNode *parser.Node, su
 
 // createDiagnosticWithCode builds a diagnostic like createDiagnosticFromNode but
 // attaches a stable Code and optional Data payload for code actions.
+// statementEndLine returns the last line a statement occupies, walking all
+// descendants to find the furthest one. A statement may span multiple lines
+// (operands on continuation lines), so the end line is the deepest/latest
+// node's line, not the statement header's line.
+func statementEndLine(stmt *parser.Node) int {
+	line := stmt.Position.Line
+
+	var walk func(n *parser.Node)
+	walk = func(n *parser.Node) {
+		for _, child := range n.Children {
+			if child.Position.Line > line {
+				line = child.Position.Line
+			}
+			walk(child)
+		}
+	}
+	walk(stmt)
+
+	return line
+}
+
 func (p *Provider) createDiagnosticWithCode(node *parser.Node, severity int, message, code string, data any) lsp.Diagnostic {
 	d := p.createDiagnosticFromNode(node, severity, message)
 	d.Code = code

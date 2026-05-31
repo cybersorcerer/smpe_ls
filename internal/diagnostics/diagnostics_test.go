@@ -94,6 +94,37 @@ func TestDiagnosticsMissingTerminator(t *testing.T) {
 	}
 }
 
+// Test: Missing terminator on a multi-line statement carries the statement
+// end position (last operand) in Data, not the statement header position.
+func TestDiagnosticsMissingTerminatorEndPosition(t *testing.T) {
+	_, p, dp := createTestProviders()
+
+	// ++USERMOD header on line 0; REWORK operand on line 1 is the last content.
+	input := "++USERMOD(LJS2012)\n    REWORK(2024366)"
+	doc := p.Parse(input)
+	diags := dp.AnalyzeAST(doc)
+
+	var term *lsp.Diagnostic
+	for i := range diags {
+		if diags[i].Code == CodeMissingTerminator {
+			term = &diags[i]
+			break
+		}
+	}
+	if term == nil {
+		t.Fatal("expected missing_terminator diagnostic")
+	}
+
+	m, ok := term.Data.(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected Data map, got %T", term.Data)
+	}
+	// REWORK(2024366) is on line 1; the end line must be 1, not the header's 0.
+	if line, _ := m["endLine"].(int); line != 1 {
+		t.Errorf("expected endLine 1, got %v", m["endLine"])
+	}
+}
+
 // Test: Unbalanced parentheses
 func TestDiagnosticsUnbalancedParentheses(t *testing.T) {
 	_, p, dp := createTestProviders()

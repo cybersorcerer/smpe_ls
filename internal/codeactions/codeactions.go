@@ -29,27 +29,42 @@ func (p *Provider) GetCodeActions(uri, text string, ctx lsp.CodeActionContext) [
 	for _, d := range ctx.Diagnostics {
 		switch d.Code {
 		case diagnostics.CodeMissingTerminator:
-			actions = append(actions, p.terminatorFix(uri, d))
+			actions = append(actions, p.terminatorFix(uri, text, d))
 		case diagnostics.CodeEmptyOperandParameter:
 			if a, ok := p.reworkFix(uri, text, d); ok {
 				actions = append(actions, a)
 			}
 		case diagnostics.CodeMissingRequiredOperand:
 			if name := operandName(d); name != "" {
-				actions = append(actions, p.operandFix(uri, d, name))
+				actions = append(actions, p.operandFix(uri, text, d, name))
 				missingOperand = append(missingOperand, d)
 			}
 		}
 	}
 	if len(missingOperand) >= 2 {
-		actions = append(actions, p.insertAllOperandsFix(uri, missingOperand))
+		actions = append(actions, p.insertAllOperandsFix(uri, text, missingOperand))
 	}
 	return actions
 }
 
-// operandFix inserts a single missing operand skeleton after the statement start.
-func (p *Provider) operandFix(uri string, d lsp.Diagnostic, name string) lsp.CodeAction {
-	pos := d.Range.End
+// operandInsertPos returns the position to insert a missing operand skeleton:
+// the end of the statement header. The diagnostic Range only covers the
+// statement name token (e.g. "++SRC"), so anchoring there would insert into
+// the name operand (e.g. "++SRC(S1)"). The diagnostics provider attaches the
+// statement's end line in Data; we append at that line's end. Falls back to the
+// diagnostic range end when the payload is absent.
+func operandInsertPos(text string, d lsp.Diagnostic) lsp.Position {
+	if m, ok := d.Data.(map[string]interface{}); ok {
+		if line, ok := jsonInt(m["endLine"]); ok {
+			return lsp.Position{Line: line, Character: lineLength(text, line)}
+		}
+	}
+	return d.Range.End
+}
+
+// operandFix inserts a single missing operand skeleton after the statement header.
+func (p *Provider) operandFix(uri, text string, d lsp.Diagnostic, name string) lsp.CodeAction {
+	pos := operandInsertPos(text, d)
 	edit := lsp.TextEdit{
 		Range:   lsp.Range{Start: pos, End: pos},
 		NewText: "\n    " + name + "()",
@@ -64,13 +79,13 @@ func (p *Provider) operandFix(uri string, d lsp.Diagnostic, name string) lsp.Cod
 
 // insertAllOperandsFix inserts skeletons for all missing required operands at once.
 // All missing-operand diagnostics for one statement share that statement's range,
-// so anchoring at the first diagnostic's end inserts every skeleton at the statement.
-func (p *Provider) insertAllOperandsFix(uri string, diags []lsp.Diagnostic) lsp.CodeAction {
+// so anchoring at the first diagnostic's header end inserts every skeleton at the statement.
+func (p *Provider) insertAllOperandsFix(uri, text string, diags []lsp.Diagnostic) lsp.CodeAction {
 	var sb strings.Builder
 	for _, d := range diags {
 		sb.WriteString("\n    " + operandName(d) + "()")
 	}
-	pos := diags[0].Range.End
+	pos := operandInsertPos(text, diags[0])
 	edit := lsp.TextEdit{
 		Range:   lsp.Range{Start: pos, End: pos},
 		NewText: sb.String(),
@@ -81,6 +96,29 @@ func (p *Provider) insertAllOperandsFix(uri string, diags []lsp.Diagnostic) lsp.
 		Diagnostics: diags,
 		Edit:        &lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{uri: {edit}}},
 	}
+}
+
+// lineLength returns the rune length of the given 0-based line in text,
+// used as the character offset to append at the line's end. Returns 0 if
+// the line is out of range.
+func lineLength(text string, line int) int {
+	lines := strings.Split(text, "\n")
+	if line < 0 || line >= len(lines) {
+		return 0
+	}
+	return len([]rune(lines[line]))
+}
+
+// jsonInt extracts an int from a Data payload value. Numbers round-trip
+// through JSON as float64, so we accept both float64 and int.
+func jsonInt(v interface{}) (int, bool) {
+	switch n := v.(type) {
+	case float64:
+		return int(n), true
+	case int:
+		return n, true
+	}
+	return 0, false
 }
 
 // operandName reads the operand name from the diagnostic Data payload.
@@ -140,12 +178,21 @@ func (p *Provider) reworkFix(uri, text string, d lsp.Diagnostic) (lsp.CodeAction
 	}, true
 }
 
-// terminatorFix inserts a '.' at the end of the statement range.
-func (p *Provider) terminatorFix(uri string, d lsp.Diagnostic) lsp.CodeAction {
+// terminatorFix inserts a '.' on its own line after the end of the statement.
+// The statement may span multiple lines, so the end line is read from the
+// diagnostic Data payload (set by the diagnostics provider) and the '.' is
+// inserted at that line's end. If the line is absent, it falls back to the
+// diagnostic range end (statement header).
+func (p *Provider) terminatorFix(uri, text string, d lsp.Diagnostic) lsp.CodeAction {
 	pos := d.Range.End
+	if m, ok := d.Data.(map[string]interface{}); ok {
+		if line, ok := jsonInt(m["endLine"]); ok {
+			pos = lsp.Position{Line: line, Character: lineLength(text, line)}
+		}
+	}
 	edit := lsp.TextEdit{
 		Range:   lsp.Range{Start: pos, End: pos},
-		NewText: ".",
+		NewText: "\n.",
 	}
 	return lsp.CodeAction{
 		Title:       "Add statement terminator",
