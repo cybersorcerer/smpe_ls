@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.3] - 2026-06-01
+
+### Added
+
+### Fixed
+
+- **Fix language discrepancies** - Free Form Query now has only english button labels
+
 ## [1.3.2] - 2026-05-31
 
 ### Added

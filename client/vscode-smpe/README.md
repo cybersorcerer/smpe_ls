@@ -2,6 +2,8 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 1.3.3
+
 ## What's New in 1.3.2
 
 - **Code Actions (Quick Fixes)** - The editor lightbulb (`Cmd+.` / `Ctrl+.`) offers one-click fixes for diagnostics: **Add statement terminator** (inserts the missing `.`), **Insert operand X** / **Insert all required operands** (inserts skeletons for missing required operands), and **Set REWORK to current date** (fills an empty `REWORK()` with today's Julian date `yyyyddd`).

@@ -51,11 +51,13 @@ Alternatively, install a platform-specific `.vsix` from the [releases page](http
 Download pre-built binaries for your platform from the [latest release](https://github.com/cybersorcerer/smpe_ls/releases/latest).
 
 **Available platforms:**
+
 - Linux (AMD64, ARM64)
 - macOS (Apple Silicon, Intel)
 - Windows (AMD64, ARM64)
 
 **Installation paths:**
+
 - **Linux/macOS:** Binary in `/usr/local/bin/`, data in `~/.local/share/smpe_ls/`
 - **Windows:** Binary and data in `%LOCALAPPDATA%\smpe_ls\`
 
@@ -74,11 +76,13 @@ make install
 ### VSCode Extension
 
 1. Install the language server:
+
    ```bash
    make install
    ```
 
 2. Build the VSCode extension:
+
    ```bash
    make vscode
    ```
@@ -218,6 +222,7 @@ All HFS-type statements share the same syntax and validation rules:
 *`++HFS` can also be coded as `++HFSxxx` where xxx is one of 32 national language identifiers (e.g., `++HFSENU`, `++HFSDEU`, `++HFSJPN`). All language variants are supported in completion, diagnostics, and hover.
 
 **Data Element MCS:**
+
 - All data element statements with language variants (++BOOK, ++CLIST, ++EXEC, ++FONT, ++HELP, ++MSG, ++PARM, etc.)
 - Completion and hover available for all statements
 
@@ -237,6 +242,7 @@ make test-suite
 ```
 
 **Test Coverage:**
+
 - 57 unit tests across 4 modules
 - 27 integration test files with 24 passing
 - Tests for completion, diagnostics, hover, and parser
@@ -261,7 +267,15 @@ make release
 
 ## 📋 What's New
 
-### Version 1.3.2 (Latest)
+### Version 1.3.3
+
+**New Features**
+
+**Bug Fixes**
+
+- **Fix language discrepancies** - Free Form Query now has only english button labels
+
+### Version 1.3.2
 
 **New Features:**
 
@@ -284,298 +298,6 @@ make release
 - ✨ **Saved Queries in Free Form Query** - Save, manage and reuse CSI queries. Queries are stored in `.smpe-saved-queries.yaml` in the workspace root. The Free Form Query panel shows a collapsible saved queries section below the input form.
 - ⚙️ **Auto-Detect Language Mode Toggle** - New setting `smpe.editor.autoDetectLanguage` (default: `true`) and command `SMP/E: Toggle Auto-Detect Language Mode`. When disabled, manual language mode changes (e.g. switching a `.smpe` buffer to REXX) are preserved.
 
-### Version 1.2.0
-
-**New Features:**
-
-- ✨ **Filter History in Free Form Query** - Filter strings are automatically saved (max. 20, no duplicates). A `▼` button opens a dropdown with saved entries. Entries persist across sessions.
-- ⚙️ **Manage Filter History** - New command `SMP/E: Manage Filter History` to edit, delete, or clear saved filter entries.
-
-### Version 1.1.0
-
-**New Features:**
-
-- ✨ **HOLD Comments Viewer** - Right-click the 💬 icon in the HOLDDATA column of a SYSMOD Free Form Query result (GLOBAL zone only) to fetch and display all `++HOLD` COMMENT texts from the SMPPTS member.
-
-**Bug Fixes:**
-
-- 🐛 **CRLF line endings (Zowe Explorer)** - z/OS Dataset Members opened via Zowe Explorer no longer produce false `unknown_operand` diagnostics for `COMMENT` content in `++HOLD` statements.
-
-### Version 1.0.1
-
-**Bug Fixes:**
-
-- 🐛 **`++HOLD` COMMENT free-text handling** - `COMMENT(...)` is now correctly treated as free text: no false diagnostics for missing TEXT/ENHANCED-HOLDDATA parameters, and English apostrophes in COMMENT content no longer cause false missing-terminator errors.
-- 🐛 **SMRTDATA operand for `++HOLD`** - Enhanced HOLDDATA is now correctly modelled as a separate `SMRTDATA` operand with sub-operands `CHGDT`, `FIX`, and `SYMP`.
-
-### Version 1.0.0
-
-**New Features:**
-
-- ✨ **Boilerplate Snippets** - All Control MCS statements now offer a second completion item `…` (recognizable by the snippet icon) that inserts a ready-to-use template with tab stops for all required operands. The REWORK operand is pre-filled with the current date in `yyyyddd` format.
-
-### Version 0.9.8
-
-**Bug Fixes:**
-
-- 🐛 **Content beyond column 72 false positive in inline data** - The column 72 diagnostic no longer fires for lines that are inline data (e.g. JCL after `++JCLIN`, source after `++SRC`). Inline data regions are now excluded from the check, consistent with all other diagnostics.
-- 🐛 **Free Form CSI Query: default subentries** - Entry type selection now pre-fills the subentries field with a default set for SYSMOD, DDDEF, GLOBALZONE, TARGETZONE, DLIBZONE, and DLIB. The picker pre-selects the matching checkboxes. Entry types without a defined default still clear the field on change.
-- 🐛 **Parser Fix: SYMPATH in `++HFS`** - Quoted path strings (e.g. `'../IVP/eqadrest.env'`) no longer cause premature statement termination. Dots and parentheses inside `'...'` are now correctly ignored by the terminator and parenthesis depth logic.
-
-### Version 0.9.6
-
-**New Features:**
-
-- 📚 **Training Documentation** - 22 Markdown training modules (DE + EN) covering installation, all VSCode extension features, CLI tools (`smpe_lint`, `smpe_outl`), and z/OSMF integration. Available under `docs/training/`.
-
-### Version 0.9.5
-
-**New Features:**
-
-- 📥 **Check Missing Input Members** - New command (`SMP/E: Check Missing Input Members`) checks whether all referenced input member files exist in the workspace. Results displayed in a filterable/sortable Webview table. Available in Command Palette and via right-click on `.smpe` files.
-- ⚙️ **`smpe.checkMissingInputMembers.searchFolders`** - Configures which folders are searched for input member files (default: `["customization"]`). Use `"*"` to search the entire workspace.
-
-### Version 0.9.4
-
-**New Features:**
-
-- 🛠️ **smpe_outl** - New CLI tool to print the document outline (symbols) of SMP/E MCS files, with Markdown and JSON (DocumentSymbol-compatible) output
-- 🔎 **z/OSMF Config Lookup** - `.smpe-zosmf.yaml` is now resolved from workspace folders first, then `~/.config/smpe_ls/` as a global fallback
-- 🏷️ **LLQ-based Language Detection** - z/OS datasets with configurable last level qualifiers (e.g. `.MCS`) are automatically recognized as SMP/E files
-
-### Version 0.9.3
-
-**New Features:**
-
-- 🔍 **Workspace Symbols** - Search for SYSMOD definitions across all `.smpe` files in the workspace (`Cmd+T`)
-- 📦 **Dataset Member Attributes** - PDS member listing now shows full ISPF-style attributes (User, Created, Modified, Ver, Mod) via `X-IBM-Attributes: base` header
-
-### Version 0.9.2
-
-**Improvements:**
-
-- 🔧 **Debug Logging Levels** - Separated normal and debug logging; startup and error messages always visible, verbose details only with `smpe.debug` enabled
-- 💬 **Improved Cell Tooltips** - Tooltips in result tables now reliably show full content for long values (SUPING, PRE, etc.)
-
-**Bug Fixes:**
-
-- 🏷️ **SYSMOD Subentry Picker** - Removed invalid subentry names `NPRE2` and `REQ2`
-
-### Version 0.9.1
-
-**New Features:**
-
-- 📐 **Folding Ranges** - MCS statements and multi-line comments can be collapsed/expanded in the editor
-- 🔧 **Debug Logging Control** - All extension logging now respects the `smpe.debug` setting
-- 🌐 **Global Zone SYSMOD Subentries** - Free Form Query subentry picker includes Global Zone subentries (ACCID, APPID, DELETE, HOLDDATA, NPRE, PRE, REQ, SREL, TLIBPREFIX)
-
-**Bug Fixes:**
-
-- 🔍 **Free Form Query Subentries** - CSI queries now include TARGETZONE in entries array, fixing empty subentry results
-- 🏷️ **SYSMOD Subentry DELETE2** - Corrected invalid subentry name to `DELETE`
-
-### Version 0.9.0
-
-**New Features:**
-
-- 📂 **USS Directory Browsing** - Clickable PATH links in DDDEF query results open a USS directory browser via z/OSMF Files REST API with breadcrumb navigation and file viewing
-- 📦 **MVS Dataset Browsing** - Clickable DATASET links in DDDEF query results open PDS member listings or sequential datasets via z/OSMF Dataset REST API
-- 📄 **Read-Only File Viewing** - USS files and dataset members open as read-only virtual documents (`smpe-uss://` and `smpe-ds://` schemes)
-- 🔗 **Automatic PATHPREFIX Resolution** - USS paths with SMP/E PATHPREFIX segments are automatically resolved by stripping prefix segments on 404
-
-**Improvements:**
-
-- 🖥️ **Webview Layout** - All result panels now open in the main editor area instead of beside
-
-### Version 0.8.9
-
-**New Features:**
-
-- 🔍 **Unified SYSMOD List Queries** - CodeLens generates one query per operand covering all SYSMODs in a list
-- 📋 **Extended SYSMOD Reference Operands** - All 11 operands that accept SYSMOD lists are now recognized (DELETE, FMID, NPRE, PRE, REQ, RESOLVER, RMID, SUP, TO, UMID, VERSION)
-- 🗄️ **CSI List Support** - `.smpe-zosmf.yaml` supports multiple CSIs per server with optional `defaultCsi`
-- 🔽 **CSI Selection in Free Form Query** - Dropdown to select the CSI in the Free Form Query panel
-- ❓ **Missing Entry Display** - SYSMODs/DDDEFs not found by a query are shown with `.` in all columns
-
-**Bug Fixes:**
-
-- 🐛 **SYSMOD Query Filter** - Filter correctly generates `ENAME='SM1'|ENAME='SM2'|...` format for multiple SYSMODs
-- 🐛 **Space and Comma Separated Lists** - Both separators are now handled identically in CodeLens and query input
-
-### Version 0.8.8
-
-**New Features:**
-
-- 📦 **smpe.json Template System** - `$ref` template mechanism reduces smpe.json size by ~42%; resolved at load time with zero consumer impact
-- 📋 **PATH and INITDISP in DDDEF Query** - DDDEF query result table now shows PATH (after DATASET) and INITDISP columns
-
-**Bug Fixes:**
-
-- 🐛 **List Operand Parsing in CodeLens** - SMP/E list items separated by spaces or commas are now correctly split into individual CodeLens entries
-- 🐛 **DESC Operand Formatting** - `DESC(This is a long description)` no longer incorrectly splits at spaces
-- 🐛 **List Display Format** - List operands (PRE, REQ, SUP) now render items on separate lines with correct indentation
-- 🐛 **Dot in Statement Parameter** - `++PRODUCT(PROD001,01.00.00)` no longer duplicates output after formatting
-
-### Version 0.8.6
-
-**New Features:**
-
-- 🌐 **Extended CSI Entry Types** - Free Form CSI Query now supports DLIBZONE, FEATURE, FMIDSET, HOLDDATA, JAR, JARUPD, OPTIONS, ORDER, PRODUCT, PROGRAM, UTILITY, ZONESET with correct subentries
-- 🗂️ **Entry Type Picker** - New radio button picker for Entry Type selection (alphabetically sorted)
-- 🖥️ **HFS Entry Types** - AIX1-5, CLIENT1-5, OS21-5, UNIX1-5, WIN1-5 added to Free Form CSI Query
-
-**Bug Fixes:**
-
-- 🐛 **Export JSON/CSV** - Export buttons now work correctly in all query panels (SYSMOD, DDDEF, Zone)
-- 🐛 **Duplicate Emoji in Diagnostics** - Parameter length exceeded diagnostics no longer show two warning emojis
-
-### Version 0.8.3
-
-**New Features:**
-
-- 🌐 **z/OSMF Free Form CSI Query** - Webview-based query interface with input form and dynamic result table
-- 🔍 **Zone Pattern Matching** - Wildcard support (`*`, `?`) for zone parameters in z/OSMF queries
-
-**Bug Fixes:**
-
-- 🐛 **List-type Parameter Validation** - `PRE`, `REQ`, `SUP` with multiple values no longer produce false length warnings
-- 🐛 **golangci-lint** - Fixed `ineffassign` error in `formatting.go`
-
-### Version 0.8.1
-
-**New Features:**
-
-- 🔧 **Command-Line Linter** - New `smpe_lint` tool for CI/CD integration
-  - Markdown and JSON output formats
-  - Configurable diagnostics via YAML/JSON config files
-  - `--disable` flag to disable specific diagnostics
-  - `--warnings-as-errors` for strict mode
-  - `--init` to create sample configuration files
-
-**Bug Fixes:**
-
-- 🐛 **Comment Indentation** - Comments now start at column 3 (2 space indent) instead of column 1
-- 🐛 **Multi-line Comment Before Terminator** - Multi-line comments before terminator are now correctly placed before the `.` during formatting
-- 🐛 **SHSCRIPT Comma Preservation** - Commas in `SHSCRIPT(MYSCRIPT, POST)` are now preserved during formatting
-- 🐛 **Leading Comment Indentation** - Leading comments moved into statements now correctly start at column 3
-
-### Version 0.8.0
-
-**Bug Fixes:**
-
-- 🐛 **Multi-line Comment Parsing** - Parser now correctly captures full text of multi-line comments
-- 🐛 **Multi-line Comment Formatting** - Formatting preserves multi-line comments inside statements
-- 🐛 **Comment Line Wrapping** - Long lines within multi-line comments are now wrapped at column 72
-- 🐛 **Comment Before Terminator** - Comments before terminator on same line (e.g., `CALLLIBS /* comment */.`) are now preserved during formatting
-
-### Version 0.7.8
-
-**New Features:**
-
-- 🚨 **Column 72 Diagnostic** - Error diagnostic when content extends beyond column 72 (configurable)
-- 📝 **Improved Formatting** - Enforces IBM SMP/E column 72 limit, wraps long lines automatically
-- 💬 **Comment Preservation** - Formatting now preserves comments per IBM rules
-
-### Version 0.7.7
-
-**New Features:**
-
-- 🔗 **Go to Definition** - Navigate to SYSMOD/FMID definitions (`F12` or `Cmd+Click`)
-- 🔎 **Find All References** - Find all references to a SYSMOD or FMID (`Shift+F12`)
-- 🏷️ **Git Commit Hash** - Build includes commit hash for traceability (`smpe_ls --version`)
-
-### Version 0.7.6
-
-**New Features:**
-
-- 📄 **Document Symbols** - Outline view and quick navigation (`Cmd+Shift+O`)
-- 📝 **Document Formatting** - Auto-format SMP/E statements with configurable options
-- 🔧 **Whitespace Tolerance** - Parser accepts `++ VER` syntax (formatting corrects it)
-- 📏 **Column Rulers** - Visual guides at columns 72 and 80 for mainframe card boundaries
-- ⚙️ **Format on Save** - Optionally auto-format when saving
-
-**Improvements:**
-
-- Statement terminator (`.`) now placed on its own line during formatting
-- Highlighting correctly covers statements with spaces after `++`
-
-### Version 0.7.0
-
-**New Features:**
-- ✨ **HFS Statement Support** - Added 10 missing HFS-type statements (++AIX1-5, ++CLIENT1-5)
-- 🌍 **National Language Identifiers** - Full support for ++HFSxxx variants (32 language identifiers)
-- ✨ **Hover Unit Tests** - Complete test coverage for hover functionality (11 tests)
-- 📊 **Enhanced Test Suite** - Human-readable test output with detailed diagnostics
-- 🤖 **GitHub Actions** - Automated multi-platform builds and releases
-- 🔧 **Cross-compilation** - Native binaries for 6 platforms (Linux, macOS, Windows - AMD64 & ARM64)
-- 📦 **Release Automation** - Automatic GitHub releases on version tags
-- 🎯 **Makefile Improvements** - New targets: `test-suite`, `test-all`, `build-all`, `release`
-
-**HFS Statements:**
-- Added ++AIX1-5 (AIX client elements)
-- Added ++CLIENT1-5 (generic client elements)
-- ++HFS now supports all 32 national language identifier variants (++HFSENU, ++HFSDEU, etc.)
-- Total HFS-type statements: 27 (2 base + 25 platform-specific variants)
-
-**Test Infrastructure:**
-- Central test runner with grouped results (passed/failed)
-- Diagnostics organized by severity (🔴 Errors → ⚠️ Warnings → ℹ️ Info)
-- Pass rate statistics and detailed failure reporting
-- 19 comprehensive test files with valid and invalid test cases
-
-**CI/CD:**
-- Automatic builds on push to main branch
-- Release builds on version tags with GitHub Releases
-- Code coverage reporting to Codecov
-- golangci-lint integration
-
-### Version 0.6.0
-
-**New Features:**
-- Complete AST-based refactoring for completion and diagnostics
-- All 25 Control MCS statements with full diagnostics validation
-- Enhanced statement validation (++PRODUCT, ++PROGRAM, ++PTF, ++RELEASE)
-- Improved required operand validation
-- Better error messages for missing inline data
-
-### Version 0.5.0
-
-**New Features:**
-- ++MOVE statement with complex DISTLIB/SYSLIB mode validation
-- Enhanced inline data handling
-- Improved diagnostics for mutually exclusive operands
-
-### Version 0.4.0
-
-**New Features:**
-- ++NULL statement support
-- Refactored diagnostics and completion to use AST
-- Enhanced multiline statement handling
-
-### Version 0.3.0
-
-**New Features:**
-- ++MAC, ++MACUPD, ++MOD, ++SRC, ++SRCUPD statement support
-- Dynamic inline data handling via smpe.json
-- Enhanced syntax highlighting for inline data
-- Visual diagnostic severity with Unicode symbols (🔴 ⚠️ ℹ️ 💡)
-
-### Version 0.2.0
-
-**New Features:**
-- Multiline parameter support
-- Malformed parenthesis detection
-- ++JCLIN, ++JAR, ++JARUPD, ++VER, ++ZAP statement support
-- Improved completion for mutually exclusive operands
-
-### Version 0.1.0
-
-**Initial Release:**
-- Syntax highlighting
-- Context-aware code completion
-- Real-time diagnostics
-- Hover information
-
 ## 🔧 Configuration
 
 ### VSCode Settings
@@ -593,15 +315,18 @@ Add to `.vscode/settings.json`:
 ### Logging
 
 Logs are written to:
+
 - **Linux/macOS:** `~/.local/share/smpe_ls/smpe_ls.log`
 - **Windows:** `%LOCALAPPDATA%\smpe_ls\smpe_ls.log`
 
 Enable debug logging:
+
 ```bash
 smpe_ls --debug
 ```
 
 Or in VSCode:
+
 ```json
 {
   "smpe.debug": true
@@ -613,6 +338,7 @@ Or in VSCode:
 ### Parser Strategy
 
 **Recursive Descent Parser** with AST generation:
+
 - Statement-specific parser functions
 - Grammar derived from IBM SMP/E Reference documentation
 - Zero external parser dependencies
@@ -620,6 +346,7 @@ Or in VSCode:
 ### Data Sources
 
 **smpe.json** (`data/smpe.json`)
+
 - Statement and operand descriptions
 - Grammar rules and validation logic
 - Completion and hover information
@@ -627,7 +354,7 @@ Or in VSCode:
 
 ### Components
 
-```
+```text
 smpe_ls/
 ├── cmd/
 │   ├── smpe_ls/        # Language server binary
@@ -708,17 +435,20 @@ See [LICENSE](LICENSE) file for the full license text.
 ### Server Not Starting
 
 1. Verify installation:
+
    ```bash
    which smpe_ls
    smpe_ls --version
    ```
 
 2. Check log file:
+
    ```bash
    tail -f ~/.local/share/smpe_ls/smpe_ls.log
    ```
 
 3. Verify data file:
+
    ```bash
    ls -la ~/.local/share/smpe_ls/smpe.json
    ```
@@ -730,6 +460,7 @@ See [LICENSE](LICENSE) file for the full license text.
 2. Check Output panel: View → Output → "SMP/E Language Server"
 
 3. Reinstall server:
+
    ```bash
    make clean install
    ```
@@ -737,11 +468,13 @@ See [LICENSE](LICENSE) file for the full license text.
 ### Build Issues
 
 1. Verify Go version:
+
    ```bash
    go version  # Should be 1.21+
    ```
 
 2. Clean and rebuild:
+
    ```bash
    make clean-all
    make build

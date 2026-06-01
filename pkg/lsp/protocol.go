@@ -153,6 +153,29 @@ const (
 	MarkupKindMarkdown  = "markdown"
 )
 
+// SignatureHelp is the textDocument/signatureHelp response.
+type SignatureHelp struct {
+	Signatures      []SignatureInformation `json:"signatures"`
+	ActiveSignature int                    `json:"activeSignature"`
+	ActiveParameter int                    `json:"activeParameter"`
+}
+
+// SignatureInformation describes one signature (here: one operand parameter).
+type SignatureInformation struct {
+	Label         string `json:"label"`
+	Documentation string `json:"documentation,omitempty"`
+}
+
+// SignatureHelpOptions is advertised as a server capability.
+type SignatureHelpOptions struct {
+	TriggerCharacters []string `json:"triggerCharacters,omitempty"`
+}
+
+// SignatureHelpSettings carries the enable flag from the client.
+type SignatureHelpSettings struct {
+	Enabled bool `json:"enabled"`
+}
+
 // ServerCapabilities describes the capabilities of the server
 type ServerCapabilities struct {
 	TextDocumentSync                int                    `json:"textDocumentSync,omitempty"`
@@ -161,6 +184,7 @@ type ServerCapabilities struct {
 	DiagnosticProvider              *DiagnosticOptions     `json:"diagnosticProvider,omitempty"`
 	SemanticTokensProvider          *SemanticTokensOptions `json:"semanticTokensProvider,omitempty"`
 	DocumentFormattingProvider      bool                   `json:"documentFormattingProvider,omitempty"`
+	SignatureHelpProvider           *SignatureHelpOptions  `json:"signatureHelpProvider,omitempty"`
 	DocumentRangeFormattingProvider bool                   `json:"documentRangeFormattingProvider,omitempty"`
 	DocumentSymbolProvider          bool                   `json:"documentSymbolProvider,omitempty"`
 	DefinitionProvider              bool                   `json:"definitionProvider,omitempty"`
@@ -223,8 +247,9 @@ type SemanticTokens struct {
 
 // InitializationOptions represents client-provided initialization options
 type InitializationOptions struct {
-	Diagnostics *DiagnosticsOptions `json:"diagnostics,omitempty"`
-	Formatting  *FormattingOptions  `json:"formatting,omitempty"`
+	Diagnostics   *DiagnosticsOptions    `json:"diagnostics,omitempty"`
+	Formatting    *FormattingOptions     `json:"formatting,omitempty"`
+	SignatureHelp *SignatureHelpSettings `json:"signatureHelp,omitempty"`
 }
 
 // DiagnosticsOptions configures which diagnostics are enabled
@@ -280,8 +305,9 @@ type SettingsPayload struct {
 
 // SmpeSettings represents the smpe.* settings from VSCode
 type SmpeSettings struct {
-	Diagnostics *DiagnosticsOptions `json:"diagnostics,omitempty"`
-	Formatting  *FormattingOptions  `json:"formatting,omitempty"`
+	Diagnostics   *DiagnosticsOptions    `json:"diagnostics,omitempty"`
+	Formatting    *FormattingOptions     `json:"formatting,omitempty"`
+	SignatureHelp *SignatureHelpSettings `json:"signatureHelp,omitempty"`
 }
 
 // FormattingOptions configures document formatting behavior
@@ -319,6 +345,12 @@ type DocumentSymbolParams struct {
 
 // DefinitionParams represents textDocument/definition request params
 type DefinitionParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+	Position     Position               `json:"position"`
+}
+
+// SignatureHelpParams is the textDocument/signatureHelp request payload.
+type SignatureHelpParams struct {
 	TextDocument TextDocumentIdentifier `json:"textDocument"`
 	Position     Position               `json:"position"`
 }
