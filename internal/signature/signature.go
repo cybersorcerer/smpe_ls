@@ -123,7 +123,8 @@ func (p *Provider) findOperandAtCursor(doc *parser.Document, text string, line, 
 			if child.Type != parser.NodeTypeOperand || child.OperandDef == nil {
 				continue
 			}
-			if child.Position.Line == line && child.Position.Character == start {
+			runeStart := len([]rune(ln[:start]))
+			if child.Position.Line == line && child.Position.Character == runeStart {
 				return child
 			}
 		}
