@@ -182,6 +182,11 @@
           "default": true,
           "description": "Move comments from before first statement into the statement during formatting"
         },
+        "smpe.signatureHelp.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Signature Help for SMP/E operand parameters"
+        },
         "smpe.zosmf.queryTimeoutSeconds": {
           "type": "integer",
           "default": 300,
