@@ -45,7 +45,7 @@ func TestSignatureStringOperand(t *testing.T) {
 	text := "++MOVE(M1)\n    DISTLIB()\n."
 	line, char := colAfterParen(text, "DISTLIB")
 	doc := p.Parse(text)
-	sh := sp.GetSignatureHelp(doc, line, char)
+	sh := sp.GetSignatureHelp(doc, text, line, char)
 	if sh == nil {
 		t.Fatal("expected signature help for DISTLIB, got nil")
 	}
@@ -68,7 +68,7 @@ func TestSignatureBooleanOperandNil(t *testing.T) {
 	text := "++MOVE(M1)\n    MAC()\n."
 	line, char := colAfterParen(text, "MAC")
 	doc := p.Parse(text)
-	if sh := sp.GetSignatureHelp(doc, line, char); sh != nil {
+	if sh := sp.GetSignatureHelp(doc, text, line, char); sh != nil {
 		t.Errorf("expected nil for boolean operand MAC, got %+v", sh)
 	}
 }
@@ -79,7 +79,7 @@ func TestSignatureDisabledNil(t *testing.T) {
 	text := "++MOVE(M1)\n    DISTLIB()\n."
 	line, char := colAfterParen(text, "DISTLIB")
 	doc := p.Parse(text)
-	if sh := sp.GetSignatureHelp(doc, line, char); sh != nil {
+	if sh := sp.GetSignatureHelp(doc, text, line, char); sh != nil {
 		t.Errorf("expected nil when disabled, got %+v", sh)
 	}
 }
@@ -88,7 +88,33 @@ func TestSignatureOutsideOperandNil(t *testing.T) {
 	_, p, sp := createTestProviders()
 	text := "++MOVE(M1)\n    DISTLIB()\n."
 	doc := p.Parse(text)
-	if sh := sp.GetSignatureHelp(doc, 0, 2); sh != nil {
+	if sh := sp.GetSignatureHelp(doc, text, 0, 2); sh != nil {
 		t.Errorf("expected nil outside operand, got %+v", sh)
+	}
+}
+
+func TestSignatureAfterClosingParenNil(t *testing.T) {
+	_, p, sp := createTestProviders()
+	text := "++MOVE(M1)\n    DISTLIB() \n."
+	doc := p.Parse(text)
+	// cursor on line 1 at the trailing space AFTER "DISTLIB()" (col = len("    DISTLIB() "))
+	line, char := 1, len("    DISTLIB() ")
+	if sh := sp.GetSignatureHelp(doc, text, line, char); sh != nil {
+		t.Errorf("expected nil when cursor is after the closing paren, got %+v", sh)
+	}
+}
+
+func TestSignatureInsideParensWithValue(t *testing.T) {
+	_, p, sp := createTestProviders()
+	text := "++MOVE(M1)\n    DISTLIB(SMPLTS)\n."
+	doc := p.Parse(text)
+	// cursor between the parens, in the middle of the value: after "DISTLIB(SMP"
+	line, char := 1, len("    DISTLIB(SMP")
+	sh := sp.GetSignatureHelp(doc, text, line, char)
+	if sh == nil {
+		t.Fatal("expected signature help while typing inside DISTLIB(...), got nil")
+	}
+	if sh.Signatures[0].Label != "DISTLIB(DDNAME)" {
+		t.Errorf("unexpected label: %q", sh.Signatures[0].Label)
 	}
 }
