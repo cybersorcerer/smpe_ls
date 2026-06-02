@@ -108,6 +108,7 @@ type CompletionItem struct {
 	InsertText       string    `json:"insertText,omitempty"`
 	InsertTextFormat int       `json:"insertTextFormat,omitempty"`
 	TextEdit         *TextEdit `json:"textEdit,omitempty"`
+	Command          *Command  `json:"command,omitempty"`
 }
 
 // CompletionItemKind values

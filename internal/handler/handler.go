@@ -199,8 +199,11 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 			params.InitializationOptions.SignatureHelp.Enabled)
 	}
 
-	// Add all uppercase letters as trigger characters so completion triggers automatically when typing operand names
-	triggerChars := []string{"+", "(", " "}
+	// Add all uppercase letters as trigger characters so completion triggers automatically when typing operand names.
+	// Note: '(' is intentionally NOT a completion trigger — it is the signature-help trigger. Letting '(' trigger
+	// completion opened the completion widget on '(' and suppressed VSCode's automatic signature-help request.
+	// Operand-value completion still fires on the first typed letter after '('.
+	triggerChars := []string{"+", " "}
 	for ch := 'A'; ch <= 'Z'; ch++ {
 		triggerChars = append(triggerChars, string(ch))
 	}
