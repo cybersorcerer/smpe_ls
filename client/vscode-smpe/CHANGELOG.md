@@ -2,9 +2,11 @@
 
 All notable changes to this project are documented in this file.
 
-## [1.3.3] - 2026-06-01
+## [1.3.3] - 2026-06-02
 
 ### Added
+
+- **Signature Help** - The language server now implements `textDocument/signatureHelp`. When the cursor is inside an operand's parentheses (`DISTLIB(│)`), a floating box shows the expected parameter, a short description and the type, sourced from `smpe.json`. It appears automatically while typing `(` and after accepting an operand from the completion list. Boolean flag operands (no parameter) show no box. Toggle with the new setting `smpe.signatureHelp.enabled` (default `true`).
 
 ### Fixed
 

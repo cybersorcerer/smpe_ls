@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-1.3.2-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-1.3.3-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -26,6 +26,7 @@ Alternatively, install a platform-specific `.vsix` from the [releases page](http
 - **💡 Intelligent Code Completion** - Context-aware completion for statements and operands
 - **🔍 Real-time Diagnostics** - Instant validation of SMP/E syntax and semantics
 - **💡 Code Actions (Quick Fixes)** - One-click fixes for missing terminators, missing required operands, and empty `REWORK()` (current date)
+- **🖋️ Signature Help** - Floating parameter hint for operands (`DISTLIB(│)`) with description and type, toggleable via `smpe.signatureHelp.enabled`
 - **🔧 Command-Line Linter** - CI/CD-ready linter with configurable diagnostics (`smpe_lint`)
 - **🗂️ Command-Line Outline** - Document outline tool for CI/CD inventory and reporting (`smpe_outl`)
 - **📖 Hover Documentation** - Inline documentation from IBM SMP/E Reference
@@ -271,6 +272,8 @@ make release
 
 **New Features**
 
+- 🖋️ **Signature Help** - When the cursor is inside an operand's parentheses (`DISTLIB(│)`), a floating box shows the expected parameter, a short description and the type (from `smpe.json`). It triggers automatically while typing `(` and after accepting an operand from the completion list; boolean flag operands show no box. Toggle with `smpe.signatureHelp.enabled` (default `true`).
+
 **Bug Fixes**
 
 - **Fix language discrepancies** - Free Form Query now has only english button labels
@@ -483,8 +486,8 @@ See [LICENSE](LICENSE) file for the full license text.
 ## 🗺️ Roadmap
 
 - [x] Code Actions (Quick Fixes)
+- [x] Signature Help
 - [ ] Rename (SYSMOD/FMID)
-- [ ] Signature Help
 
 ---
 
