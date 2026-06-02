@@ -2,6 +2,11 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 1.3.3
+
+- **Signature Help** - When the cursor is inside an operand's parentheses (`DISTLIB(│)`), a floating box shows the expected parameter, a short description and the type. It triggers automatically while typing `(` and after accepting an operand from the completion list; boolean flag operands show no box. Toggle with `smpe.signatureHelp.enabled` (default `true`).
+- **Fix language discrepancies** - Free Form Query now has only english button labels.
+
 ## What's New in 1.3.2
 
 - **Code Actions (Quick Fixes)** - The editor lightbulb (`Cmd+.` / `Ctrl+.`) offers one-click fixes for diagnostics: **Add statement terminator** (inserts the missing `.`), **Insert operand X** / **Insert all required operands** (inserts skeletons for missing required operands), and **Set REWORK to current date** (fills an empty `REWORK()` with today's Julian date `yyyyddd`).
@@ -24,6 +29,7 @@ See the [CHANGELOG](https://github.com/cybersorcerer/smpe_ls/blob/main/client/vs
 - **Code Completion** - Context-sensitive completion for MCS statements and operands
 - **Diagnostics** - Real-time validation with error and warning messages
 - **Code Actions (Quick Fixes)** - Lightbulb fixes for missing terminators, missing required operands, and empty `REWORK()`
+- **Signature Help** - Floating parameter hint for operands with description and type (toggle via `smpe.signatureHelp.enabled`)
 - **Hover Information** - Documentation when hovering over statements and operands
 - **Go to Definition** - Navigate to SYSMOD/FMID definitions (`F12` or `Cmd+Click`)
 - **Find References** - Find all references to a SYSMOD or FMID (`Shift+F12`)
@@ -56,6 +62,7 @@ The extension supports all common SMP/E MCS statements, including:
 | `smpe.dataPath` | `""` | Path to the smpe.json data file (uses bundled file if empty) |
 | `smpe.outlPath` | `""` | Path to the smpe_outl executable (uses bundled binary if empty) |
 | `smpe.debug` | `true` | Enable debug logging |
+| `smpe.signatureHelp.enabled` | `true` | Enable Signature Help for operand parameters |
 
 ### Formatting
 

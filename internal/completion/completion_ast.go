@@ -584,6 +584,14 @@ func (p *Provider) getOperandCompletionsAST(stmt *parser.Node, text string, line
 		if op.Parameter != "" {
 			item.InsertText = primaryName + "($0)"
 			item.InsertTextFormat = lsp.InsertTextFormatSnippet
+			// After the snippet places the cursor between the parens, ask the
+			// editor to open signature help. Accepting the completion does not
+			// type a '(', so the signature-help trigger character never fires —
+			// this command triggers it explicitly.
+			item.Command = &lsp.Command{
+				Title:   "Trigger Signature Help",
+				Command: "editor.action.triggerParameterHints",
+			}
 		} else {
 			item.InsertText = primaryName
 		}

@@ -16,6 +16,7 @@ import (
 	"github.com/cybersorcerer/smpe_ls/internal/parser"
 	"github.com/cybersorcerer/smpe_ls/internal/references"
 	"github.com/cybersorcerer/smpe_ls/internal/semantic"
+	"github.com/cybersorcerer/smpe_ls/internal/signature"
 	"github.com/cybersorcerer/smpe_ls/internal/symbols"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
@@ -74,6 +75,7 @@ type Handler struct {
 	parser              *parser.Parser
 	completionProvider  *completion.Provider
 	hoverProvider       *hover.Provider
+	signatureProvider   *signature.Provider
 	diagnosticsProvider *diagnostics.Provider
 	semanticProvider    *semantic.Provider
 	formattingProvider  *formatting.Provider
@@ -102,6 +104,7 @@ func New(version string, commit string, dataPath string) (*Handler, error) {
 
 	// Create providers with shared data
 	hoverProvider := hover.NewProvider(store)
+	signatureProvider := signature.NewProvider(store)
 	completionProvider := completion.NewProvider(store)
 	diagnosticsProvider := diagnostics.NewProvider(store)
 	semanticProvider := semantic.NewProvider(store.Statements)
@@ -120,6 +123,7 @@ func New(version string, commit string, dataPath string) (*Handler, error) {
 		parser:              parserInstance,
 		completionProvider:  completionProvider,
 		hoverProvider:       hoverProvider,
+		signatureProvider:   signatureProvider,
 		diagnosticsProvider: diagnosticsProvider,
 		semanticProvider:    semanticProvider,
 		formattingProvider:  formattingProvider,
@@ -189,8 +193,17 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 		logger.Info("Using default formatting config")
 	}
 
-	// Add all uppercase letters as trigger characters so completion triggers automatically when typing operand names
-	triggerChars := []string{"+", "(", " "}
+	if params.InitializationOptions != nil && params.InitializationOptions.SignatureHelp != nil {
+		h.signatureProvider.SetEnabled(params.InitializationOptions.SignatureHelp.Enabled)
+		logger.Info("Signature help config received from client: Enabled=%v",
+			params.InitializationOptions.SignatureHelp.Enabled)
+	}
+
+	// Add all uppercase letters as trigger characters so completion triggers automatically when typing operand names.
+	// Note: '(' is intentionally NOT a completion trigger — it is the signature-help trigger. Letting '(' trigger
+	// completion opened the completion widget on '(' and suppressed VSCode's automatic signature-help request.
+	// Operand-value completion still fires on the first typed letter after '('.
+	triggerChars := []string{"+", " "}
 	for ch := 'A'; ch <= 'Z'; ch++ {
 		triggerChars = append(triggerChars, string(ch))
 	}
@@ -202,6 +215,7 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 				TriggerCharacters: triggerChars,
 			},
 			HoverProvider:                   true,
+			SignatureHelpProvider:           &lsp.SignatureHelpOptions{TriggerCharacters: []string{"("}},
 			DocumentFormattingProvider:      true,
 			DocumentRangeFormattingProvider: true,
 			DocumentSymbolProvider:          true,
@@ -348,6 +362,29 @@ func (h *Handler) TextDocumentHover(params lsp.HoverParams) (*lsp.Hover, error) 
 	return hover, nil
 }
 
+// TextDocumentSignatureHelp handles signature help requests.
+func (h *Handler) TextDocumentSignatureHelp(params lsp.SignatureHelpParams) (*lsp.SignatureHelp, error) {
+	logger.Debug("Signature help requested at %s:%d:%d",
+		params.TextDocument.URI, params.Position.Line, params.Position.Character)
+
+	h.documentsMutex.RLock()
+	text, textExists := h.documents[params.TextDocument.URI]
+	doc, hasDoc := h.parsedDocuments[params.TextDocument.URI]
+	h.documentsMutex.RUnlock()
+
+	if !textExists {
+		return nil, nil
+	}
+	if !hasDoc {
+		h.documentsMutex.Lock()
+		doc = h.parser.Parse(text)
+		h.parsedDocuments[params.TextDocument.URI] = doc
+		h.documentsMutex.Unlock()
+	}
+
+	return h.signatureProvider.GetSignatureHelp(doc, text, params.Position.Line, params.Position.Character), nil
+}
+
 // TextDocumentSemanticTokensFull handles semantic tokens request
 func (h *Handler) TextDocumentSemanticTokensFull(params lsp.SemanticTokensParams) (*lsp.SemanticTokens, error) {
 	logger.Debug("Semantic tokens request for: %s", params.TextDocument.URI)
@@ -476,6 +513,12 @@ func (h *Handler) WorkspaceDidChangeConfiguration(params lsp.DidChangeConfigurat
 		})
 		logger.Info("Updated formatting config: Enabled=%v, IndentContinuation=%d, OneOperandPerLine=%v, WrapListsAfterN=%d, MoveLeadingComments=%v",
 			opts.Enabled, opts.IndentContinuation, opts.OneOperandPerLine, opts.WrapListsAfterN, opts.MoveLeadingComments)
+	}
+
+	if params.Settings != nil && params.Settings.Smpe != nil && params.Settings.Smpe.SignatureHelp != nil {
+		h.signatureProvider.SetEnabled(params.Settings.Smpe.SignatureHelp.Enabled)
+		logger.Info("Signature help config updated: Enabled=%v",
+			params.Settings.Smpe.SignatureHelp.Enabled)
 	}
 
 	return nil

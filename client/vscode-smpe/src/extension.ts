@@ -189,6 +189,10 @@ export function activate(context: vscode.ExtensionContext) {
 		moveLeadingComments: config.get<boolean>('formatting.moveLeadingComments', false)
 	};
 
+	const signatureHelpConfig = {
+		enabled: config.get<boolean>('signatureHelp.enabled', true)
+	};
+
 	debugLog(`Diagnostics config: ${JSON.stringify(diagnosticsConfig)}`);
 	debugLog(`Formatting config: ${JSON.stringify(formattingConfig)}`);
 
@@ -207,7 +211,8 @@ export function activate(context: vscode.ExtensionContext) {
 		outputChannel: outputChannel,
 		initializationOptions: {
 			diagnostics: diagnosticsConfig,
-			formatting: formattingConfig
+			formatting: formattingConfig,
+			signatureHelp: signatureHelpConfig
 		}
 	};
 
@@ -299,7 +304,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Listen for configuration changes and notify the server
 	context.subscriptions.push(
 		vscode.workspace.onDidChangeConfiguration(e => {
-			if (e.affectsConfiguration('smpe.diagnostics') || e.affectsConfiguration('smpe.formatting')) {
+			if (e.affectsConfiguration('smpe.diagnostics') || e.affectsConfiguration('smpe.formatting') || e.affectsConfiguration('smpe.signatureHelp')) {
 				// Get updated configuration
 				const updatedConfig = vscode.workspace.getConfiguration('smpe');
 				const updatedDiagnosticsConfig = {
@@ -330,12 +335,17 @@ export function activate(context: vscode.ExtensionContext) {
 					moveLeadingComments: updatedConfig.get<boolean>('formatting.moveLeadingComments', false)
 				};
 
+				const updatedSignatureHelpConfig = {
+					enabled: updatedConfig.get<boolean>('signatureHelp.enabled', true)
+				};
+
 				// Send notification to server
 				client.sendNotification('workspace/didChangeConfiguration', {
 					settings: {
 						smpe: {
 							diagnostics: updatedDiagnosticsConfig,
-							formatting: updatedFormattingConfig
+							formatting: updatedFormattingConfig,
+							signatureHelp: updatedSignatureHelpConfig
 						}
 					}
 				});

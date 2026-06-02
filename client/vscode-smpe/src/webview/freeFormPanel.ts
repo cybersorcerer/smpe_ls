@@ -837,15 +837,15 @@ export class FreeFormPanel {
     <div class="saved-queries-section" id="savedQueriesSection">
         <div class="saved-queries-header" id="savedQueriesHeader">
             <span id="savedQueriesArrow">▸</span>
-            <span>Gespeicherte Queries</span>
+            <span>Saved Queries</span>
         </div>
         <div class="saved-queries-chips" id="savedQueriesChips" style="display:none">
-            <button class="save-chip" id="saveQueryBtn">+ Speichern</button>
+            <button class="save-chip" id="saveQueryBtn">+ Save</button>
         </div>
         <div class="delete-confirm" id="deleteConfirm">
-            <span id="deleteConfirmMsg">Query löschen?</span>
-            <button class="danger" id="deleteConfirmYes">Löschen</button>
-            <button class="secondary" id="deleteConfirmNo">Abbrechen</button>
+            <span id="deleteConfirmMsg">Delete query?</span>
+            <button class="danger" id="deleteConfirmYes">Delete</button>
+            <button class="secondary" id="deleteConfirmNo">Cancel</button>
         </div>
     </div>
 
@@ -947,7 +947,7 @@ export class FreeFormPanel {
                 chip.className = 'query-chip';
                 chip.innerHTML =
                     '<span class="chip-name" title="Klick: Felder laden">' + escapeHtml(q.name) + '</span>' +
-                    '<button class="chip-delete" title="Löschen">✕</button>';
+                    '<button class="chip-delete" title="Delete">✕</button>';
                 chip.querySelector('.chip-name').addEventListener('click', () => loadSavedQuery(q));
                 chip.querySelector('.chip-delete').addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -985,7 +985,7 @@ export class FreeFormPanel {
 
         function showDeleteConfirmDialog(name) {
             pendingDeleteName = name;
-            document.getElementById('deleteConfirmMsg').textContent = 'Query "' + escapeHtml(name) + '" löschen?';
+            document.getElementById('deleteConfirmMsg').textContent = 'Delete query "' + escapeHtml(name) + '"?';
             document.getElementById('deleteConfirm').classList.add('visible');
         }
 
