@@ -1427,6 +1427,10 @@ export class FreeFormPanel {
         document.getElementById('togglePickerBtn').addEventListener('click', () => {
             const picker = document.getElementById('subentryPicker');
             picker.classList.toggle('visible');
+            // Rebuild grid from current text field so already-selected subentries show a checkmark
+            if (picker.classList.contains('visible')) {
+                updateSubentryGrid();
+            }
         });
 
         // Add checked subentries to text field
@@ -1436,20 +1440,14 @@ export class FreeFormPanel {
             const checked = Array.from(grid.querySelectorAll('input[type="checkbox"]:checked'));
             if (checked.length === 0) { return; }
 
-            const selected = checked.map(cb => cb.value);
+            const selected = checked.map(cb => cb.value.toUpperCase());
             const current = input.value.trim();
-            const existing = current ? current.split(',').map(s => s.trim().toUpperCase()) : [];
-            const toAdd = selected.filter(s => !existing.includes(s));
-            if (toAdd.length === 0) { return; }
+            const existing = current ? current.split(',').map(s => s.trim().toUpperCase()).filter(s => s.length > 0) : [];
+            const merged = Array.from(new Set([...existing, ...selected])).sort();
+            input.value = merged.join(',');
 
-            if (current) {
-                input.value = current + ',' + toAdd.join(',');
-            } else {
-                input.value = toAdd.join(',');
-            }
-
-            // Uncheck all and close picker
-            checked.forEach(cb => { cb.checked = false; });
+            // Rebuild grid so checkmarks reflect the merged selection, then close picker
+            updateSubentryGrid();
             document.getElementById('subentryPicker').classList.remove('visible');
         });
 

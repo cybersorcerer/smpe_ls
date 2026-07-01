@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.4] - 2026-07-01
+
+### Fixed
+
+- **Free Form Query subentry picker** - Already selected subentries now show a checkmark again when the picker is reopened, and newly picked subentries are merged into the list in alphabetical order instead of being appended to the end.
+
 ## [1.3.3] - 2026-06-02
 
 ### Added

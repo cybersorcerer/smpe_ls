@@ -2,6 +2,10 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 1.3.4
+
+- **Free Form Query subentry picker fix** - Already selected subentries show a checkmark again when reopening the picker, and new picks are merged alphabetically instead of appended to the end.
+
 ## What's New in 1.3.3
 
 - **Signature Help** - When the cursor is inside an operand's parentheses (`DISTLIB(│)`), a floating box shows the expected parameter, a short description and the type. It triggers automatically while typing `(` and after accepting an operand from the completion list; boolean flag operands show no box. Toggle with `smpe.signatureHelp.enabled` (default `true`).
