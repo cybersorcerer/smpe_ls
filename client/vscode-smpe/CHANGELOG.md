@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.5] - 2026-07-06
+
+### Added
+
+- **Free Form Query entry types complete** - The entry type picklist now covers all SMP/E CSI entry types: added `HFS`, `SHELLSCR`, the `ELEMENT` pseudo-entry and all data element types (BOOK, CLIST, EXEC, MSG, PARM, PROC, SAMP, USER1-USER5 and more), each with its valid subentries (46 → 86 entry types).
+- **National language variants** - Entry types with a language suffix (e.g. `HFSESP`, `MSGENU`) automatically resolve to the subentries of their base type.
+
+### Fixed
+
+- **Free Form Query HFS entries** - `HFS` was missing from the entry type picklist, so its subentries could not be selected.
+
 ## [1.3.4] - 2026-07-01
 
 ### Fixed

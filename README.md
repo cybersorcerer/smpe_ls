@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-1.3.4-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-1.3.5-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -267,6 +267,16 @@ make release
 ```
 
 ## 📋 What's New
+
+### Version 1.3.5
+
+**New Features**
+
+- 📚 **Free Form Query entry types complete** - The entry type picklist now covers all SMP/E CSI entry types: added `HFS`, `SHELLSCR`, the `ELEMENT` pseudo-entry and all data element types (BOOK, CLIST, EXEC, MSG, PARM, PROC, SAMP, USER1-USER5 and more), each with its valid subentries (46 → 86 entry types). National language variants (e.g. `HFSESP`, `MSGENU`) automatically resolve to the subentries of their base type.
+
+**Bug Fixes**
+
+- 🩹 **Free Form Query HFS entries** - `HFS` was missing from the entry type picklist, so its subentries could not be selected.
 
 ### Version 1.3.4
 

@@ -1077,11 +1077,13 @@ export class FreeFormPanel {
             CLIENT3: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
             CLIENT4: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
             CLIENT5: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            HFS: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
             OS21: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
             OS22: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
             OS23: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
             OS24: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
             OS25: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            SHELLSCR: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
             UNIX1: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
             UNIX2: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
             UNIX3: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
@@ -1091,7 +1093,47 @@ export class FreeFormPanel {
             WIN2: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
             WIN3: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
             WIN4: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
-            WIN5: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB']
+            WIN5: ['DISTLIB','ENAME','FMID','HFSPARM','INSTMODE','LASTUPD','LASTUPDTYPE','LINK','RMID','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB'],
+            // Data element types share the same subentries as DATA
+            BOOK: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            BSIND: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            CGM: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            CLIST: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            DATA1: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            DATA2: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            DATA3: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            DATA4: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            DATA5: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            DATA6: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            EXEC: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            FONT: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            GDF: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            HELP: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            IMG: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            MSG: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            PARM: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            PNL: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            PROBJ: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            PROC: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            PRODXML: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            PRSRC: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            PSEG: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            PUBLB: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            SAMP: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            SKL: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            TBL: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            TEXT: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            USER1: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            USER2: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            USER3: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            USER4: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            USER5: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            UTIN: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            UTOUT: ['ALIAS','DISTLIB','ENAME','FMID','LASTUPD','LASTUPDTYPE','RMID','SYSLIB'],
+            // ELEMENT pseudo-entry (GIMAPI): returns JAR, MOD, MAC, PROGRAM, SRC and all
+            // data element and hierarchical file system element entries.
+            // Subentries: union of all element entry subentries.
+            ELEMENT: ['ALIAS','ASSEMBLE','CSECT','DALIAS','DISTLIB','ENAME','FMID','GENASM','HFSPARM','INSTMODE','JARPARM','LASTUPD','LASTUPDTYPE','LEPARM','LINK','LKLIB','LMOD','MALIAS','RMID','RMIDASM','SHSCRIPT','SYMLINK','SYMPATH','SYSLIB','TALIAS','TXLIB','UMID','VERSION','XZLMOD','XZLMODP']
         };
 
         // Handle messages from extension
@@ -1403,11 +1445,20 @@ export class FreeFormPanel {
                 .replace(/"/g, '&quot;');
         }
 
+        // Look up subentries for an entry type; national language variants
+        // fall back to their base type (e.g. HFSESP -> HFS, MSGENU -> MSG)
+        function lookupSubentries(entryType) {
+            const t = entryType.trim().toUpperCase();
+            if (SUBENTRIES_BY_TYPE[t]) { return SUBENTRIES_BY_TYPE[t]; }
+            if (t.length > 3 && SUBENTRIES_BY_TYPE[t.slice(0, -3)]) { return SUBENTRIES_BY_TYPE[t.slice(0, -3)]; }
+            return [];
+        }
+
         // Subentry picker: build checkbox grid for current entry type
         function updateSubentryGrid() {
             const entryType = document.getElementById('entryType').value;
             const grid = document.getElementById('subentryGrid');
-            const subs = (SUBENTRIES_BY_TYPE[entryType] || []).slice().sort();
+            const subs = lookupSubentries(entryType).slice().sort();
             const currentVal = document.getElementById('subentries').value;
             const selected = new Set(currentVal.split(',').map(s => s.trim().toUpperCase()).filter(s => s.length > 0));
             grid.innerHTML = '';

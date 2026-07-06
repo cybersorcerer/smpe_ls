@@ -2,6 +2,11 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 1.3.5
+
+- **Free Form Query entry types complete** - The entry type picklist now covers all SMP/E CSI entry types (46 → 86): added `HFS`, `SHELLSCR`, the `ELEMENT` pseudo-entry and all data element types, each with its valid subentries.
+- **National language variants** - Entry types like `HFSESP` or `MSGENU` automatically resolve to the subentries of their base type.
+
 ## What's New in 1.3.4
 
 - **Free Form Query subentry picker fix** - Already selected subentries show a checkmark again when reopening the picker, and new picks are merged alphabetically instead of appended to the end.
