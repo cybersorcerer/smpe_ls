@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.6] - 2026-07-07
+
+### Added
+
+- **smpe_lint `--data` flag** - New `--data <path>` option to set the smpe.json location explicitly, for Docker containers and CI runners without a usable home directory (matching `smpe_outl`).
+
+### Changed
+
+- **smpe_lint default path resolution** - The default smpe.json lookup now uses the operating system's home directory resolution, so it also works on Windows and fails with a clear error when no home directory exists.
+
 ## [1.3.5] - 2026-07-06
 
 ### Added

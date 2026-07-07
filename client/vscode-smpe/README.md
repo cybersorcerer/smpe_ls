@@ -2,6 +2,10 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 1.3.6
+
+- **smpe_lint `--data` flag** - Set the smpe.json location explicitly (`--data <path>`) for Docker containers and CI runners without a usable home directory; default lookup now also works on Windows.
+
 ## What's New in 1.3.5
 
 - **Free Form Query entry types complete** - The entry type picklist now covers all SMP/E CSI entry types (46 → 86): added `HFS`, `SHELLSCR`, the `ELEMENT` pseudo-entry and all data element types, each with its valid subentries.

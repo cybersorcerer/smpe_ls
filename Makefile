@@ -38,6 +38,9 @@ help:
 	@echo "  make vscode-compile - Compile VSCode extension"
 	@echo "  make vscode       - Build server and prepare VSCode extension"
 	@echo "  make package-windows - Create VSIX package for Windows"
+	@echo ""
+	@echo "Documentation:"
+	@echo "  make presentation - Build presentation HTML from Markdown (needs marp-cli)"
 	@echo "════════════════════════════════════════════════════════════════"
 
 build:
@@ -365,4 +368,9 @@ package-all: vscode-deps
 	@echo "═══════════════════════════════════════════════════════════════"
 	@ls -lh release/vsix/
 
-.PHONY: vscode-deps vscode-compile vscode package-windows package-windows-arm64 package-linux package-linux-arm64 package-macos package-macos-x64 package-all
+presentation:
+	@echo "Building presentation HTML (marp)..."
+	marp docs/presentations/smpe_ls_de.md -o docs/presentations/smpe_ls_de.html
+	@echo "Presentation built: docs/presentations/smpe_ls_de.html"
+
+.PHONY: vscode-deps vscode-compile vscode package-windows package-windows-arm64 package-linux package-linux-arm64 package-macos package-macos-x64 package-all presentation

@@ -109,7 +109,8 @@ Lists all configured zones with their properties.
 
 Opens a full WebUI for free-form CSI queries:
 
-- **Entry type** freely selectable (SYSMOD, DDDEF, MOD, UNIX1, ...)
+- **Entry type** selectable from a picklist covering all SMP/E CSI entry types (SYSMOD, DDDEF, MOD, HFS, all data element types such as CLIST or MSG, ...), including the `ELEMENT` pseudo-entry for all element entries at once
+- National language variants (e.g. `HFSESP`, `MSGENU`) automatically get the subentries of their base type
 - **Subentries** selectable via picker
 - **Filter** as a CSI filter expression (e.g. `ENAME='UA12345'`)
 - **Multiple zones** can be queried simultaneously

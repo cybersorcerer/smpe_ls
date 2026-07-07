@@ -137,7 +137,7 @@ style: |
 # SMP/E MCS Language Server
 ## Moderne Entwicklungsunterstützung für z/OS Systemprogrammierer
 
-Version 1.3.2
+Version 1.3.6
 
 Ronny Funk — Senior Mainframe Architect SVA
 
@@ -254,6 +254,8 @@ Er läuft als Hintergrundprozess und kommuniziert mit VS Code über **JSON-RPC v
 | `workspace/symbol` | Workspace-weite Symbolsuche |
 | `textDocument/definition` | Gehe zur Definition |
 | `textDocument/references` | Alle Referenzen finden |
+| `textDocument/signatureHelp` | Signatur-Hilfe in Operanden-Klammern |
+| `textDocument/codeAction` | Quick Fixes (Glühbirne) |
 
 ## Settings in VS Code
 
@@ -302,6 +304,7 @@ Das Verzeichnis wird beim ersten Start automatisch angelegt.
 smpe_lint [Optionen] <Dateimuster>
 
   --config <Pfad>       Konfigurationsdatei (.smpe_lint.yaml oder .json)
+  --data <Pfad>         Pfad zur smpe.json Datendatei
   --disable <Code>      Bestimmte Diagnose deaktivieren (mehrfach nutzbar)
   --init <format>       Beispiel-Konfiguration erstellen (yaml oder json)
   --json                Ausgabe im JSON-Format
@@ -657,7 +660,8 @@ Klickbare Links direkt über SYSMOD- und DDDEF-Namen im Editor:
 
 ## Leistungsfähige Abfragen direkt im Editor
 
-- **Entry Type** frei wählbar (SYSMOD, DDDEF, MOD, UNIX1, ...)
+- **Entry Type** per Picklist — alle CSI-Entry-Types inkl. HFS, Data-Elemente und `ELEMENT`-Pseudo-Entry *(neu in v1.3.5)*
+- Sprachvarianten (z.B. `HFSESP`) erhalten automatisch die Subentries ihres Basistyps
 - **Subentries** per Picker auswählen
 - **Filter** als CSI-Filterausdruck (z.B. `ENAME='UA12345'`)
 - **Mehrere Zonen** gleichzeitig abfragen
@@ -790,10 +794,10 @@ Von der GitHub Release-Seite die passende Plattform-Version laden:
 
 | Plattform | Datei |
 |-----------|-------|
-| macOS Apple Silicon | `...-darwin-arm64-1.3.2.vsix` |
-| macOS Intel | `...-darwin-x64-1.3.2.vsix` |
-| Windows x64 | `...-win32-x64-1.3.2.vsix` |
-| Linux x64 | `...-linux-x64-1.3.2.vsix` |
+| macOS Apple Silicon | `...-darwin-arm64-1.3.6.vsix` |
+| macOS Intel | `...-darwin-x64-1.3.6.vsix` |
+| Windows x64 | `...-win32-x64-1.3.6.vsix` |
+| Linux x64 | `...-linux-x64-1.3.6.vsix` |
 
 ## 2. In VS Code installieren
 
@@ -823,6 +827,7 @@ Cmd+Shift+P  →  SMP/E: Create z/OSMF Config
 | `smpe.zosDatasetsLlq` | `["MCS"]` | LLQ für Spracherkennung |
 | `smpe.zosmf.queryTimeoutSeconds` | `300` | Query-Timeout (30–600s) |
 | `smpe.checkMissingInputMembers.searchFolders` | `["customization"]` | Suchordner |
+| `smpe.signatureHelp.enabled` | `true` | Signatur-Hilfe in Operanden-Klammern |
 | `smpe.editor.autoDetectLanguage` | `true` | Automatische Spracherkennung (deaktivieren für manuelle Sprachauswahl) |
 
 ---
@@ -863,7 +868,7 @@ Cmd+Shift+P  →  SMP/E: Create z/OSMF Config
 
 # Zusammenfassung
 
-## smpe_ls bringt moderne IDE-Unterstützung für z/OS SMP/E MCS Statemets
+## smpe_ls bringt moderne IDE-Unterstützung für z/OS SMP/E MCS Statements
 
 - **Echtzeit-Validierung** — Fehler sofort sehen, nicht erst beim SMP/E APPLY
 - **IntelliSense** — Kein Nachschlagen im SMP/E Reference Manual

@@ -94,6 +94,16 @@ disable:
 warnings_as_errors: false
 ```
 
+## Pfad zur smpe.json (`--data`)
+
+`smpe_lint` liest die Statement-Definitionen standardmäßig aus
+`~/.local/share/smpe_ls/smpe.json`. In Umgebungen ohne nutzbares
+Home-Verzeichnis (Docker-Container, CI-Runner) den Pfad explizit angeben:
+
+```bash
+smpe_lint --data data/smpe.json *.smpe
+```
+
 ## Exit-Codes
 
 | Code | Bedeutung |
@@ -108,7 +118,7 @@ warnings_as_errors: false
 # GitHub Actions Beispiel
 - name: Lint SMP/E files
   run: |
-    smpe_lint --warnings-as-errors *.smpe
+    smpe_lint --data data/smpe.json --warnings-as-errors *.smpe
 ```
 
 ## Zusammenfassung
@@ -117,4 +127,5 @@ warnings_as_errors: false
 - Markdown- und JSON-Ausgabe für unterschiedliche Anwendungsfälle
 - `--warnings-as-errors` für strikte Pipelines
 - `--disable` zum Ausblenden einzelner Checks
+- `--data` für den smpe.json-Pfad in Containern/CI
 - Exit-Code `0` = keine Fehler, `1` = Fehler gefunden

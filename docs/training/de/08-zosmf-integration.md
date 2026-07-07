@@ -111,7 +111,8 @@ Listet alle konfigurierten Zonen mit ihren Eigenschaften.
 
 Öffnet eine vollständige WebUI für freie CSI-Abfragen:
 
-- **Entry Type** frei wählbar (SYSMOD, DDDEF, MOD, UNIX1, ...)
+- **Entry Type** per Picklist wählbar — deckt alle SMP/E-CSI-Entry-Types ab (SYSMOD, DDDEF, MOD, HFS, alle Data-Element-Typen wie CLIST oder MSG, ...), inklusive Pseudo-Entry `ELEMENT` für alle Element-Entries auf einmal
+- Sprachvarianten (z.B. `HFSESP`, `MSGENU`) erhalten automatisch die Subentries ihres Basistyps
 - **Subentries** per Picker auswählen
 - **Filter** als CSI-Filterausdruck (z.B. `ENAME='UA12345'`)
 - **Mehrere Zonen** gleichzeitig abfragen

@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-1.3.5-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-1.3.6-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -267,6 +267,12 @@ make release
 ```
 
 ## 📋 What's New
+
+### Version 1.3.6
+
+**New Features**
+
+- 🐳 **smpe_lint `--data` flag** - Set the smpe.json location explicitly with `--data <path>` — for Docker containers and CI runners without a usable home directory (matching `smpe_outl`). The default lookup now uses the OS home directory resolution, so it also works on Windows.
 
 ### Version 1.3.5
 

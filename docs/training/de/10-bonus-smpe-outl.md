@@ -133,6 +133,16 @@ exit ${exit_code:-0}
 | `++MSG` | `.msg` |
 | `++HELP` | `.help` |
 
+## Pfad zur smpe.json (`--data`)
+
+`smpe_outl` liest die Statement-Definitionen standardmäßig aus
+`~/.local/share/smpe_ls/smpe.json`. In Umgebungen ohne nutzbares
+Home-Verzeichnis (Docker-Container, CI-Runner) den Pfad explizit angeben:
+
+```bash
+smpe_outl --data data/smpe.json --json *.smpe
+```
+
 ## Zusammenfassung
 
 - `smpe_outl` gibt die Dokumentstruktur als Markdown oder JSON aus
@@ -141,3 +151,4 @@ exit ${exit_code:-0}
 - `--ranges` fügt LSP-Positionsinformationen hinzu
 - Ideal für Inventarisierung, Reports und CI/CD-Pipelines
 - Pipeline-Skripte können mit `--json --meta` fehlende Input-Member erkennen
+- `--data` für den smpe.json-Pfad in Containern/CI

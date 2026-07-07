@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	version = "v1.3.5"
+	version = "v1.3.6"
 	commit  = "unknown"
 )
 
@@ -53,6 +53,7 @@ func main() {
 	versionFlag := flag.Bool("version", false, "Show version information")
 	shortVersionFlag := flag.Bool("v", false, "Show version information")
 	configFile := flag.String("config", "", "Path to configuration file (.smpe_lint.yaml or .smpe_lint.json)")
+	dataFlag := flag.String("data", "", "Path to smpe.json data file")
 	warningsAsErrors := flag.Bool("warnings-as-errors", false, "Treat warnings as errors (exit code 1)")
 	initConfig := flag.String("init", "", "Create a sample configuration file (yaml or json)")
 	var disableFlags arrayFlags
@@ -63,6 +64,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "\nLints SMP/E MCS files and reports diagnostics.\n")
 		fmt.Fprintf(os.Stderr, "\nOptions:\n")
 		fmt.Fprintf(os.Stderr, "  --config <path>       Path to configuration file (.smpe_lint.yaml or .smpe_lint.json)\n")
+		fmt.Fprintf(os.Stderr, "  --data <path>         Path to smpe.json data file (default: ~/.local/share/smpe_ls/smpe.json)\n")
 		fmt.Fprintf(os.Stderr, "  --disable <code>      Disable specific diagnostic (can be used multiple times)\n")
 		fmt.Fprintf(os.Stderr, "  --init <format>       Create sample config file (yaml or json)\n")
 		fmt.Fprintf(os.Stderr, "  --json                Output results in JSON format\n")
@@ -172,7 +174,15 @@ func main() {
 	}
 
 	// Load smpe.json
-	dataPath := os.Getenv("HOME") + "/.local/share/smpe_ls/smpe.json"
+	dataPath := *dataFlag
+	if dataPath == "" {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error determining home directory: %v\n", err)
+			os.Exit(1)
+		}
+		dataPath = homeDir + "/.local/share/smpe_ls/smpe.json"
+	}
 	store, err := data.Load(dataPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error loading smpe.json from %s: %v\n", dataPath, err)
