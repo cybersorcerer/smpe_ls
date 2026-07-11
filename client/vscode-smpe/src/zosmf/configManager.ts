@@ -17,6 +17,7 @@ const SECRET_KEY_PREFIX = 'smpe.zosmf.password.';
  */
 const CONFIG_TEMPLATE = `# z/OSMF Connection Configurations
 # Multiple servers can be defined
+# Shared with zosmf-mcp, vscpdf and nvpdf.nvim — unknown fields are ignored per component.
 
 servers:
   - name: Production
@@ -34,6 +35,12 @@ servers:
       - MVSD100
     defaultZones:
       - GLOBAL
+    # auth:                      # alternative to user:, with env expansion
+    #   username: USERID
+    #   password: \${PROD_PASSWORD}
+    # tso_account: ACCT1         # required for zosmf_tso_command
+    # tso_proc: IKJACCNT
+    # home: /u/user1             # USS home (used by vscpdf/nvpdf)
 
   # Add more servers as needed:
   # - name: Development
@@ -46,6 +53,13 @@ servers:
 
 # Optional: Default server name (if not set, user is always prompted)
 # defaultServer: Production
+
+# ssh_systems:                   # optional, for ZOAU tools via SSH
+#   - name: PROD
+#     host: prod.example.com
+#     port: 22
+#     username: user1
+#     key_file: ~/.ssh/id_rsa
 `;
 
 export class ConfigManager {
