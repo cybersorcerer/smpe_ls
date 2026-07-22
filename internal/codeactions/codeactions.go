@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/cybersorcerer/smpe_ls/internal/diagnostics"
+	"github.com/cybersorcerer/smpe_ls/internal/parser"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
@@ -21,10 +22,13 @@ func NewProvider() *Provider {
 	return &Provider{}
 }
 
-// GetCodeActions returns quick fixes for the diagnostics in the request context.
-// text is the full document text; it is used to locate parentheses for operand fixes.
-// It never returns nil (serializes as [] not null).
-func (p *Provider) GetCodeActions(uri, text string, ctx lsp.CodeActionContext) []lsp.CodeAction {
+// GetCodeActions returns quick fixes for the diagnostics in the request context,
+// plus any cursor-based actions available at reqRange (e.g. refreshing a
+// non-empty REWORK value). text is the full document text; it is used to
+// locate parentheses for operand fixes. doc is the parsed AST for the same
+// text, used for cursor-based lookups. It never returns nil (serializes as
+// [] not null).
+func (p *Provider) GetCodeActions(uri, text string, doc *parser.Document, reqRange lsp.Range, ctx lsp.CodeActionContext) []lsp.CodeAction {
 	actions := []lsp.CodeAction{}
 	var missingOperand []lsp.Diagnostic
 	for _, d := range ctx.Diagnostics {
@@ -46,6 +50,9 @@ func (p *Provider) GetCodeActions(uri, text string, ctx lsp.CodeActionContext) [
 	}
 	if len(missingOperand) >= 2 {
 		actions = append(actions, p.insertAllOperandsFix(uri, text, missingOperand))
+	}
+	if a, ok := p.reworkUpdateFix(uri, doc, reqRange.Start); ok {
+		actions = append(actions, a)
 	}
 	return actions
 }
@@ -226,8 +233,7 @@ func (p *Provider) reworkFix(uri, text string, d lsp.Diagnostic) (lsp.CodeAction
 	closeCol := openCol + closeIdx
 
 	// Build an edit that replaces the content between '(' and ')' with the Julian date.
-	now := time.Now()
-	julian := fmt.Sprintf("%d%03d", now.Year(), now.YearDay())
+	julian := currentJulianDate()
 	editRange := lsp.Range{
 		Start: lsp.Position{Line: lineIdx, Character: openCol + 1},
 		End:   lsp.Position{Line: lineIdx, Character: closeCol},
@@ -239,6 +245,109 @@ func (p *Provider) reworkFix(uri, text string, d lsp.Diagnostic) (lsp.CodeAction
 		Diagnostics: []lsp.Diagnostic{d},
 		Edit:        &lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{uri: {edit}}},
 		IsPreferred: true,
+	}, true
+}
+
+// currentJulianDate returns today's date in SMP/E REWORK format (yyyyddd).
+func currentJulianDate() string {
+	now := time.Now()
+	return fmt.Sprintf("%d%03d", now.Year(), now.YearDay())
+}
+
+// findNodeAtPosition finds the deepest AST node at the given position.
+// This is a local copy of the same lookup used by hover/completion/signature;
+// see the astutil refactor tech-debt note for consolidating these.
+func findNodeAtPosition(doc *parser.Document, line, character int) *parser.Node {
+	for _, stmt := range doc.Statements {
+		if node := findNodeInTree(stmt, line, character); node != nil {
+			return node
+		}
+	}
+	return nil
+}
+
+func findNodeInTree(node *parser.Node, line, character int) *parser.Node {
+	if node == nil {
+		return nil
+	}
+	if line == node.Position.Line {
+		nodeEnd := node.Position.Character + node.Position.Length
+		if character >= node.Position.Character && character < nodeEnd {
+			for _, child := range node.Children {
+				if childNode := findNodeInTree(child, line, character); childNode != nil {
+					return childNode
+				}
+			}
+			return node
+		}
+	}
+	for _, child := range node.Children {
+		if childNode := findNodeInTree(child, line, character); childNode != nil {
+			return childNode
+		}
+	}
+	return nil
+}
+
+// reworkUpdateFix offers to refresh a non-empty REWORK value that is not
+// today's date. It complements reworkFix, which only handles the empty-value
+// case (CodeEmptyOperandParameter diagnostic); this one is cursor-based and
+// does not depend on any diagnostic being present. Returns false when the
+// cursor is not inside a statement's REWORK operand, when REWORK has no
+// parameter node (empty — reworkFix's job), or when the value already
+// matches today's date.
+func (p *Provider) reworkUpdateFix(uri string, doc *parser.Document, pos lsp.Position) (lsp.CodeAction, bool) {
+	if doc == nil {
+		return lsp.CodeAction{}, false
+	}
+
+	node := findNodeAtPosition(doc, pos.Line, pos.Character)
+	if node == nil {
+		return lsp.CodeAction{}, false
+	}
+
+	// The cursor node is either the REWORK operand itself or one of its
+	// parameter children; walk up until we find it or hit the enclosing
+	// statement (in which case the cursor is on some other part of it,
+	// e.g. the statement name or a different operand).
+	reworkOp := node
+	for reworkOp != nil && !(reworkOp.Type == parser.NodeTypeOperand && strings.EqualFold(reworkOp.Name, "REWORK")) {
+		if reworkOp.Type == parser.NodeTypeStatement {
+			reworkOp = nil
+			break
+		}
+		reworkOp = reworkOp.Parent
+	}
+	if reworkOp == nil {
+		return lsp.CodeAction{}, false
+	}
+
+	var paramNode *parser.Node
+	for _, child := range reworkOp.Children {
+		if child.Type == parser.NodeTypeParameter {
+			paramNode = child
+			break
+		}
+	}
+	if paramNode == nil || strings.TrimSpace(paramNode.Value) == "" {
+		// Empty REWORK is reworkFix's job, not ours.
+		return lsp.CodeAction{}, false
+	}
+
+	julian := currentJulianDate()
+	if strings.TrimSpace(paramNode.Value) == julian {
+		return lsp.CodeAction{}, false
+	}
+
+	editRange := lsp.Range{
+		Start: lsp.Position{Line: paramNode.Position.Line, Character: paramNode.Position.Character},
+		End:   lsp.Position{Line: paramNode.Position.Line, Character: paramNode.Position.Character + paramNode.Position.Length},
+	}
+	edit := lsp.TextEdit{Range: editRange, NewText: julian}
+	return lsp.CodeAction{
+		Title: "Update REWORK to current date",
+		Kind:  kindQuickFix,
+		Edit:  &lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{uri: {edit}}},
 	}, true
 }
 

@@ -2,6 +2,10 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 1.3.7
+
+- **New Quick Fix: "Update REWORK to current date"** - Refreshes a stale, already-filled `REWORK()` value from the cursor, no diagnostic needed. The existing empty-value fix is unchanged.
+
 ## What's New in 1.3.6
 
 - **smpe_lint `--data` flag** - Set the smpe.json location explicitly (`--data <path>`) for Docker containers and CI runners without a usable home directory; default lookup now also works on Windows.

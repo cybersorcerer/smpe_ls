@@ -780,10 +780,25 @@ func (h *Handler) TextDocumentCodeAction(params lsp.CodeActionParams) ([]lsp.Cod
 	logger.Debug("CodeAction requested for: %s", params.TextDocument.URI)
 
 	h.documentsMutex.RLock()
-	text := h.documents[params.TextDocument.URI]
+	text, textExists := h.documents[params.TextDocument.URI]
+	doc, hasDoc := h.parsedDocuments[params.TextDocument.URI]
 	h.documentsMutex.RUnlock()
 
-	return h.codeActionsProvider.GetCodeActions(params.TextDocument.URI, text, params.Context), nil
+	if !textExists {
+		logger.Debug("Document not found: %s", params.TextDocument.URI)
+		return []lsp.CodeAction{}, nil
+	}
+
+	// Always ensure we have a parsed document (AST)
+	if !hasDoc {
+		logger.Debug("No parsed document found for code action, parsing now: %s", params.TextDocument.URI)
+		h.documentsMutex.Lock()
+		doc = h.parser.Parse(text)
+		h.parsedDocuments[params.TextDocument.URI] = doc
+		h.documentsMutex.Unlock()
+	}
+
+	return h.codeActionsProvider.GetCodeActions(params.TextDocument.URI, text, doc, params.Range, params.Context), nil
 }
 
 // WorkspaceSymbol handles workspace/symbol requests

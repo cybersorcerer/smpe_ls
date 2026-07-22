@@ -132,6 +132,15 @@ Full list of settings:
 - **Set REWORK to current date** — fills an empty `REWORK()` with today's Julian date
   in `yyyyddd` format.
 
+### Update REWORK *(new in v1.3.7)*
+
+When the cursor is inside an already-filled `REWORK(...)` whose value is not today's date,
+the lightbulb also offers **"Update REWORK to current date"** — independent of any
+diagnostic. Unlike the three fixes above, this one needs no error to trigger it: it reacts
+purely to the cursor position and replaces the existing value with today's Julian date. If
+the value is already current or empty, this action does not appear (an empty `REWORK()`
+stays the job of the fix above).
+
 ### Notes
 
 - The fixes are plain-text edits applied directly in the editor — no extra configuration needed.
@@ -151,3 +160,4 @@ server normalizes these automatically — no false diagnostics are produced for
 - Setting changes take effect immediately without restart
 - CRLF line endings (Zowe Explorer) are normalized automatically
 - Quick Fixes (💡) automatically correct a missing terminator, missing required operands, and an empty REWORK
+- A cursor-based fix updates an already-filled, stale REWORK — no diagnostic needed

@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-1.3.6-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-1.3.7-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -267,6 +267,12 @@ make release
 ```
 
 ## 📋 What's New
+
+### Version 1.3.7
+
+**New Features**
+
+- 💡 **New Quick Fix: "Update REWORK to current date"** - Refreshes a stale, already-filled `REWORK()` value to today's date, triggered from the cursor without needing a diagnostic first. The existing "Set REWORK to current date" fix for an *empty* `REWORK()` is unchanged and keeps handling that case.
 
 ### Version 1.3.6
 

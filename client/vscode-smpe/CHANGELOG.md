@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.7] - 2026-07-08
+
+### Added
+
+- **New Quick Fix: "Update REWORK to current date"** - Refreshes an already-filled `REWORK()` value to today's date when it is stale, available right from the cursor without needing a diagnostic first. The existing "Set REWORK to current date" fix (for an empty `REWORK()`) is unchanged and keeps handling that case.
+
 ## [1.3.6] - 2026-07-07
 
 ### Added

@@ -132,6 +132,15 @@ Vollständige Liste aller Einstellungen:
 - **REWORK auf aktuelles Datum setzen** — füllt ein leeres `REWORK()` mit dem aktuellen
   julianischen Datum im Format `jjjjddd`.
 
+### REWORK aktualisieren *(neu in v1.3.7)*
+
+Steht der Cursor in einem bereits gefüllten `REWORK(...)`, dessen Wert nicht dem heutigen
+Datum entspricht, bietet die Glühbirne zusätzlich **„REWORK aktualisieren"** an — unabhängig
+von einer Diagnostic. Anders als die drei Fixes oben braucht dieser keinen Fehler als
+Auslöser: er reagiert allein auf die Cursor-Position und ersetzt den vorhandenen Wert durch
+das aktuelle julianische Datum. Ist der Wert bereits aktuell oder leer, erscheint diese
+Aktion nicht (leeres `REWORK()` bleibt Sache des Fixes oben).
+
 ### Hinweise
 
 - Die Fixes sind reine Texteinfügungen im Editor — keine externe Konfiguration nötig.
@@ -151,3 +160,4 @@ Diagnostics für `COMMENT`-Inhalte in `++HOLD`-Statements.
 - Einstellungsänderungen wirken sofort ohne Neustart
 - CRLF-Zeilenenden (Zowe Explorer) werden automatisch normalisiert
 - Quick Fixes (💡) beheben fehlenden Terminator, fehlende Pflicht-Operanden und leeres REWORK automatisch
+- Ein cursor-basierter Fix aktualisiert ein bereits gefülltes, veraltetes REWORK — ohne Diagnostic nötig

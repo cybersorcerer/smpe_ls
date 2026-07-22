@@ -5,10 +5,29 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/diagnostics"
+	"github.com/cybersorcerer/smpe_ls/internal/parser"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
+
+// reworkTestParser returns a parser that knows a single ++USERMOD statement
+// with a REWORK operand, for reworkUpdateFix tests that need a real AST.
+func reworkTestParser() *parser.Parser {
+	statements := map[string]data.MCSStatement{
+		"++USERMOD": {
+			Name:      "++USERMOD",
+			Parameter: "usermod_name",
+			Operands: []data.Operand{
+				{Name: "REWORK", Parameter: "rework_id"},
+				{Name: "DESC", Parameter: "description"},
+			},
+		},
+	}
+	return parser.NewParser(statements)
+}
 
 func diag(code string, data any, line, char, length int) lsp.Diagnostic {
 	return lsp.Diagnostic{
@@ -38,7 +57,7 @@ func TestMissingTerminatorFix(t *testing.T) {
 	ctx := lsp.CodeActionContext{
 		Diagnostics: []lsp.Diagnostic{diag(diagnostics.CodeMissingTerminator, nil, 0, 0, 6)},
 	}
-	actions := p.GetCodeActions(uri, "", ctx)
+	actions := p.GetCodeActions(uri, "", nil, lsp.Range{}, ctx)
 	if len(actions) != 1 {
 		t.Fatalf("expected 1 action, got %d", len(actions))
 	}
@@ -66,7 +85,7 @@ func TestMissingTerminatorFixMultiline(t *testing.T) {
 	ctx := lsp.CodeActionContext{
 		Diagnostics: []lsp.Diagnostic{diag(diagnostics.CodeMissingTerminator, data, 0, 0, 6)},
 	}
-	actions := p.GetCodeActions(uri, src, ctx)
+	actions := p.GetCodeActions(uri, src, nil, lsp.Range{}, ctx)
 	if len(actions) != 1 {
 		t.Fatalf("expected 1 action, got %d", len(actions))
 	}
@@ -90,7 +109,7 @@ func TestReworkFix(t *testing.T) {
 			diag(diagnostics.CodeEmptyOperandParameter, map[string]any{"operand": "REWORK"}, 1, 4, 6),
 		},
 	}
-	actions := p.GetCodeActions(uri, src, ctx)
+	actions := p.GetCodeActions(uri, src, nil, lsp.Range{}, ctx)
 	if len(actions) != 1 {
 		t.Fatalf("expected 1 action, got %d", len(actions))
 	}
@@ -116,7 +135,7 @@ func TestReworkFixAppliedNoStrayParens(t *testing.T) {
 			diag(diagnostics.CodeEmptyOperandParameter, map[string]any{"operand": "REWORK"}, 1, 4, 6),
 		},
 	}
-	actions := p.GetCodeActions(uri, src, ctx)
+	actions := p.GetCodeActions(uri, src, nil, lsp.Range{}, ctx)
 	if len(actions) != 1 {
 		t.Fatalf("expected 1 action, got %d", len(actions))
 	}
@@ -136,7 +155,7 @@ func TestEmptyOperandNonReworkNoFix(t *testing.T) {
 			diag(diagnostics.CodeEmptyOperandParameter, map[string]any{"operand": "FMID"}, 1, 4, 4),
 		},
 	}
-	if got := p.GetCodeActions("file:///t.smpe", "", ctx); len(got) != 0 {
+	if got := p.GetCodeActions("file:///t.smpe", "", nil, lsp.Range{}, ctx); len(got) != 0 {
 		t.Errorf("expected no actions for non-REWORK empty operand, got %d", len(got))
 	}
 }
@@ -149,7 +168,7 @@ func TestSingleMissingOperandFix(t *testing.T) {
 			diag(diagnostics.CodeMissingRequiredOperand, map[string]any{"operand": "SOURCEID"}, 0, 0, 8),
 		},
 	}
-	actions := p.GetCodeActions(uri, "", ctx)
+	actions := p.GetCodeActions(uri, "", nil, lsp.Range{}, ctx)
 	if len(actions) != 1 {
 		t.Fatalf("expected 1 action, got %d", len(actions))
 	}
@@ -212,7 +231,7 @@ func TestSingleMissingOperandFixPosition(t *testing.T) {
 						0, 0, tc.nameLen),
 				},
 			}
-			actions := p.GetCodeActions(uri, tc.src, ctx)
+			actions := p.GetCodeActions(uri, tc.src, nil, lsp.Range{}, ctx)
 			if len(actions) != 1 {
 				t.Fatalf("expected 1 action, got %d", len(actions))
 			}
@@ -231,7 +250,7 @@ func TestMissingOperandNilDataNoFix(t *testing.T) {
 			diag(diagnostics.CodeMissingRequiredOperand, nil, 0, 0, 8),
 		},
 	}
-	if got := p.GetCodeActions("file:///t.smpe", "", ctx); len(got) != 0 {
+	if got := p.GetCodeActions("file:///t.smpe", "", nil, lsp.Range{}, ctx); len(got) != 0 {
 		t.Errorf("expected no actions for missing-operand with nil Data, got %d", len(got))
 	}
 }
@@ -245,7 +264,7 @@ func TestMultipleMissingOperandsAddInsertAll(t *testing.T) {
 			diag(diagnostics.CodeMissingRequiredOperand, map[string]any{"operand": "TO"}, 0, 0, 8),
 		},
 	}
-	actions := p.GetCodeActions(uri, "", ctx)
+	actions := p.GetCodeActions(uri, "", nil, lsp.Range{}, ctx)
 	if len(actions) != 3 { // 2 single + 1 insert-all
 		t.Fatalf("expected 3 actions, got %d", len(actions))
 	}
@@ -299,7 +318,7 @@ func TestMoveInsertOperandsJSONRoundtrip(t *testing.T) {
 	}
 
 	p := NewProvider()
-	actions := p.GetCodeActions(uri, src, lsp.CodeActionContext{Diagnostics: []lsp.Diagnostic{wired}})
+	actions := p.GetCodeActions(uri, src, nil, lsp.Range{}, lsp.CodeActionContext{Diagnostics: []lsp.Diagnostic{wired}})
 	if len(actions) != 2 {
 		t.Fatalf("expected 2 actions after JSON roundtrip, got %d", len(actions))
 	}
@@ -380,7 +399,7 @@ func TestMoveInsertOperandsFixes(t *testing.T) {
 						0, 0, 6),
 				},
 			}
-			actions := p.GetCodeActions(uri, tc.src, ctx)
+			actions := p.GetCodeActions(uri, tc.src, nil, lsp.Range{}, ctx)
 			if len(actions) != tc.wantCount {
 				t.Fatalf("expected %d actions, got %d", tc.wantCount, len(actions))
 			}
@@ -402,7 +421,147 @@ func TestMoveInsertOperandsEmptyNoFix(t *testing.T) {
 				map[string]any{"endLine": float64(0), "fixes": []map[string]any{}}, 0, 0, 6),
 		},
 	}
-	if got := p.GetCodeActions("file:///t.smpe", "++MOVE(M1)\n.", ctx); len(got) != 0 {
+	if got := p.GetCodeActions("file:///t.smpe", "++MOVE(M1)\n.", nil, lsp.Range{}, ctx); len(got) != 0 {
 		t.Errorf("expected no actions for empty fixes, got %d", len(got))
+	}
+}
+
+// TestReworkUpdateFixStaleValue verifies a non-empty, non-current REWORK
+// value gets a cursor-based "Update REWORK to current date" action,
+// independent of any diagnostic.
+func TestReworkUpdateFixStaleValue(t *testing.T) {
+	p := NewProvider()
+	uri := "file:///t.smpe"
+	src := "++USERMOD(U1)\n    REWORK(2024001).\n"
+	doc := reworkTestParser().Parse(src)
+
+	// Cursor inside the REWORK value, line 1 (0-based), around character 12.
+	cursor := lsp.Range{Start: lsp.Position{Line: 1, Character: 12}}
+	actions := p.GetCodeActions(uri, src, doc, cursor, lsp.CodeActionContext{})
+
+	if len(actions) != 1 {
+		t.Fatalf("expected 1 action, got %d", len(actions))
+	}
+	if actions[0].Title != "Update REWORK to current date" {
+		t.Errorf("unexpected title: %q", actions[0].Title)
+	}
+	edits := actions[0].Edit.Changes[uri]
+	if len(edits) != 1 {
+		t.Fatalf("expected single edit, got %d", len(edits))
+	}
+	want := currentJulianDate()
+	if edits[0].NewText != want {
+		t.Errorf("expected new text %q, got %q", want, edits[0].NewText)
+	}
+	got := applyEdit(src, edits[0])
+	wantSrc := "++USERMOD(U1)\n    REWORK(" + want + ").\n"
+	if got != wantSrc {
+		t.Errorf("wrong edit\n got: %q\nwant: %q", got, wantSrc)
+	}
+}
+
+// TestReworkUpdateFixCurrentValue verifies no action is offered when REWORK
+// already holds today's date.
+func TestReworkUpdateFixCurrentValue(t *testing.T) {
+	p := NewProvider()
+	uri := "file:///t.smpe"
+	today := currentJulianDate()
+	src := "++USERMOD(U1)\n    REWORK(" + today + ").\n"
+	doc := reworkTestParser().Parse(src)
+
+	cursor := lsp.Range{Start: lsp.Position{Line: 1, Character: 12}}
+	actions := p.GetCodeActions(uri, src, doc, cursor, lsp.CodeActionContext{})
+	if len(actions) != 0 {
+		t.Errorf("expected no action for already-current REWORK, got %d: %+v", len(actions), actions)
+	}
+}
+
+// TestReworkUpdateFixEmptyValue verifies the cursor-based fix stays out of
+// reworkFix's territory: an empty REWORK() must not produce this action
+// (only the diagnostic-driven reworkFix handles that case).
+func TestReworkUpdateFixEmptyValue(t *testing.T) {
+	p := NewProvider()
+	uri := "file:///t.smpe"
+	src := "++USERMOD(U1)\n    REWORK().\n"
+	doc := reworkTestParser().Parse(src)
+
+	cursor := lsp.Range{Start: lsp.Position{Line: 1, Character: 12}}
+	actions := p.GetCodeActions(uri, src, doc, cursor, lsp.CodeActionContext{})
+	if len(actions) != 0 {
+		t.Errorf("expected no cursor-based action for empty REWORK, got %d: %+v", len(actions), actions)
+	}
+}
+
+// TestReworkUpdateFixCursorElsewhere verifies no action fires when the
+// cursor is outside any REWORK operand (e.g. on DESC, or outside any
+// statement entirely).
+func TestReworkUpdateFixCursorElsewhere(t *testing.T) {
+	p := NewProvider()
+	uri := "file:///t.smpe"
+	src := "++USERMOD(U1)\n    REWORK(2024001) DESC(text).\n"
+	doc := reworkTestParser().Parse(src)
+
+	// Cursor on the statement name, line 0 — not inside REWORK.
+	cursor := lsp.Range{Start: lsp.Position{Line: 0, Character: 2}}
+	actions := p.GetCodeActions(uri, src, doc, cursor, lsp.CodeActionContext{})
+	if len(actions) != 0 {
+		t.Errorf("expected no action with cursor outside REWORK, got %d: %+v", len(actions), actions)
+	}
+
+	// Cursor past the end of the document.
+	cursor = lsp.Range{Start: lsp.Position{Line: 99, Character: 0}}
+	actions = p.GetCodeActions(uri, src, doc, cursor, lsp.CodeActionContext{})
+	if len(actions) != 0 {
+		t.Errorf("expected no action with cursor past document end, got %d: %+v", len(actions), actions)
+	}
+}
+
+// TestReworkUpdateFixNilDoc verifies a nil AST (e.g. code action requested
+// before any parse succeeded) is handled without panicking.
+func TestReworkUpdateFixNilDoc(t *testing.T) {
+	p := NewProvider()
+	cursor := lsp.Range{Start: lsp.Position{Line: 1, Character: 12}}
+	actions := p.GetCodeActions("file:///t.smpe", "", nil, cursor, lsp.CodeActionContext{})
+	if len(actions) != 0 {
+		t.Errorf("expected no action with nil doc, got %d: %+v", len(actions), actions)
+	}
+}
+
+// TestReworkUpdateFixCoexistsWithReworkFix verifies both REWORK actions can
+// appear together for the same request when applicable: reworkFix reacts to
+// the diagnostic (empty REWORK elsewhere), reworkUpdateFix reacts to the
+// cursor (stale REWORK here). They must not collide when both conditions
+// are met on the same statement's REWORK operand — in that case only
+// reworkFix's diagnostic-driven action applies since the value is empty.
+func TestReworkUpdateFixDoesNotDuplicateReworkFix(t *testing.T) {
+	p := NewProvider()
+	uri := "file:///t.smpe"
+	src := "++USERMOD(U1)\n    REWORK().\n"
+	doc := reworkTestParser().Parse(src)
+
+	d := diag(diagnostics.CodeEmptyOperandParameter,
+		map[string]interface{}{"operand": "REWORK"}, 1, 4, 6)
+	cursor := lsp.Range{Start: lsp.Position{Line: 1, Character: 12}}
+	ctx := lsp.CodeActionContext{Diagnostics: []lsp.Diagnostic{d}}
+
+	actions := p.GetCodeActions(uri, src, doc, cursor, ctx)
+	if len(actions) != 1 {
+		t.Fatalf("expected exactly 1 action (reworkFix only), got %d: %+v", len(actions), actions)
+	}
+	if actions[0].Title != "Set REWORK to current date" {
+		t.Errorf("unexpected title: %q", actions[0].Title)
+	}
+}
+
+// TestCurrentJulianDateFormat sanity-checks the yyyyddd format shared by
+// reworkFix and reworkUpdateFix.
+func TestCurrentJulianDateFormat(t *testing.T) {
+	got := currentJulianDate()
+	want := time.Now().Format("2006") + time.Now().Format("002")
+	if len(got) != 7 {
+		t.Errorf("expected 7-digit julian date, got %q", got)
+	}
+	if got[:4] != want[:4] {
+		t.Errorf("expected year prefix %q, got %q", want[:4], got)
 	}
 }
