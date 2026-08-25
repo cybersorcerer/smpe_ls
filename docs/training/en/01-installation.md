@@ -18,12 +18,12 @@ Download the correct VSIX file from the
 
 | Platform | File |
 |----------|------|
-| Windows x64 | `smpe-mcs-language-server-win32-x64-1.3.2.vsix` |
-| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-1.3.2.vsix` |
-| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-1.3.2.vsix` |
-| macOS Intel | `smpe-mcs-language-server-darwin-x64-1.3.2.vsix` |
-| Linux x64 | `smpe-mcs-language-server-linux-x64-1.3.2.vsix` |
-| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-1.3.2.vsix` |
+| Windows x64 | `smpe-mcs-language-server-win32-x64-1.3.8.vsix` |
+| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-1.3.8.vsix` |
+| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-1.3.8.vsix` |
+| macOS Intel | `smpe-mcs-language-server-darwin-x64-1.3.8.vsix` |
+| Linux x64 | `smpe-mcs-language-server-linux-x64-1.3.8.vsix` |
+| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-1.3.8.vsix` |
 
 The language server binary is already bundled inside the extension — no separate
 installation required.
@@ -38,7 +38,7 @@ installation required.
 ## Installation via Terminal
 
 ```bash
-code --install-extension smpe-mcs-language-server-darwin-arm64-1.3.2.vsix
+code --install-extension smpe-mcs-language-server-darwin-arm64-1.3.8.vsix
 ```
 
 Then reload VSCode.

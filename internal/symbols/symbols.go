@@ -53,10 +53,10 @@ func (p *Provider) createStatementSymbol(stmt *parser.Node, lines []string) *lsp
 	}
 
 	// Determine symbol kind based on statement type
-	kind := p.getSymbolKind(stmt.Name)
+	kind := p.GetSymbolKind(stmt.Name)
 
 	// Calculate range (from statement start to terminator or last operand)
-	endLine, endChar := p.getStatementEndPosition(stmt, lines)
+	endLine, endChar := p.GetStatementEndPosition(stmt, lines)
 
 	symbol := &lsp.DocumentSymbol{
 		Name:   name,
@@ -78,8 +78,8 @@ func (p *Provider) createStatementSymbol(stmt *parser.Node, lines []string) *lsp
 	return symbol
 }
 
-// getSymbolKind returns the appropriate SymbolKind for a statement
-func (p *Provider) getSymbolKind(stmtName string) lsp.SymbolKind {
+// GetSymbolKind returns the appropriate SymbolKind for a statement
+func (p *Provider) GetSymbolKind(stmtName string) lsp.SymbolKind {
 	switch stmtName {
 	case "++FUNCTION", "++USERMOD", "++PTF", "++APAR":
 		// SYSMOD definitions - like classes/modules
@@ -113,8 +113,11 @@ func (p *Provider) getStatementDetail(stmt *parser.Node) string {
 	return ""
 }
 
-// getStatementEndPosition finds the end position of a statement
-func (p *Provider) getStatementEndPosition(stmt *parser.Node, lines []string) (int, int) {
+// GetStatementEndPosition finds the end position of a statement: the '.'
+// terminator following the statement's last child, skipping over any
+// /* ... */ block comments so a '.' inside a comment (e.g. a "dd.mm.yy"
+// date) is never mistaken for the terminator.
+func (p *Provider) GetStatementEndPosition(stmt *parser.Node, lines []string) (int, int) {
 	endLine := stmt.Position.Line
 	endChar := stmt.Position.Character + stmt.Position.Length
 
@@ -138,16 +141,31 @@ func (p *Provider) getStatementEndPosition(stmt *parser.Node, lines []string) (i
 		}
 	}
 
-	// Look for terminator
+	// Look for terminator, skipping over /* ... */ block comments so a '.'
+	// inside a comment (e.g. a "dd.mm.yy" date) is never mistaken for the
+	// statement terminator.
+	inBlockComment := false
 	for i := endLine; i < len(lines); i++ {
 		line := lines[i]
 		for j := 0; j < len(line); j++ {
+			if inBlockComment {
+				if j+1 < len(line) && line[j] == '*' && line[j+1] == '/' {
+					inBlockComment = false
+					j++
+				}
+				continue
+			}
+			if j+1 < len(line) && line[j] == '/' && line[j+1] == '*' {
+				inBlockComment = true
+				j++
+				continue
+			}
 			if line[j] == '.' {
 				return i, j + 1
 			}
 		}
 		// Stop if we hit another statement
-		if i > stmt.Position.Line {
+		if i > stmt.Position.Line && !inBlockComment {
 			for j := 0; j < len(line)-1; j++ {
 				if line[j] == '+' && line[j+1] == '+' {
 					return endLine, endChar

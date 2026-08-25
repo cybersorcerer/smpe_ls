@@ -137,7 +137,7 @@ style: |
 # SMP/E MCS Language Server
 ## Moderne Entwicklungsunterstützung für z/OS Systemprogrammierer
 
-Version 1.3.7
+Version 1.3.8
 
 Ronny Funk — Senior Mainframe Architect SVA
 
@@ -795,10 +795,10 @@ Von der GitHub Release-Seite die passende Plattform-Version laden:
 
 | Plattform | Datei |
 |-----------|-------|
-| macOS Apple Silicon | `...-darwin-arm64-1.3.7.vsix` |
-| macOS Intel | `...-darwin-x64-1.3.7.vsix` |
-| Windows x64 | `...-win32-x64-1.3.7.vsix` |
-| Linux x64 | `...-linux-x64-1.3.7.vsix` |
+| macOS Apple Silicon | `...-darwin-arm64-1.3.8.vsix` |
+| macOS Intel | `...-darwin-x64-1.3.8.vsix` |
+| Windows x64 | `...-win32-x64-1.3.8.vsix` |
+| Linux x64 | `...-linux-x64-1.3.8.vsix` |
 
 ## 2. In VS Code installieren
 

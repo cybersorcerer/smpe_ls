@@ -112,11 +112,11 @@ func (p *Provider) extractSymbolInformation(doc *parser.Document, uri string, li
 			name = stmt.Name + "(" + stmtParam + ")"
 		}
 
-		endLine, endChar := p.getStatementEndPosition(stmt, lines)
+		endLine, endChar := p.GetStatementEndPosition(stmt, lines)
 
 		result = append(result, lsp.SymbolInformation{
 			Name: name,
-			Kind: p.getSymbolKind(stmt.Name),
+			Kind: p.GetSymbolKind(stmt.Name),
 			Location: lsp.Location{
 				URI: uri,
 				Range: lsp.Range{

@@ -3,6 +3,7 @@
 /smpe_lint
 /smpe_outl
 /testfmt
+/cmd/smpe_test/smpe_test
 *.exe
 *.dll
 *.so
@@ -46,6 +47,7 @@ cmd/smpe_test/smpe_test
 .claude/
 syntax_diagrams/
 TODO.md
+LEPARM_BUG.md
 bug.smpe
 .smpe-zosmf.yaml
 smpe_outl.md

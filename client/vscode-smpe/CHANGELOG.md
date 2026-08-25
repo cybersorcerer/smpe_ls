@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.8] - 2026-08-25
+
+### Fixed
+
+- **Outline / document symbol range past comment dates** - A `.` inside a `/* ... */` block comment (e.g. a German-style date like `19.11.25`) was mistaken for the statement terminator, cutting the Outline view, folding range, and `smpe_outl` symbol range short at the comment instead of the real terminator. Fixed in the shared symbol logic and in `smpe_outl`, which had its own duplicated copy of the same bug.
+
+### Changed
+
+- **`smpe_outl` no longer duplicates symbol logic** - Now shares `internal/symbols.Provider` instead of carrying its own copy of the end-position and symbol-kind logic, so future fixes only need to happen in one place.
+
 ## [1.3.7] - 2026-07-08
 
 ### Added

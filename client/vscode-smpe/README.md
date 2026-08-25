@@ -2,6 +2,10 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 1.3.8
+
+- Internal fixes only — see [CHANGELOG](CHANGELOG.md) for details.
+
 ## What's New in 1.3.7
 
 - **New Quick Fix: "Update REWORK to current date"** - Refreshes a stale, already-filled `REWORK()` value from the cursor, no diagnostic needed. The existing empty-value fix is unchanged.
@@ -166,6 +170,8 @@ All commands are available via the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+
 | `SMP/E: Check Missing Input Members` | Scan the workspace for missing MCS input member files |
 | `SMP/E: Toggle Auto-Detect Language Mode` | Toggle the `smpe.editor.autoDetectLanguage` setting |
 | `SMP/E: Open Training` | Open the bundled training documentation |
+| `SMP/E: Query SYSMOD (CodeLens)` | Internal command triggered by the SYSMOD CodeLens link above `++PTF`/`++APAR`/etc. |
+| `SMP/E: Query DDDEF (CodeLens)` | Internal command triggered by the DDDEF CodeLens link above `DISTLIB`/`SYSLIB`/etc. |
 
 ## File Extensions
 

@@ -10,11 +10,14 @@ import (
 
 	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/parser"
+	"github.com/cybersorcerer/smpe_ls/internal/symbols"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
+var symbolProvider = symbols.NewProvider()
+
 var (
-	version = "v1.3.7"
+	version = "v1.3.8"
 	commit  = "unknown"
 )
 
@@ -183,12 +186,12 @@ func buildStatementSymbol(stmt *parser.Node, lines []string, withRanges bool, wi
 		name = stmt.Name + "(" + stmtParam + ")"
 	}
 
-	endLine, endChar := getStatementEndPosition(stmt, lines)
+	endLine, endChar := symbolProvider.GetStatementEndPosition(stmt, lines)
 
 	sym := OutlineSymbol{
 		Name:     name,
 		ID:       stmtParam,
-		Kind:     getSymbolKind(stmt.Name),
+		Kind:     symbolProvider.GetSymbolKind(stmt.Name),
 		Children: buildOperandSymbols(stmt, withRanges),
 	}
 	if withMeta {
@@ -255,65 +258,6 @@ func buildOperandSymbols(stmt *parser.Node, withRanges bool) []OutlineSymbol {
 	}
 
 	return children
-}
-
-func getSymbolKind(stmtName string) lsp.SymbolKind {
-	switch stmtName {
-	case "++FUNCTION", "++USERMOD", "++PTF", "++APAR":
-		return lsp.SymbolKindClass
-	case "++VER":
-		return lsp.SymbolKindMethod
-	case "++IF":
-		return lsp.SymbolKindOperator
-	case "++MAC", "++SRC", "++MOD":
-		return lsp.SymbolKindStruct
-	case "++MACUPD", "++SRCUPD":
-		return lsp.SymbolKindEvent
-	case "++JCLIN":
-		return lsp.SymbolKindFile
-	default:
-		return lsp.SymbolKindFunction
-	}
-}
-
-func getStatementEndPosition(stmt *parser.Node, lines []string) (int, int) {
-	endLine := stmt.Position.Line
-	endChar := stmt.Position.Character + stmt.Position.Length
-
-	for _, child := range stmt.Children {
-		if child.Position.Line > endLine {
-			endLine = child.Position.Line
-			endChar = child.Position.Character + child.Position.Length
-		} else if child.Position.Line == endLine && child.Position.Character+child.Position.Length > endChar {
-			endChar = child.Position.Character + child.Position.Length
-		}
-		for _, grandchild := range child.Children {
-			if grandchild.Position.Line > endLine {
-				endLine = grandchild.Position.Line
-				endChar = grandchild.Position.Character + grandchild.Position.Length
-			} else if grandchild.Position.Line == endLine && grandchild.Position.Character+grandchild.Position.Length > endChar {
-				endChar = grandchild.Position.Character + grandchild.Position.Length
-			}
-		}
-	}
-
-	for i := endLine; i < len(lines); i++ {
-		line := lines[i]
-		for j := 0; j < len(line); j++ {
-			if line[j] == '.' {
-				return i, j + 1
-			}
-		}
-		if i > stmt.Position.Line {
-			for j := 0; j < len(line)-1; j++ {
-				if line[j] == '+' && line[j+1] == '+' {
-					return endLine, endChar
-				}
-			}
-		}
-	}
-
-	return endLine, endChar
 }
 
 func printMarkdown(outlines []OutlineFile) {

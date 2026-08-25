@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-1.3.7-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-1.3.8-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -119,8 +119,8 @@ smpe_lint --warnings-as-errors *.smpe
 # JSON output for programmatic processing
 smpe_lint --json *.smpe
 
-# Ignore specific diagnostics
-smpe_lint --ignore unknown_operand *.smpe
+# Disable specific diagnostics
+smpe_lint --disable unknown_operand *.smpe
 
 # Use configuration file
 smpe_lint --config .smpe_lint.yaml *.smpe
@@ -244,9 +244,9 @@ make test-suite
 
 **Test Coverage:**
 
-- 57 unit tests across 4 modules
-- 27 integration test files with 24 passing
-- Tests for completion, diagnostics, hover, and parser
+- 152 unit tests across 11 modules
+- 32 integration test files in `test-files/`
+- Tests for codeactions, completion, data, diagnostics, formatting, hover, langid, parser, semantic, signature, and symbols
 
 ## 🏗️ Building for All Platforms
 
@@ -267,6 +267,10 @@ make release
 ```
 
 ## 📋 What's New
+
+### Version 1.3.8
+
+Internal fixes only — see [CHANGELOG](client/vscode-smpe/CHANGELOG.md) for details.
 
 ### Version 1.3.7
 
@@ -390,13 +394,25 @@ smpe_ls/
 ├── cmd/
 │   ├── smpe_ls/        # Language server binary
 │   ├── smpe_lint/      # Command-line linter for CI/CD
+│   ├── smpe_outl/      # Command-line outline tool for CI/CD
 │   └── smpe_test/      # Central test suite
 ├── internal/
+│   ├── codeactions/    # Code actions (quick fixes)
+│   ├── codelens/       # Inline z/OSMF query links
 │   ├── completion/     # Code completion provider
+│   ├── data/            # smpe.json loader
 │   ├── diagnostics/    # Syntax validation
+│   ├── folding/        # Folding range provider
+│   ├── formatting/     # Document formatting provider
+│   ├── handler/        # LSP protocol handler
 │   ├── hover/          # Documentation provider
+│   ├── langid/         # Language-variant statement ID handling
+│   ├── logger/         # Debug/log file writer
 │   ├── parser/         # AST parser
-│   └── handler/        # LSP protocol handler
+│   ├── references/     # Find references provider
+│   ├── semantic/       # Semantic tokens (syntax highlighting)
+│   ├── signature/      # Signature help provider
+│   └── symbols/        # Document/workspace symbol provider
 ├── client/
 │   └── vscode-smpe/    # VSCode extension
 └── data/
