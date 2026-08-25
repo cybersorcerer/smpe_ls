@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-1.3.8-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-1.3.9-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -267,6 +267,16 @@ make release
 ```
 
 ## 📋 What's New
+
+### Version 1.3.9
+
+**New Features**
+
+- 📚 **FETCHOPT parameter values** - `FETCHOPT(PACK|NOPACK)` is now correctly declared in `data/smpe.json`, so it gets hover, completion, and formatting support like `LEPARM`'s other attributes.
+
+**Bug Fixes**
+
+- 🩹 **LEPARM and other sub-operand containers (parsing, completion, outline, formatting)** - A parser bug duplicated every operand's parameter value into two identical AST nodes, corrupting semantic-highlighting tokens and silently dropping `LEPARM`/`FROMDS` from the Outline view and `smpe_outl` output. Completion inside a nested sub-operand leaked the parent's suggestion list; already-used sub-operands (including aliases) were re-offered; enumerated pipe-value operands offered no completions at all. Formatting of comma- or space-separated sub-operand lists dropped the original separator and never wrapped long lists.
 
 ### Version 1.3.8
 

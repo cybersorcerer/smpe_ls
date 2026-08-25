@@ -455,6 +455,17 @@ func (p *Provider) findOperandAtPosition(stmt *parser.Node, line, character int,
 					}
 
 					if character <= opEndWithParam {
+						// The cursor is somewhere within this operand's full
+						// parenthesized range. If it has sub-operand children
+						// (e.g. AC/ALIGN2/AMODE inside LEPARM, or DSN/VOL/...
+						// inside FROMDS), the cursor may actually be nested
+						// deeper inside one of those — e.g. LEPARM(AC(│) —
+						// so try the more specific recursive match first and
+						// only fall back to this operand itself if none of
+						// its children claim the position.
+						if subOp := p.findOperandAtPosition(child, line, character, text); subOp != nil {
+							return subOp
+						}
 						return child
 					}
 				}
@@ -617,12 +628,36 @@ func (p *Provider) getOperandValueCompletionsAST(operandNode *parser.Node, fullT
 	// e.g., "DSN(dsname) NUMBER(number)" indicates DSN and NUMBER are sub-operands
 	if len(operandNode.OperandDef.Values) > 0 && operandNode.OperandDef.Parameter != "" && strings.Contains(operandNode.OperandDef.Parameter, "(") {
 		logger.Debug("getOperandValueCompletionsAST: Using sub-operand path for %s", operandNode.Name)
+
+		// Collect sub-operands already present under this operand (e.g. AC
+		// already used inside LEPARM(AC(1),│), so it isn't offered again —
+		// mirrors the presentOperands filtering getOperandCompletionsAST
+		// already does for top-level operands.
+		presentSubOperands := make(map[string]bool)
+		for _, child := range operandNode.Children {
+			if child.Type == parser.NodeTypeOperand {
+				presentSubOperands[child.Name] = true
+			}
+		}
+
 		// These are sub-operands (e.g., DSN, NUMBER for FROMDS)
 		var items []lsp.CompletionItem
 		for _, subOp := range operandNode.OperandDef.Values {
 			// Handle aliases (e.g., "AMODE|AMOD" -> ["AMODE", "AMOD"])
 			names := strings.Split(subOp.Name, "|")
 			primaryName := strings.TrimSpace(names[0])
+
+			// Skip if any alias of this sub-operand is already present.
+			alreadyPresent := false
+			for _, n := range names {
+				if presentSubOperands[strings.TrimSpace(n)] {
+					alreadyPresent = true
+					break
+				}
+			}
+			if alreadyPresent {
+				continue
+			}
 
 			// Determine if this sub-operand needs a parameter
 			insertText := primaryName
@@ -708,6 +743,30 @@ func (p *Provider) getOperandValueCompletionsAST(operandNode *parser.Node, fullT
 				}
 				items = append(items, aliasItem)
 			}
+		}
+		return items
+	}
+
+	// Otherwise, when there are no explicit Values but the Parameter field
+	// itself is a pipe-separated enumeration (e.g. "YES|NO" for UPCASE,
+	// "PACK|NOPACK" for FETCHOPT, "24|31|64|ANY|MIN" for AMODE), offer each
+	// alternative as a completion item directly. Values is used when an
+	// operand's alternatives have their own descriptions/sub-parameters;
+	// a bare Parameter string is used when they're just enumerated names.
+	if operandNode.OperandDef.Parameter != "" && !strings.Contains(operandNode.OperandDef.Parameter, "(") && strings.Contains(operandNode.OperandDef.Parameter, "|") {
+		logger.Debug("getOperandValueCompletionsAST: Using pipe-separated parameter enum for %s", operandNode.Name)
+		var items []lsp.CompletionItem
+		for _, alt := range strings.Split(operandNode.OperandDef.Parameter, "|") {
+			alt = strings.TrimSpace(alt)
+			if alt == "" {
+				continue
+			}
+			items = append(items, lsp.CompletionItem{
+				Label:      alt,
+				Kind:       lsp.CompletionItemKindValue,
+				Detail:     "Value",
+				InsertText: alt,
+			})
 		}
 		return items
 	}

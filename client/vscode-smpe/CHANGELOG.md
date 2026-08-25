@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.9] - 2026-08-25
+
+### Added
+
+- **FETCHOPT parameter values** - `data/smpe.json` now declares `FETCHOPT(PACK|NOPACK)` correctly (it was missing its parameter entirely), so it gets hover, completion, and formatting support like the rest of `LEPARM`'s attributes.
+
+### Fixed
+
+- **LEPARM and other sub-operand containers (parsing, completion, outline, formatting)** - A parser bug duplicated every operand's parameter value into two identical AST nodes; harmless for most operands, but it corrupted semantic-highlighting tokens and, combined with a second bug, silently dropped `LEPARM`/`FROMDS` entirely from the Outline view and `smpe_outl` output. Completion inside a nested sub-operand (e.g. `LEPARM(AC(│)`) leaked the parent's suggestion list instead of the sub-operand's own; already-used sub-operands (including alias forms like `AMOD`/`AMODE`) were still re-offered; and enumerated pipe-value operands (`AMODE`, `UPCASE`, `FETCHOPT`, …) offered no completions at all inside their parentheses. Formatting of comma- or space-separated sub-operand lists (`LEPARM`, `FROMDS`) dropped the user's original separator and never wrapped long lists onto multiple lines, regardless of separator.
+
 ## [1.3.8] - 2026-08-25
 
 ### Fixed

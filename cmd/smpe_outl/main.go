@@ -17,7 +17,7 @@ import (
 var symbolProvider = symbols.NewProvider()
 
 var (
-	version = "v1.3.8"
+	version = "v1.3.9"
 	commit  = "unknown"
 )
 
@@ -192,7 +192,7 @@ func buildStatementSymbol(stmt *parser.Node, lines []string, withRanges bool, wi
 		Name:     name,
 		ID:       stmtParam,
 		Kind:     symbolProvider.GetSymbolKind(stmt.Name),
-		Children: buildOperandSymbols(stmt, withRanges),
+		Children: buildOperandSymbols(stmt, lines, withRanges),
 	}
 	if withMeta {
 		hasInlineData := stmt.HasInlineData
@@ -214,7 +214,7 @@ func buildStatementSymbol(stmt *parser.Node, lines []string, withRanges bool, wi
 	return sym
 }
 
-func buildOperandSymbols(stmt *parser.Node, withRanges bool) []OutlineSymbol {
+func buildOperandSymbols(stmt *parser.Node, lines []string, withRanges bool) []OutlineSymbol {
 	var children []OutlineSymbol
 
 	for _, child := range stmt.Children {
@@ -230,8 +230,20 @@ func buildOperandSymbols(stmt *parser.Node, withRanges bool) []OutlineSymbol {
 			}
 		}
 
+		// Operands with sub-operands (e.g. LEPARM, FROMDS) have no direct
+		// NodeTypeParameter child — their children are NodeTypeOperand nodes
+		// instead. Fall back to the raw source text between the operand's
+		// own parentheses so these operands aren't silently dropped.
+		endLine, endChar := 0, 0
+		hasRange := false
 		if paramValue == "" {
-			continue
+			raw, rEndLine, rEndChar, ok := extractParenthesizedText(lines, child.Position.Line, child.Position.Character+child.Position.Length)
+			if !ok {
+				continue
+			}
+			paramValue = raw
+			endLine, endChar = rEndLine, rEndChar
+			hasRange = true
 		}
 
 		name := child.Name + "(" + paramValue + ")"
@@ -242,9 +254,13 @@ func buildOperandSymbols(stmt *parser.Node, withRanges bool) []OutlineSymbol {
 			Kind: lsp.SymbolKindProperty,
 		}
 		if withRanges {
+			if !hasRange {
+				endLine = child.Position.Line
+				endChar = child.Position.Character + child.Position.Length + len(paramValue) + 2
+			}
 			r := lsp.Range{
 				Start: lsp.Position{Line: child.Position.Line, Character: child.Position.Character},
-				End:   lsp.Position{Line: child.Position.Line, Character: child.Position.Character + child.Position.Length + len(paramValue) + 2},
+				End:   lsp.Position{Line: endLine, Character: endChar},
 			}
 			sr := lsp.Range{
 				Start: lsp.Position{Line: child.Position.Line, Character: child.Position.Character},
@@ -258,6 +274,78 @@ func buildOperandSymbols(stmt *parser.Node, withRanges bool) []OutlineSymbol {
 	}
 
 	return children
+}
+
+// extractParenthesizedText finds the '(' at or after (line, char) and
+// returns the text between it and its matching ')', which may span
+// multiple lines. Returns ok=false if no matching parentheses are found.
+// The returned text has internal newlines replaced with a single space, to
+// keep the outline output on one line per symbol.
+func extractParenthesizedText(lines []string, line, char int) (text string, endLine int, endChar int, ok bool) {
+	if line < 0 || line >= len(lines) {
+		return "", 0, 0, false
+	}
+	// Find the opening '(' starting at (line, char).
+	startLine, startChar := -1, -1
+	for l := line; l < len(lines); l++ {
+		start := 0
+		if l == line {
+			start = char
+		}
+		if idx := strings.IndexByte(lines[l][start:], '('); idx >= 0 {
+			startLine, startChar = l, start+idx
+			break
+		}
+		// Only the original line and immediately following whitespace-only
+		// lines are allowed before giving up, to avoid matching an
+		// unrelated '(' from a later statement.
+		if strings.TrimSpace(lines[l][start:]) != "" {
+			break
+		}
+	}
+	if startLine == -1 {
+		return "", 0, 0, false
+	}
+
+	var b strings.Builder
+	depth := 0
+	l, c := startLine, startChar
+	for l < len(lines) {
+		lineText := lines[l]
+		// Skip leading whitespace on continuation lines (not the opening
+		// line itself, where c already points at '('), collapsing the
+		// line break into the single space written below.
+		if l > startLine {
+			for c < len(lineText) && (lineText[c] == ' ' || lineText[c] == '\t') {
+				c++
+			}
+		}
+		for c < len(lineText) {
+			ch := lineText[c]
+			switch ch {
+			case '(':
+				depth++
+				if depth > 1 {
+					b.WriteByte(ch)
+				}
+			case ')':
+				depth--
+				if depth == 0 {
+					return b.String(), l, c + 1, true
+				}
+				b.WriteByte(ch)
+			default:
+				b.WriteByte(ch)
+			}
+			c++
+		}
+		if l+1 < len(lines) {
+			b.WriteByte(' ')
+		}
+		l++
+		c = 0
+	}
+	return "", 0, 0, false
 }
 
 func printMarkdown(outlines []OutlineFile) {

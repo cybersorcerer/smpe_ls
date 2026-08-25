@@ -861,7 +861,7 @@ func (p *Provider) buildFormattedStatementWithLeadingComments(stmt *parser.Node,
 
 		// Each operand on its own line, with their inline comments preserved
 		for oi, op := range operands {
-			opText := p.formatOperand(op)
+			opText := p.formatOperand(op, lines)
 			comments := opComments[oi]
 
 			// Separate same-line (AtEnd) comments from following-line comments
@@ -920,7 +920,7 @@ func (p *Provider) buildFormattedStatementWithLeadingComments(stmt *parser.Node,
 		}
 
 		for i, op := range operands {
-			opText := p.formatOperand(op)
+			opText := p.formatOperand(op, lines)
 
 			if currentLine == "" {
 				currentLine = indent + opText
@@ -1031,8 +1031,8 @@ func (p *Provider) wrapMultiLineCommentAt72(commentLines []string) []string {
 
 // formatOperand formats a single operand with the given indentation.
 // Returns the formatted operand, which may contain newlines if lists are wrapped.
-func (p *Provider) formatOperand(op *parser.Node) string {
-	return p.formatOperandIndented(op, strings.Repeat(" ", p.config.IndentContinuation))
+func (p *Provider) formatOperand(op *parser.Node, lines []string) string {
+	return p.formatOperandIndented(op, strings.Repeat(" ", p.config.IndentContinuation), lines)
 }
 
 // formatOperandIndented formats a single operand, using indent for wrapped list layout:
@@ -1041,7 +1041,7 @@ func (p *Provider) formatOperand(op *parser.Node) string {
 //	    item1
 //	    item2
 //	)
-func (p *Provider) formatOperandIndented(op *parser.Node, indent string) string {
+func (p *Provider) formatOperandIndented(op *parser.Node, indent string, lines []string) string {
 	if op == nil {
 		return ""
 	}
@@ -1083,22 +1083,103 @@ func (p *Provider) formatOperandIndented(op *parser.Node, indent string) string 
 		}
 	}
 
-	// If no parameter found, check for sub-operands (e.g., FROMDS(DSN(...)))
+	// If no parameter found, check for sub-operands (e.g., FROMDS(DSN(...)),
+	// LEPARM(AC(1),ALIGN2,...)).
 	if !hasContent {
-		var subOps []string
+		var subOpNodes []*parser.Node
 		for _, child := range op.Children {
 			if child.Type == parser.NodeTypeOperand {
-				subOps = append(subOps, p.formatOperandIndented(child, indent))
+				subOpNodes = append(subOpNodes, child)
 			}
 		}
-		if len(subOps) > 0 {
-			sb.WriteString("(")
-			sb.WriteString(strings.Join(subOps, " "))
-			sb.WriteString(")")
+		if len(subOpNodes) > 0 {
+			// SMP/E MCS list elements accept either blanks or commas as
+			// separators. Preserve whichever the user originally wrote
+			// between each pair of sub-operands, instead of forcing one —
+			// e.g. LEPARM's comma-separated values (syntax_diagrams/leparm.png
+			// shows a comma loop) must not be silently rejoined with spaces.
+			usesComma := p.subOperandsCommaSeparated(subOpNodes, lines)
+
+			var subOps []string
+			for _, child := range subOpNodes {
+				subOps = append(subOps, p.formatOperandIndented(child, indent, lines))
+			}
+
+			// Wrapping onto one value per line applies regardless of which
+			// separator the user wrote — only the separator character
+			// itself (comma vs. none, since space-separated items need no
+			// trailing character) depends on usesComma.
+			if p.config.WrapListsAfterN > 0 && len(subOps) > p.config.WrapListsAfterN {
+				itemIndent := indent + strings.Repeat(" ", p.config.IndentContinuation)
+				trailer := ""
+				if usesComma {
+					trailer = ","
+				}
+				sb.WriteString("(\n")
+				for i, item := range subOps {
+					sb.WriteString(itemIndent)
+					sb.WriteString(item)
+					if i < len(subOps)-1 {
+						sb.WriteString(trailer)
+					}
+					sb.WriteString("\n")
+				}
+				sb.WriteString(indent)
+				sb.WriteString(")")
+			} else if usesComma {
+				sb.WriteString("(")
+				sb.WriteString(strings.Join(subOps, ","))
+				sb.WriteString(")")
+			} else {
+				sb.WriteString("(")
+				sb.WriteString(strings.Join(subOps, " "))
+				sb.WriteString(")")
+			}
 		}
 	}
 
 	return sb.String()
+}
+
+// subOperandsCommaSeparated inspects the original source text between the
+// first two sub-operand nodes to determine whether the user separated them
+// with a comma or with whitespace — including across a line break, so a
+// previously wrapped list (each value on its own line, trailing comma) is
+// still recognized as comma-separated on a second formatting pass
+// (idempotency). Defaults to false (space-separated, today's long-standing
+// behavior for containers like FROMDS) when there is only one sub-operand,
+// positions are missing, or lines is unavailable.
+func (p *Provider) subOperandsCommaSeparated(subOps []*parser.Node, lines []string) bool {
+	if len(subOps) < 2 || lines == nil {
+		return false
+	}
+	first, second := subOps[0], subOps[1]
+	firstLine, secondLine := first.Position.Line, second.Position.Line
+	if firstLine < 0 || secondLine >= len(lines) || firstLine > secondLine {
+		return false
+	}
+
+	var between strings.Builder
+	for l := firstLine; l <= secondLine; l++ {
+		if l < 0 || l >= len(lines) {
+			return false
+		}
+		lineText := lines[l]
+		lineRunes := []rune(lineText)
+		start := 0
+		if l == firstLine {
+			start = first.Position.Character + first.Position.Length
+		}
+		end := len(lineRunes)
+		if l == secondLine {
+			end = second.Position.Character
+		}
+		if start < 0 || end > len(lineRunes) || start > end {
+			return false
+		}
+		between.WriteString(string(lineRunes[start:end]))
+	}
+	return strings.Contains(between.String(), ",")
 }
 
 // splitTopLevelCommas splits a string by commas at the top level (depth 0),

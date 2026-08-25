@@ -622,9 +622,17 @@ func (p *Parser) parseOperandParameter(text string, lineNum int, offset int, sta
 		Children: []*Node{},
 	}
 
-	// Split comma-separated parameters and create individual nodes
-	// This enables proper highlighting for multiline parameter lists
+	// Split comma-separated parameters and create individual nodes.
+	// This enables proper highlighting/navigation for multi-value lists
+	// like PRE(UJ001,UJ002). When there is only a single value, the
+	// wrapper node above already represents it — adding one identical
+	// child here would just duplicate the same Type/Value/Position twice
+	// in the tree, so skip child-node creation in that case.
 	params := p.splitParameters(paramValue)
+	if len(params) <= 1 {
+		return wrapperNode
+	}
+
 	currentPos := paramStart
 
 	for _, param := range params {

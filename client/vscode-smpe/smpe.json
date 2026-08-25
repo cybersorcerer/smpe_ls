@@ -5229,7 +5229,8 @@
             },
             {
               "name": "FETCHOPT",
-              "type": "boolean",
+              "parameter": "PACK|NOPACK",
+              "type": "string",
               "description": "Fetch protect - storage occupied by the module cannot be modified"
             },
             {

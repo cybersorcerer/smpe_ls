@@ -2,6 +2,10 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 1.3.9
+
+- **LEPARM and sub-operand containers fixed end-to-end** - Parsing, completion (nested context, already-used filtering, pipe-value suggestions like `AMODE`/`UPCASE`/`FETCHOPT`), Outline view, and formatting (separator preservation, list wrapping) all work correctly now for `LEPARM`, `FROMDS`, and similar sub-operand operands.
+
 ## What's New in 1.3.8
 
 - Internal fixes only — see [CHANGELOG](CHANGELOG.md) for details.
