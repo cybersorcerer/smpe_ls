@@ -2,13 +2,20 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"github.com/cybersorcerer/smpe_ls/internal/parser"
 	"github.com/cybersorcerer/smpe_ls/internal/data"
+	"github.com/cybersorcerer/smpe_ls/internal/parser"
+	"os"
+	"path/filepath"
 )
 
 func main() {
-	store, err := data.Load("/Users/Ronald.Funk/.local/share/smpe_ls/smpe.json")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	store, err := data.Load(filepath.Join(home, ".local", "share", "smpe_ls", "smpe.json"))
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
@@ -16,7 +23,7 @@ func main() {
 
 	p := parser.NewParser(store.Statements)
 
-	content, err := os.ReadFile("/Users/Ronald.Funk/My_Documents/source/gitlab/smpe_ls/examples/test-mac.smpe")
+	content, err := os.ReadFile("test-files/test-mac.smpe")
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
@@ -35,7 +42,7 @@ func main() {
 		}
 		fmt.Printf("  %d: Line %d (0-indexed)\n", i+1, c.Position.Line)
 	}
-	
+
 	if len(doc.StatementsExpectingInline) > 0 {
 		fmt.Printf("\nStatements expecting inline:\n")
 		for i, s := range doc.StatementsExpectingInline {
