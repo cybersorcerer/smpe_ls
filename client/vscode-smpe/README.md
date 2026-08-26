@@ -8,7 +8,7 @@ Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
 ## What's New in 1.3.8
 
-- Internal fixes only — see [CHANGELOG](CHANGELOG.md) for details.
+- Internal fixes only — see [CHANGELOG](https://github.com/cybersorcerer/smpe_ls/blob/main/client/vscode-smpe/CHANGELOG.md) for details.
 
 ## What's New in 1.3.7
 
@@ -191,7 +191,7 @@ The extension activates automatically for files with the following extensions:
 
 ## License
 
-AGPL-3.0 - See [LICENSE](LICENSE) for details.
+AGPL-3.0 - See [LICENSE](https://github.com/cybersorcerer/smpe_ls/blob/main/client/vscode-smpe/LICENSE) for details.
 
 ## Author
 
