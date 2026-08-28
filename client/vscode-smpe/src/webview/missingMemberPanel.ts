@@ -72,10 +72,11 @@ export class MissingMemberPanel {
             const foundCell = r.found
                 ? `<td class="found-yes" title="${this.escapeHtml(r.foundPath ?? '')}">Yes</td>`
                 : `<td class="found-no">No</td>`;
-            return `<tr data-smpe="${this.escapeHtml(r.smpeFile)}" data-stmt="${this.escapeHtml(r.statement)}" data-member="${this.escapeHtml(r.member)}" data-found="${r.found ? 'yes' : 'no'}">
+            return `<tr data-smpe="${this.escapeHtml(r.smpeFile)}" data-stmt="${this.escapeHtml(r.statement)}" data-member="${this.escapeHtml(r.member)}" data-source="${this.escapeHtml(r.source)}" data-found="${r.found ? 'yes' : 'no'}">
                 <td>${this.escapeHtml(r.smpeFile)}</td>
                 <td>${this.escapeHtml(r.statement)}</td>
                 <td>${this.escapeHtml(r.member)}</td>
+                <td>${this.escapeHtml(r.source)}</td>
                 ${foundCell}
             </tr>`;
         }).join('\n');
@@ -215,11 +216,12 @@ export class MissingMemberPanel {
       <th data-col="0" onclick="sortBy(0)">SMP/E File<span class="sort-indicator"></span></th>
       <th data-col="1" onclick="sortBy(1)">Statement<span class="sort-indicator"></span></th>
       <th data-col="2" onclick="sortBy(2)">Member<span class="sort-indicator"></span></th>
-      <th data-col="3" onclick="sortBy(3)">Found<span class="sort-indicator"></span></th>
+      <th data-col="3" onclick="sortBy(3)">Source<span class="sort-indicator"></span></th>
+      <th data-col="4" onclick="sortBy(4)">Found<span class="sort-indicator"></span></th>
     </tr>
   </thead>
   <tbody id="results-body">
-    ${rows || '<tr><td colspan="4" class="no-results">No statements to check.</td></tr>'}
+    ${rows || '<tr><td colspan="5" class="no-results">No statements to check.</td></tr>'}
   </tbody>
 </table>
 <script>
@@ -236,9 +238,10 @@ export class MissingMemberPanel {
       const smpe = row.dataset.smpe.toLowerCase();
       const stmt = row.dataset.stmt.toLowerCase();
       const member = row.dataset.member.toLowerCase();
+      const source = row.dataset.source.toLowerCase();
       const found = row.dataset.found;
 
-      const textMatch = !text || smpe.includes(text) || stmt.includes(text) || member.includes(text);
+      const textMatch = !text || smpe.includes(text) || stmt.includes(text) || member.includes(text) || source.includes(text);
       const foundMatch = foundFilter === 'all' || found === foundFilter;
 
       if (textMatch && foundMatch) {

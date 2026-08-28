@@ -1,12 +1,28 @@
 /**
  * Missing Input Member Checker
- * Uses smpe_outl --json --meta to parse .smpe files and checks whether
- * the referenced input member files exist in the configured search folders.
+ *
+ * Uses smpe_outl --json --meta --ranges to parse .smpe files and checks that
+ * every referenced input member can be resolved, so a usermod can actually be
+ * assembled by the pipeline. There are two ways a statement points at its
+ * input member, and both are checked:
+ *
+ *  - placeholder: a "{{ path }}" line in the statement's inline data area.
+ *    The path is relative to the repository root and is checked as written -
+ *    it may point anywhere, not just into the search folders. The GitLab
+ *    pipeline replaces such a line with the contents of that file.
+ *  - convention: no placeholder and no inline data, so the member is expected
+ *    as "<element name><extension>" somewhere below the configured search
+ *    folders (smpe.checkMissingInputMembers.searchFolders, default
+ *    "customization"), matched on file name alone.
  */
 
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 import * as cp from 'child_process';
+
+/** How the expected input member was derived. */
+export type MemberSource = 'placeholder' | 'convention';
 
 export interface MemberCheckResult {
     smpeFile: string;
@@ -14,7 +30,15 @@ export interface MemberCheckResult {
     member: string;
     found: boolean;
     foundPath?: string;
+    source: MemberSource;
 }
+
+/**
+ * A "{{ path }}" line. The pipeline accepts an optional leading "./", optional
+ * spaces inside the braces and an indented line, so all of those are matched
+ * here as well.
+ */
+const PLACEHOLDER_RE = /^\s*\{\{\s*(.+?)\s*\}\}\s*$/;
 
 const STATEMENT_FILE_MAP: Record<string, string> = {
     '++EXEC':     '.rexx',
@@ -39,11 +63,22 @@ const STATEMENT_FILE_MAP: Record<string, string> = {
     '++PNLENU':   '.enu.pnl',
 };
 
-// Shape of smpe_outl --json --meta output
+// Shape of smpe_outl --json --meta --ranges output
+interface OutlinePosition {
+    line: number;
+    character: number;
+}
+
+interface OutlineRange {
+    start: OutlinePosition;
+    end: OutlinePosition;
+}
+
 interface OutlineSymbol {
     name: string;
     id?: string;
     hasInlineData?: boolean;
+    range?: OutlineRange;
     children?: OutlineSymbol[];
 }
 
@@ -127,7 +162,9 @@ export class MissingMemberChecker {
             return [];
         }
 
-        const args = ['--json', '--meta'];
+        // --ranges is needed to locate each statement's inline data area,
+        // which is where the "{{ path }}" placeholders live.
+        const args = ['--json', '--meta', '--ranges'];
         if (this.dataBinaryPath) {
             args.push('--data', this.dataBinaryPath);
         }
@@ -191,7 +228,9 @@ export class MissingMemberChecker {
         // Process results per file
         const fresh: MemberCheckResult[] = [];
         for (const outline of outlines) {
-            const fileResults = this.processOutline(outline);
+            const lines = this.readLines(outline.file);
+            const repoRoot = this.repoRootFor(outline.file);
+            const fileResults = this.processOutline(outline, lines, repoRoot);
             this.resultCache.set(outline.file, fileResults);
             fresh.push(...fileResults);
         }
@@ -199,16 +238,71 @@ export class MissingMemberChecker {
         return [...cached, ...fresh];
     }
 
-    private processOutline(outline: OutlineFile): MemberCheckResult[] {
+    /**
+     * Read the source lines of a .smpe file, or undefined if unreadable.
+     * Needed because smpe_outl reports statement ranges but not the inline
+     * data content in which the placeholders sit.
+     */
+    private readLines(filePath: string): string[] | undefined {
+        try {
+            return fs.readFileSync(filePath, 'utf8').split('\n');
+        } catch (err) {
+            this.log(`Cannot read ${filePath}: ${err}`);
+            return undefined;
+        }
+    }
+
+    /**
+     * Repository root for a .smpe file: the workspace folder containing it.
+     * Placeholder paths are relative to this.
+     */
+    private repoRootFor(filePath: string): string | undefined {
+        const folder = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(filePath));
+        return folder?.uri.fsPath;
+    }
+
+    /**
+     * Collect the "{{ path }}" placeholders in lines [from, to).
+     * A statement's inline data starts after its range end and runs up to the
+     * next statement, so that span is what gets scanned.
+     */
+    private placeholdersIn(lines: string[], from: number, to: number): string[] {
+        const found: string[] = [];
+        for (let i = Math.max(0, from); i < Math.min(to, lines.length); i++) {
+            const m = lines[i].match(PLACEHOLDER_RE);
+            if (m) {
+                found.push(m[1]);
+            }
+        }
+        return found;
+    }
+
+    private processOutline(outline: OutlineFile, lines: string[] | undefined, repoRoot: string | undefined): MemberCheckResult[] {
         const results: MemberCheckResult[] = [];
         const smpeFileName = path.basename(outline.file);
+        const symbols = outline.symbols ?? [];
 
-        for (const sym of outline.symbols ?? []) {
+        for (let i = 0; i < symbols.length; i++) {
+            const sym = symbols[i];
+
             // Extract statement name from symbol name (e.g. "++PARM(RSSPRMI)" -> "++PARM")
             const nameMatch = sym.name.match(/^(\+\+[A-Z]+)/);
             if (!nameMatch) { continue; }
             const stmtName = nameMatch[1];
 
+            // 1. Placeholder check. Independent of STATEMENT_FILE_MAP: the path
+            // is stated explicitly, so it works for statements the map does not
+            // cover (++JCLIN and friends) too.
+            const placeholders = this.placeholderPathsFor(symbols, i, lines);
+            if (placeholders.length > 0) {
+                for (const rel of placeholders) {
+                    results.push(this.checkPlaceholder(smpeFileName, stmtName, rel, repoRoot));
+                }
+                continue;
+            }
+
+            // 2. Convention check. Only for statements whose element file name
+            // can be derived, and only when the data is not supplied otherwise.
             const ext = STATEMENT_FILE_MAP[stmtName];
             if (!ext) { continue; }
 
@@ -216,7 +310,7 @@ export class MissingMemberChecker {
             const elementName = sym.id;
             if (!elementName) { continue; }
 
-            // Skip if statement has inline data
+            // Skip if statement carries its inline data directly
             if (sym.hasInlineData) { continue; }
 
             // Skip if an operand supplies the data from elsewhere, or deletes
@@ -237,9 +331,42 @@ export class MissingMemberChecker {
                 member: expectedFile,
                 found: foundPath !== undefined,
                 foundPath,
+                source: 'convention',
             });
         }
 
         return results;
+    }
+
+    /** Placeholder paths in the inline data area following symbols[i]. */
+    private placeholderPathsFor(symbols: OutlineSymbol[], i: number, lines: string[] | undefined): string[] {
+        if (!lines) { return []; }
+        const end = symbols[i].range?.end.line;
+        if (end === undefined) { return []; }
+
+        // The inline data runs from the line after this statement up to the
+        // next statement, or to the end of the file for the last one.
+        const nextStart = symbols[i + 1]?.range?.start.line ?? lines.length;
+        return this.placeholdersIn(lines, end + 1, nextStart);
+    }
+
+    /** Resolve a placeholder path against the repository root. */
+    private checkPlaceholder(smpeFileName: string, stmtName: string, rel: string, repoRoot: string | undefined): MemberCheckResult {
+        if (!repoRoot) {
+            this.log(`No workspace folder for ${smpeFileName}, cannot resolve "${rel}"`);
+            return { smpeFile: smpeFileName, statement: stmtName, member: rel, found: false, source: 'placeholder' };
+        }
+
+        const abs = path.resolve(repoRoot, rel);
+        const exists = fs.existsSync(abs) && fs.statSync(abs).isFile();
+
+        return {
+            smpeFile: smpeFileName,
+            statement: stmtName,
+            member: rel,
+            found: exists,
+            foundPath: exists ? abs : undefined,
+            source: 'placeholder',
+        };
     }
 }
