@@ -219,9 +219,14 @@ export class MissingMemberChecker {
             // Skip if statement has inline data
             if (sym.hasInlineData) { continue; }
 
-            // Skip if TXLIB operand is present (appears as child symbol)
-            const hasTxlib = (sym.children ?? []).some(c => c.name.startsWith('TXLIB('));
-            if (hasTxlib) { continue; }
+            // Skip if an operand supplies the data from elsewhere, or deletes
+            // the element - in those cases no member file is expected.
+            const hasExternalSource = (sym.children ?? []).some(c =>
+                c.name.startsWith('TXLIB(') ||
+                c.name.startsWith('FROMDS(') ||
+                c.name.startsWith('RELFILE(') ||
+                c.name === 'DELETE' || c.name.startsWith('DELETE('));
+            if (hasExternalSource) { continue; }
 
             const expectedFile = elementName + ext;
             const foundPath = this.fileIndex!.get(expectedFile);
