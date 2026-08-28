@@ -40,6 +40,15 @@ export interface MemberCheckResult {
  */
 const PLACEHOLDER_RE = /^\s*\{\{\s*(.+?)\s*\}\}\s*$/;
 
+/**
+ * File extensions that deviate from the default rule.
+ *
+ * The default is the statement name without "++", lower case: ++BOOK expects
+ * "<element>.book". Only statements whose extension differs are listed here.
+ * Entries are also what makes a statement eligible for the convention check at
+ * all when it carries no inline_data flag (++ZAP, ++CLIST, ++PROGRAM, ++DATA1
+ * to ++DATA5), so this list must not be trimmed.
+ */
 const STATEMENT_FILE_MAP: Record<string, string> = {
     '++EXEC':     '.rexx',
     '++PARM':     '.parm',
@@ -57,10 +66,8 @@ const STATEMENT_FILE_MAP: Record<string, string> = {
     '++DATA':     '.data',
     '++SAMP':     '.samp',
     '++HELP':     '.help',
-    '++SHSCRIPT': '.sh',
-    '++SHELLSRC': '.sh',
     '++PROGRAM':  '.bin',
-    '++PNLENU':   '.enu.pnl',
+    '++SHELLSCR': '.sh',
 };
 
 // Shape of smpe_outl --json --meta --ranges output
@@ -87,6 +94,22 @@ interface OutlineFile {
     symbols: OutlineSymbol[];
 }
 
+/** The parts of smpe.json the checker needs to resolve statement names. */
+interface StatementData {
+    /** 3-character national language identifiers (ENU, DEU, ...). */
+    languageIds: Set<string>;
+    /** Base names that may carry a language suffix (++PNL -> ++PNLENU). */
+    variantBases: string[];
+    /** Statements that expect inline data, and therefore an input member. */
+    inlineData: Set<string>;
+}
+
+/** Shape of the parts of smpe.json read here. */
+interface SmpeJson {
+    language_identifiers?: { id: string }[];
+    statements?: { name: string; language_variants?: boolean; inline_data?: boolean }[];
+}
+
 export class MissingMemberChecker {
     private outputChannel: vscode.OutputChannel;
     private outlBinaryPath: string;
@@ -96,6 +119,8 @@ export class MissingMemberChecker {
     private resultCache: Map<string, MemberCheckResult[]> = new Map();
     // Index of all workspace files: filename -> full fsPath (first match wins)
     private fileIndex: Map<string, string> | undefined;
+    // Statement definitions read from smpe.json, loaded once per session
+    private statementData: StatementData | undefined;
 
     constructor(outputChannel: vscode.OutputChannel, outlBinaryPath: string, dataBinaryPath: string) {
         this.outputChannel = outputChannel;
@@ -125,6 +150,80 @@ export class MissingMemberChecker {
     public setOutlBinaryPath(p: string): void {
         this.outlBinaryPath = p;
         this.resultCache.clear();
+    }
+
+    /**
+     * Read the statement definitions from smpe.json. They decide which
+     * statements expect an input member and how a language variant maps back
+     * onto its base statement, so smpe.json stays the single source of truth.
+     * On failure the checker falls back to STATEMENT_FILE_MAP alone.
+     */
+    private loadStatementData(): StatementData {
+        if (this.statementData) {
+            return this.statementData;
+        }
+
+        const empty: StatementData = { languageIds: new Set(), variantBases: [], inlineData: new Set() };
+        if (!this.dataBinaryPath) {
+            this.log('No smpe.json path configured, statement rules limited to STATEMENT_FILE_MAP');
+            this.statementData = empty;
+            return empty;
+        }
+
+        try {
+            const raw = JSON.parse(fs.readFileSync(this.dataBinaryPath, 'utf8')) as SmpeJson;
+            const data: StatementData = {
+                languageIds: new Set((raw.language_identifiers ?? []).map(l => l.id)),
+                variantBases: (raw.statements ?? []).filter(st => st.language_variants).map(st => st.name),
+                inlineData: new Set((raw.statements ?? []).filter(st => st.inline_data).map(st => st.name)),
+            };
+            this.log(`smpe.json: ${data.languageIds.size} language ids, ${data.variantBases.length} variant bases, ${data.inlineData.size} inline-data statements`);
+            this.statementData = data;
+            return data;
+        } catch (err) {
+            this.log(`Cannot read ${this.dataBinaryPath}: ${err}`);
+            this.statementData = empty;
+            return empty;
+        }
+    }
+
+    /**
+     * Strip a national language suffix: ++PNLENU -> ++PNL. Names that are not
+     * a language variant come back unchanged.
+     */
+    private baseStatement(name: string, data: StatementData): string {
+        for (const base of data.variantBases) {
+            if (name.length === base.length + 3 && name.startsWith(base)) {
+                if (data.languageIds.has(name.slice(base.length))) {
+                    return base;
+                }
+            }
+        }
+        return name;
+    }
+
+    /**
+     * Expected file extension for a statement, or undefined when it needs no
+     * input member. STATEMENT_FILE_MAP wins so the established conventions
+     * (++SRC -> .hlasm, ++PROC -> .jcl) keep working; everything else falls
+     * back to the statement name without "++", provided it expects inline data.
+     */
+    private extensionFor(stmtName: string, data: StatementData): string | undefined {
+        const mapped = STATEMENT_FILE_MAP[stmtName];
+        if (mapped) {
+            return mapped;
+        }
+
+        const base = this.baseStatement(stmtName, data);
+        const mappedBase = STATEMENT_FILE_MAP[base];
+        if (mappedBase) {
+            return mappedBase;
+        }
+
+        if (!data.inlineData.has(base)) {
+            return undefined;
+        }
+        return '.' + base.slice(2).replace(/\d+$/, '').toLowerCase();
     }
 
     private async buildFileIndex(): Promise<Map<string, string>> {
@@ -281,6 +380,7 @@ export class MissingMemberChecker {
         const results: MemberCheckResult[] = [];
         const smpeFileName = path.basename(outline.file);
         const symbols = outline.symbols ?? [];
+        const statementData = this.loadStatementData();
 
         for (let i = 0; i < symbols.length; i++) {
             const sym = symbols[i];
@@ -303,7 +403,7 @@ export class MissingMemberChecker {
 
             // 2. Convention check. Only for statements whose element file name
             // can be derived, and only when the data is not supplied otherwise.
-            const ext = STATEMENT_FILE_MAP[stmtName];
+            const ext = this.extensionFor(stmtName, statementData);
             if (!ext) { continue; }
 
             // Element name is in the id field (e.g. "RSSPRMI")
