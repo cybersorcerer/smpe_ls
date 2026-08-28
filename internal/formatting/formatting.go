@@ -331,7 +331,7 @@ func (p *Provider) extractCommentsInRange(comments []*parser.Node, startLine, en
 				// Check if comment is after terminator (dot appears BEFORE the comment)
 				// Note: If the dot appears AFTER the comment (e.g., "CALLLIBS /* comment */.")
 				// then AfterDot should be false - the comment belongs to the statement
-				if strings.Contains(beforeComment, ".") {
+				if p.terminatorPrecedes(lines, startLine, comment.Position.Line, comment.Position.Character) {
 					info.AfterDot = true
 				}
 			}
@@ -341,6 +341,65 @@ func (p *Provider) extractCommentsInRange(comments []*parser.Node, startLine, en
 	}
 
 	return result
+}
+
+// terminatorPrecedes reports whether a real SMP/E statement terminator appears
+// in the statement text before the given position. A terminator is a '.' at
+// parenthesis depth 0, outside comments and single-quoted strings - a dot
+// inside an operand value (e.g. the dataset name in DSN(HLQ.MID.LLQ)) must not
+// count, otherwise a comment following that operand is mistaken for a
+// post-terminator comment and dropped from the formatted output.
+func (p *Provider) terminatorPrecedes(lines []string, stmtStartLine, line, character int) bool {
+	if stmtStartLine < 0 || line >= len(lines) || stmtStartLine > line {
+		return false
+	}
+
+	inComment := false
+	inQuote := false
+	parenDepth := 0
+
+	for l := stmtStartLine; l <= line; l++ {
+		runes := []rune(lines[l])
+		end := len(runes)
+		if l == line {
+			if character < 0 {
+				end = 0
+			} else if character < end {
+				end = character
+			}
+		}
+
+		for i := 0; i < end; i++ {
+			switch {
+			case inComment:
+				if runes[i] == '*' && i+1 < end && runes[i+1] == '/' {
+					inComment = false
+					i++
+				}
+			case inQuote:
+				if runes[i] == '\'' {
+					inQuote = false
+				}
+			case runes[i] == '/' && i+1 < end && runes[i+1] == '*':
+				inComment = true
+				i++
+			case runes[i] == '\'' && parenDepth == 0:
+				// Only track single-quoted strings outside parens,
+				// mirroring getStatementEndLine
+				inQuote = true
+			case runes[i] == '(':
+				parenDepth++
+			case runes[i] == ')':
+				if parenDepth > 0 {
+					parenDepth--
+				}
+			case runes[i] == '.' && parenDepth == 0:
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 // getStatementText returns the full text of a statement including continuation lines
@@ -406,7 +465,7 @@ func (p *Provider) getStatementEndLine(stmt *parser.Node, lines []string) int {
 
 			ch := line[pos]
 			switch {
-			case ch == '(' :
+			case ch == '(':
 				parenDepth++
 				pos++
 			case ch == ')':
