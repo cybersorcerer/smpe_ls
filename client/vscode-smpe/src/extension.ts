@@ -177,7 +177,8 @@ export function activate(context: vscode.ExtensionContext) {
 		unknownSubOperand: config.get<boolean>('diagnostics.unknownSubOperand', true),
 		subOperandValidation: config.get<boolean>('diagnostics.subOperandValidation', true),
 		contentBeyondColumn72: config.get<boolean>('diagnostics.contentBeyondColumn72', true),
-		standaloneCommentBetweenMCS: config.get<boolean>('diagnostics.standaloneCommentBetweenMCS', true)
+		standaloneCommentBetweenMCS: config.get<boolean>('diagnostics.standaloneCommentBetweenMCS', true),
+		commentInColumn1: config.get<boolean>('diagnostics.commentInColumn1', true)
 	};
 
 	// Build formatting configuration
@@ -324,7 +325,8 @@ export function activate(context: vscode.ExtensionContext) {
 					unknownSubOperand: updatedConfig.get<boolean>('diagnostics.unknownSubOperand', true),
 					subOperandValidation: updatedConfig.get<boolean>('diagnostics.subOperandValidation', true),
 					contentBeyondColumn72: updatedConfig.get<boolean>('diagnostics.contentBeyondColumn72', true),
-					standaloneCommentBetweenMCS: updatedConfig.get<boolean>('diagnostics.standaloneCommentBetweenMCS', true)
+					standaloneCommentBetweenMCS: updatedConfig.get<boolean>('diagnostics.standaloneCommentBetweenMCS', true),
+					commentInColumn1: updatedConfig.get<boolean>('diagnostics.commentInColumn1', true)
 				};
 
 				const updatedFormattingConfig = {

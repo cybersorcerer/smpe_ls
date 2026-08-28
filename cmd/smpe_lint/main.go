@@ -402,6 +402,9 @@ func determineDiagnosticCode(message string) DiagnosticCode {
 	if strings.Contains(msg, "comment not allowed") {
 		return DiagStandaloneCommentBetweenMCS
 	}
+	if strings.Contains(msg, "must not begin in column 1") {
+		return DiagCommentInColumn1
+	}
 
 	return ""
 }

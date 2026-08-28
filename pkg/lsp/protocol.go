@@ -272,6 +272,7 @@ type DiagnosticsOptions struct {
 	SubOperandValidation        bool `json:"subOperandValidation"`
 	ContentBeyondColumn72       bool `json:"contentBeyondColumn72"`
 	StandaloneCommentBetweenMCS bool `json:"standaloneCommentBetweenMCS"`
+	CommentInColumn1            bool `json:"commentInColumn1"`
 }
 
 // InitializeParams represents the initialize request parameters

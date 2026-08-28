@@ -148,6 +148,11 @@
           "default": true,
           "description": "Report standalone comments between MCS statements (causes SMP/E syntax error)"
         },
+        "smpe.diagnostics.commentInColumn1": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report comments beginning in column 1 (a \"/*\" in column 1 indicates the end of an input data set)"
+        },
         "smpe.formatting.enabled": {
           "type": "boolean",
           "default": true,

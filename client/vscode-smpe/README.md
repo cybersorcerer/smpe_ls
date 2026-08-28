@@ -123,6 +123,7 @@ All diagnostics are enabled by default. Set to `false` to disable specific check
 | `smpe.diagnostics.subOperandValidation` | Report sub-operand validation errors |
 | `smpe.diagnostics.contentBeyondColumn72` | Report content that extends beyond column 72 |
 | `smpe.diagnostics.standaloneCommentBetweenMCS` | Report standalone comments between MCS statements (causes SMP/E syntax error) |
+| `smpe.diagnostics.commentInColumn1` | Report comments beginning in column 1 (a `/*` in column 1 indicates the end of an input data set) |
 
 ### z/OSMF Integration
 

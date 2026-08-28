@@ -37,6 +37,7 @@ const (
 	// Structural Errors
 	DiagMissingInlineData           DiagnosticCode = "missing_inline_data"
 	DiagStandaloneCommentBetweenMCS DiagnosticCode = "standalone_comment_between_mcs"
+	DiagCommentInColumn1            DiagnosticCode = "comment_in_column_1"
 )
 
 // LintConfig holds the linter configuration
@@ -142,6 +143,7 @@ func (c *LintConfig) ToDiagnosticsConfig() *diagnostics.Config {
 	cfg.SubOperandValidation = c.IsEnabled(DiagSubOperandValidation)
 	cfg.ContentBeyondColumn72 = c.IsEnabled(DiagContentBeyondCol72)
 	cfg.StandaloneCommentBetweenMCS = c.IsEnabled(DiagStandaloneCommentBetweenMCS)
+	cfg.CommentInColumn1 = c.IsEnabled(DiagCommentInColumn1)
 
 	return cfg
 }

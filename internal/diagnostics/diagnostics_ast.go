@@ -22,6 +22,7 @@ const (
 	CodeMissingRequiredOperand = "missing_required_operand"
 	CodeEmptyOperandParameter  = "empty_operand_parameter"
 	CodeMoveInsertOperands     = "move_insert_operands"
+	CodeCommentInColumn1       = "comment_in_column_1"
 )
 
 // Config holds the configuration for which diagnostics to enable/disable
@@ -43,6 +44,7 @@ type Config struct {
 	SubOperandValidation        bool
 	ContentBeyondColumn72       bool
 	StandaloneCommentBetweenMCS bool
+	CommentInColumn1            bool
 }
 
 // DefaultConfig returns a config with all diagnostics enabled
@@ -65,6 +67,7 @@ func DefaultConfig() *Config {
 		SubOperandValidation:        true,
 		ContentBeyondColumn72:       true,
 		StandaloneCommentBetweenMCS: true,
+		CommentInColumn1:            true,
 	}
 }
 
@@ -121,6 +124,11 @@ func (p *Provider) AnalyzeASTWithConfigAndText(doc *parser.Document, config *Con
 	// Check for standalone comments between MCS statements
 	if config.StandaloneCommentBetweenMCS {
 		diagnostics = append(diagnostics, p.checkStandaloneCommentsBetweenMCS(doc, text)...)
+	}
+
+	// Check for comments starting in column 1
+	if config.CommentInColumn1 && text != "" {
+		diagnostics = append(diagnostics, p.checkCommentInColumn1(text)...)
 	}
 
 	logger.Debug("Found %d diagnostics from AST", len(diagnostics))
@@ -746,6 +754,57 @@ func (p *Provider) checkContentBeyondColumn72(doc *parser.Document, text string)
 				})
 			}
 		}
+	}
+
+	return diagnostics
+}
+
+// checkCommentInColumn1 reports every line that starts with "/*" in column 1.
+//
+// Per the SMP/E reference: a comment "should not start before a statement, nor
+// begin in column 1. (When "/*" starts in column 1, it indicates the end of an
+// input data set.)" The end-of-data-set marker is recognized by the reader on
+// any line, so continuation lines of a block comment and lines inside inline
+// data are checked as well - a "/*" in column 1 there truncates the input just
+// the same.
+//
+// The diagnostic carries the comment's block range so the quick fixes can
+// either indent just the reported line or shift the whole block.
+func (p *Provider) checkCommentInColumn1(text string) []lsp.Diagnostic {
+	var diagnostics []lsp.Diagnostic
+	lines := strings.Split(text, "\n")
+
+	for lineNum, line := range lines {
+		if !strings.HasPrefix(line, "/*") {
+			continue
+		}
+
+		// Determine where the comment opened here ends, so the block fix knows
+		// how far to shift. A comment closed on its own line is a single-line block.
+		blockEnd := lineNum
+		if !strings.Contains(line[2:], "*/") {
+			for i := lineNum + 1; i < len(lines); i++ {
+				blockEnd = i
+				if strings.Contains(lines[i], "*/") {
+					break
+				}
+			}
+		}
+
+		diagnostics = append(diagnostics, lsp.Diagnostic{
+			Range: lsp.Range{
+				Start: lsp.Position{Line: lineNum, Character: 0},
+				End:   lsp.Position{Line: lineNum, Character: 2},
+			},
+			Severity: lsp.SeverityError,
+			Source:   "smpe_ls",
+			Code:     CodeCommentInColumn1,
+			Message:  "🔴 Comment must not begin in column 1 - when \"/*\" starts in column 1, it indicates the end of an input data set",
+			Data: map[string]interface{}{
+				"blockStart": lineNum,
+				"blockEnd":   blockEnd,
+			},
+		})
 	}
 
 	return diagnostics

@@ -46,6 +46,8 @@ func (p *Provider) GetCodeActions(uri, text string, doc *parser.Document, reqRan
 			}
 		case diagnostics.CodeMoveInsertOperands:
 			actions = append(actions, p.moveOperandFixes(uri, text, d)...)
+		case diagnostics.CodeCommentInColumn1:
+			actions = append(actions, p.commentColumn1Fixes(uri, text, d)...)
 		}
 	}
 	if len(missingOperand) >= 2 {
@@ -374,4 +376,71 @@ func (p *Provider) terminatorFix(uri, text string, d lsp.Diagnostic) lsp.CodeAct
 		Edit:        &lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{uri: {edit}}},
 		IsPreferred: true,
 	}
+}
+
+// commentColumn1Indent is the indent a comment is moved to when it starts in
+// column 1, matching the indent the formatter uses for comment lines.
+const commentColumn1Indent = "  "
+
+// commentColumn1Fixes offers two ways to move a comment out of column 1:
+// indenting only the reported line, or shifting the whole comment block by the
+// same amount. Indenting the single line is the minimal change and never
+// pushes other lines past column 72; shifting the block keeps a box drawing or
+// an aligned table intact but can move long lines beyond column 72. The
+// diagnostic Data payload carries the block range.
+func (p *Provider) commentColumn1Fixes(uri, text string, d lsp.Diagnostic) []lsp.CodeAction {
+	line := d.Range.Start.Line
+	insert := lsp.Position{Line: line, Character: 0}
+
+	lineFix := lsp.CodeAction{
+		Title:       "Indent this comment line out of column 1",
+		Kind:        kindQuickFix,
+		Diagnostics: []lsp.Diagnostic{d},
+		Edit: &lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{uri: {{
+			Range:   lsp.Range{Start: insert, End: insert},
+			NewText: commentColumn1Indent,
+		}}}},
+		IsPreferred: true,
+	}
+
+	start, end, ok := commentBlockRange(d)
+	if !ok || start == end {
+		return []lsp.CodeAction{lineFix}
+	}
+
+	// Shift every non-empty line of the block by the same amount, so the
+	// relative layout of the comment is preserved.
+	lines := strings.Split(text, "\n")
+	var edits []lsp.TextEdit
+	for i := start; i <= end && i < len(lines); i++ {
+		if strings.TrimSpace(lines[i]) == "" {
+			continue
+		}
+		pos := lsp.Position{Line: i, Character: 0}
+		edits = append(edits, lsp.TextEdit{
+			Range:   lsp.Range{Start: pos, End: pos},
+			NewText: commentColumn1Indent,
+		})
+	}
+
+	blockFix := lsp.CodeAction{
+		Title:       "Indent whole comment block out of column 1",
+		Kind:        kindQuickFix,
+		Diagnostics: []lsp.Diagnostic{d},
+		Edit:        &lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{uri: edits}},
+	}
+
+	return []lsp.CodeAction{lineFix, blockFix}
+}
+
+// commentBlockRange reads the comment block range the diagnostics provider
+// attached to a comment-in-column-1 diagnostic.
+func commentBlockRange(d lsp.Diagnostic) (start, end int, ok bool) {
+	m, ok := d.Data.(map[string]interface{})
+	if !ok {
+		return 0, 0, false
+	}
+	start, okStart := jsonInt(m["blockStart"])
+	end, okEnd := jsonInt(m["blockEnd"])
+	return start, end, okStart && okEnd
 }

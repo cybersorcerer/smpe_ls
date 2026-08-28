@@ -40,6 +40,7 @@ type DiagnosticsConfig struct {
 	SubOperandValidation        bool `json:"subOperandValidation"`
 	ContentBeyondColumn72       bool `json:"contentBeyondColumn72"`
 	StandaloneCommentBetweenMCS bool `json:"standaloneCommentBetweenMCS"`
+	CommentInColumn1            bool `json:"commentInColumn1"`
 }
 
 // DefaultDiagnosticsConfig returns a config with all diagnostics enabled
@@ -62,6 +63,7 @@ func DefaultDiagnosticsConfig() *DiagnosticsConfig {
 		SubOperandValidation:        true,
 		ContentBeyondColumn72:       true,
 		StandaloneCommentBetweenMCS: true,
+		CommentInColumn1:            true,
 	}
 }
 
@@ -170,6 +172,7 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 			SubOperandValidation:        opts.SubOperandValidation,
 			ContentBeyondColumn72:       opts.ContentBeyondColumn72,
 			StandaloneCommentBetweenMCS: opts.StandaloneCommentBetweenMCS,
+			CommentInColumn1:            opts.CommentInColumn1,
 		}
 		logger.Info("Diagnostics config received from client: MissingRequiredOperand=%v, UnknownOperand=%v, ContentBeyondColumn72=%v",
 			opts.MissingRequiredOperand, opts.UnknownOperand, opts.ContentBeyondColumn72)
@@ -453,6 +456,7 @@ func (h *Handler) publishDiagnostics(uri string) {
 		SubOperandValidation:        h.diagnosticsConfig.SubOperandValidation,
 		ContentBeyondColumn72:       h.diagnosticsConfig.ContentBeyondColumn72,
 		StandaloneCommentBetweenMCS: h.diagnosticsConfig.StandaloneCommentBetweenMCS,
+		CommentInColumn1:            h.diagnosticsConfig.CommentInColumn1,
 	}
 
 	// Generate diagnostics from AST with config and text (for column 72 checking)
@@ -493,6 +497,7 @@ func (h *Handler) WorkspaceDidChangeConfiguration(params lsp.DidChangeConfigurat
 			SubOperandValidation:        opts.SubOperandValidation,
 			ContentBeyondColumn72:       opts.ContentBeyondColumn72,
 			StandaloneCommentBetweenMCS: opts.StandaloneCommentBetweenMCS,
+			CommentInColumn1:            opts.CommentInColumn1,
 		}
 		logger.Info("Updated diagnostics config: MissingRequiredOperand=%v, ContentBeyondColumn72=%v",
 			opts.MissingRequiredOperand, opts.ContentBeyondColumn72)
