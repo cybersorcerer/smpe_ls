@@ -70,6 +70,7 @@ type CommentInfo struct {
 	AtEnd            bool   // Comment was at the end of a line (after content)
 	AfterDot         bool   // Comment was after the terminator
 	BeforeTerminator bool   // Multi-line comment that appears before the terminator line
+	Moved            bool   // Comment is being relocated into the statement by the formatter
 }
 
 // FormatDocument formats the entire document
@@ -206,6 +207,7 @@ func (p *Provider) extractCommentsFromRange(lines []string, startLine, endLine i
 					Character: commentStart,
 					AtEnd:     false,
 					AfterDot:  false,
+					Moved:     true,
 				})
 			} else {
 				// Multi-line comment - find the end
@@ -225,6 +227,7 @@ func (p *Provider) extractCommentsFromRange(lines []string, startLine, endLine i
 					Character: commentStart,
 					AtEnd:     false,
 					AfterDot:  false,
+					Moved:     true,
 				})
 			}
 		}
@@ -345,7 +348,7 @@ func (p *Provider) extractCommentsInRange(comments []*parser.Node, startLine, en
 
 // terminatorPrecedes reports whether a real SMP/E statement terminator appears
 // in the statement text before the given position. A terminator is a '.' at
-// parenthesis depth 0, outside comments and single-quoted strings - a dot
+// parenthesis depth 0, outside comments and single-quoted strings — a dot
 // inside an operand value (e.g. the dataset name in DSN(HLQ.MID.LLQ)) must not
 // count, otherwise a comment following that operand is mistaken for a
 // post-terminator comment and dropped from the formatted output.
@@ -643,159 +646,6 @@ func (p *Provider) extractTrailingCommentAfterTerminator(stmt *parser.Node, line
 	return afterDot
 }
 
-// wrapCommentAt72 wraps a comment to fit within column 72
-// If the comment (with indent) exceeds column 72, it's converted to a multi-line comment
-// Input: indent (e.g. "   ") and comment text (e.g. "/* This is a long comment */")
-// Returns: slice of lines, each fitting within column 72
-func (p *Provider) wrapCommentAt72(indent string, comment string) []string {
-	fullLine := indent + comment
-	if runeCount(fullLine) <= MaxColumn {
-		return []string{fullLine}
-	}
-
-	// Extract the comment content (without /* and */)
-	content := strings.TrimPrefix(comment, "/*")
-	content = strings.TrimSuffix(content, "*/")
-	content = strings.TrimSpace(content)
-
-	// Calculate available space per line
-	// Format: indent + "/* " + content + " */"
-	// For first line (if also last): indent + "/* " + text + " */"
-	// For first line (if not last): indent + "/* " + text
-	// For middle lines: indent + "   " + text (continuation)
-	// For last line: indent + "   " + text + " */"
-	prefixFirst := indent + "/* "
-	prefixCont := indent + "   "
-	suffix := " */"
-
-	// First line must also account for suffix when determining if we need to wrap
-	availableFirst := MaxColumn - runeCount(prefixFirst) - runeCount(suffix)
-	availableCont := MaxColumn - runeCount(prefixCont) - runeCount(suffix)
-
-	if availableFirst <= 10 || availableCont <= 10 {
-		// Not enough space, just return the original (will show diagnostic)
-		return []string{fullLine}
-	}
-
-	// Split content into words
-	words := strings.Fields(content)
-	if len(words) == 0 {
-		return []string{indent + "/* */"}
-	}
-
-	var resultLines []string
-	var currentLine strings.Builder
-	isFirstLine := true
-
-	// Helper to split a long word into chunks that fit
-	splitLongWord := func(word string, available int) []string {
-		var chunks []string
-		runes := []rune(word)
-		for len(runes) > 0 {
-			chunkSize := available
-			if chunkSize > len(runes) {
-				chunkSize = len(runes)
-			}
-			chunks = append(chunks, string(runes[:chunkSize]))
-			runes = runes[chunkSize:]
-		}
-		return chunks
-	}
-
-	for i, word := range words {
-		available := availableCont
-		if isFirstLine {
-			available = availableFirst
-		}
-
-		isLastWord := i == len(words)-1
-
-		if currentLine.Len() == 0 {
-			// Starting a new line
-			if runeCount(word) > available {
-				// Word itself is too long - split it into chunks
-				chunks := splitLongWord(word, available)
-				for j, chunk := range chunks {
-					isLastChunk := j == len(chunks)-1 && isLastWord
-					if isFirstLine {
-						if isLastChunk {
-							resultLines = append(resultLines, prefixFirst+chunk+suffix)
-						} else {
-							resultLines = append(resultLines, prefixFirst+chunk)
-						}
-						isFirstLine = false
-					} else {
-						if isLastChunk {
-							resultLines = append(resultLines, prefixCont+chunk+suffix)
-						} else {
-							resultLines = append(resultLines, prefixCont+chunk)
-						}
-					}
-				}
-			} else {
-				currentLine.WriteString(word)
-				// If this is the last word, flush immediately
-				if isLastWord {
-					if isFirstLine {
-						resultLines = append(resultLines, prefixFirst+currentLine.String()+suffix)
-					} else {
-						resultLines = append(resultLines, prefixCont+currentLine.String()+suffix)
-					}
-					currentLine.Reset()
-				}
-			}
-		} else {
-			// Adding to existing line
-			newLen := currentLine.Len() + 1 + runeCount(word)
-			if newLen <= available {
-				currentLine.WriteString(" ")
-				currentLine.WriteString(word)
-				// If this is the last word, flush immediately
-				if isLastWord {
-					if isFirstLine {
-						resultLines = append(resultLines, prefixFirst+currentLine.String()+suffix)
-					} else {
-						resultLines = append(resultLines, prefixCont+currentLine.String()+suffix)
-					}
-					currentLine.Reset()
-				}
-			} else {
-				// Flush current line and start new one
-				if isFirstLine {
-					resultLines = append(resultLines, prefixFirst+currentLine.String())
-					isFirstLine = false
-				} else {
-					resultLines = append(resultLines, prefixCont+currentLine.String())
-				}
-				currentLine.Reset()
-
-				// Check if word fits on new line
-				if runeCount(word) > availableCont {
-					// Word is too long - split it
-					chunks := splitLongWord(word, availableCont)
-					for j, chunk := range chunks {
-						isLastChunk := j == len(chunks)-1 && isLastWord
-						if isLastChunk {
-							resultLines = append(resultLines, prefixCont+chunk+suffix)
-						} else {
-							resultLines = append(resultLines, prefixCont+chunk)
-						}
-					}
-				} else {
-					currentLine.WriteString(word)
-					// If this is the last word, flush immediately
-					if isLastWord {
-						resultLines = append(resultLines, prefixCont+currentLine.String()+suffix)
-						currentLine.Reset()
-					}
-				}
-			}
-		}
-	}
-
-	return resultLines
-}
-
 // removeCommentsFromLine removes /* */ comments from a line
 func removeCommentsFromLine(line string) string {
 	result := line
@@ -902,8 +752,7 @@ func (p *Provider) buildFormattedStatementWithLeadingComments(stmt *parser.Node,
 
 		// Insert leading comments after the statement header line
 		for _, lc := range leadingComments {
-			wrappedLines := p.wrapCommentAt72(commentIndent, lc.Text)
-			outputLines = append(outputLines, wrappedLines...)
+			p.appendCommentLines(lc, &outputLines)
 		}
 
 		// Build a map: operand index -> comments that belong to that operand
@@ -948,7 +797,7 @@ func (p *Provider) buildFormattedStatementWithLeadingComments(stmt *parser.Node,
 				p.appendWrappedOperand(opText, indent, &outputLines)
 				// Append same-line and following comments after the wrapped operand
 				for _, c := range sameLineComments {
-					p.appendCommentLines(c.Text, commentIndent, &outputLines)
+					p.appendCommentLines(c, &outputLines)
 				}
 			} else {
 				opLine := indent + opText
@@ -961,7 +810,7 @@ func (p *Provider) buildFormattedStatementWithLeadingComments(stmt *parser.Node,
 
 			// Append following-line comments (multi-line or standalone between operands)
 			for _, c := range followingComments {
-				p.appendCommentLines(c.Text, commentIndent, &outputLines)
+				p.appendCommentLines(c, &outputLines)
 			}
 		}
 
@@ -981,8 +830,7 @@ func (p *Provider) buildFormattedStatementWithLeadingComments(stmt *parser.Node,
 		if len(leadingComments) > 0 {
 			outputLines = append(outputLines, currentLine)
 			for _, lc := range leadingComments {
-				wrappedLines := p.wrapCommentAt72(commentIndent, lc.Text)
-				outputLines = append(outputLines, wrappedLines...)
+				p.appendCommentLines(lc, &outputLines)
 			}
 			currentLine = ""
 		}
@@ -1013,7 +861,7 @@ func (p *Provider) buildFormattedStatementWithLeadingComments(stmt *parser.Node,
 
 		// Insert inline comments that weren't on operand lines
 		for _, c := range inlineComments {
-			p.appendCommentLines(c.Text, commentIndent, &outputLines)
+			p.appendCommentLines(c, &outputLines)
 		}
 
 		// Add terminator
@@ -1079,22 +927,6 @@ func (p *Provider) findBreakPoint(line string, maxCol int) int {
 	}
 
 	return lastBreak
-}
-
-// wrapMultiLineCommentAt72 ensures multi-line comments start at column 3 (2 space indent)
-// Comments must not start in column 1 in SMP/E
-func (p *Provider) wrapMultiLineCommentAt72(commentLines []string) []string {
-	const commentIndent = "  " // 2 spaces = column 3
-	result := make([]string, len(commentLines))
-	for i, line := range commentLines {
-		trimmed := strings.TrimLeft(line, " \t")
-		if trimmed == "" {
-			result[i] = ""
-		} else {
-			result[i] = commentIndent + trimmed
-		}
-	}
-	return result
 }
 
 // formatOperand formats a single operand with the given indentation.
@@ -1351,51 +1183,82 @@ func (p *Provider) formatOperandParameter(param *parser.Node) string {
 	return param.Value
 }
 
-// appendCommentsToLine tries to append comments to the current line.
-// If a comment fits within column 72, it's appended inline.
-// If not, the current line is flushed to outputLines and the comment is
-// wrapped onto its own line(s). Returns the (possibly modified) current line.
-// An empty return means the line was already flushed.
-func (p *Provider) appendCommentsToLine(line string, comments []CommentInfo, outputLines *[]string, commentIndent string) string {
-	for _, c := range comments {
-		if strings.Contains(c.Text, "\n") {
-			// Multi-line comment: flush current line, then add wrapped comment
-			if line != "" {
-				*outputLines = append(*outputLines, p.wrapLineAt72(line, commentIndent))
-				line = ""
-			}
-			commentLines := strings.Split(c.Text, "\n")
-			wrappedLines := p.wrapMultiLineCommentAt72(commentLines)
-			*outputLines = append(*outputLines, wrappedLines...)
-		} else {
-			// Single-line comment: try to fit on current line
-			if line != "" && runeCount(line)+1+runeCount(c.Text) <= MaxColumn {
-				line += " " + c.Text
-			} else {
-				// Doesn't fit: flush current line, put comment on its own line
-				if line != "" {
-					*outputLines = append(*outputLines, p.wrapLineAt72(line, commentIndent))
-					line = ""
-				}
-				wrappedLines := p.wrapCommentAt72(commentIndent, c.Text)
-				*outputLines = append(*outputLines, wrappedLines...)
+// movedCommentIndent is the column a comment is placed at when the formatter
+// moves it into a statement and it would otherwise stay in column 1, where a
+// "/*" marks the end of an input data set.
+const movedCommentIndent = 2
+
+// commentBlockLines returns a comment exactly as the user wrote it, split into
+// output lines. The parser stores a comment from its "/*" on, so the first
+// line's original indentation is restored from Position.Character; every
+// further line is reproduced unchanged.
+//
+// The formatter never re-indents, re-wraps or reflows comment text: block
+// comments routinely carry box drawings, tables and column-aligned metadata
+// (e.g. generated GITLAB-META headers) that any rewrite destroys. A comment
+// left in column 1, or one reaching past column 72, is reported by the
+// commentInColumn1 and contentBeyondColumn72 diagnostics instead - repairing it
+// is the user's decision, offered as a quick fix.
+//
+// The single exception is a comment the formatter relocates itself (one that
+// stood before the statement): leaving it in column 1 would mean the formatter
+// produces the very error the diagnostic then reports. Such a block is shifted
+// as a whole, by the same amount on every line, so its relative layout survives.
+func commentBlockLines(c CommentInfo) []string {
+	lines := strings.Split(c.Text, "\n")
+
+	// Original column of the opening line. A single-line comment that sat
+	// behind other content and is now moving onto a line of its own left that
+	// column behind - reproducing it there would only pad the line out (and
+	// push it past column 72). Multi-line comments keep it: their first line is
+	// positioned relative to the rest of the block.
+	column := c.Character
+	if c.AtEnd && len(lines) == 1 {
+		column = movedCommentIndent
+	}
+
+	shift := 0
+	if c.Moved && column < movedCommentIndent {
+		shift = movedCommentIndent - column
+	}
+
+	lines[0] = strings.Repeat(" ", column+shift) + lines[0]
+
+	if shift > 0 {
+		pad := strings.Repeat(" ", shift)
+		for i := 1; i < len(lines); i++ {
+			if strings.TrimSpace(lines[i]) != "" {
+				lines[i] = pad + lines[i]
 			}
 		}
+	}
+
+	return lines
+}
+
+// appendCommentsToLine appends single-line comments that still fit to the
+// current line. A comment that does not fit, and any multi-line comment, causes
+// the current line to be flushed and the comment to be reproduced on its own
+// line(s). Returns the (possibly modified) current line; an empty return means
+// the line was already flushed.
+func (p *Provider) appendCommentsToLine(line string, comments []CommentInfo, outputLines *[]string, continuationIndent string) string {
+	for _, c := range comments {
+		if !strings.Contains(c.Text, "\n") && line != "" && runeCount(line)+1+runeCount(c.Text) <= MaxColumn {
+			line += " " + c.Text
+			continue
+		}
+		if line != "" {
+			*outputLines = append(*outputLines, p.wrapLineAt72(line, continuationIndent))
+			line = ""
+		}
+		p.appendCommentLines(c, outputLines)
 	}
 	return line
 }
 
-// appendCommentLines adds a comment (single or multi-line) as separate line(s),
-// wrapped at column 72
-func (p *Provider) appendCommentLines(text string, commentIndent string, outputLines *[]string) {
-	if strings.Contains(text, "\n") {
-		commentLines := strings.Split(text, "\n")
-		wrappedLines := p.wrapMultiLineCommentAt72(commentLines)
-		*outputLines = append(*outputLines, wrappedLines...)
-	} else {
-		wrappedLines := p.wrapCommentAt72(commentIndent, text)
-		*outputLines = append(*outputLines, wrappedLines...)
-	}
+// appendCommentLines adds a comment as its own output line(s), unchanged.
+func (p *Provider) appendCommentLines(c CommentInfo, outputLines *[]string) {
+	*outputLines = append(*outputLines, commentBlockLines(c)...)
 }
 
 // appendWrappedOperand adds a multi-line (wrapped list) operand to outputLines
