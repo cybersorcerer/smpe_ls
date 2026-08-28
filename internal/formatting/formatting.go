@@ -506,6 +506,13 @@ func (p *Provider) getStatementEndLine(stmt *parser.Node, lines []string) int {
 		// If we found a terminator but are now in a multi-line comment,
 		// the comment is after the terminator - continue to find where it ends
 		if foundTerminatorOnThisLine && inMultiLineComment {
+			// Lines after the terminator of a statement that expects inline
+			// data are data, never comment text - never scan into them, even
+			// when the comment after the dot was left unclosed.
+			if p.stmtExpectsInlineData(stmt) {
+				terminatorLine = i
+				break
+			}
 			// Comment after terminator - find where it ends
 			for j := i + 1; j < len(lines); j++ {
 				if strings.Contains(lines[j], "*/") {
@@ -610,8 +617,10 @@ func (p *Provider) extractTrailingCommentAfterTerminator(stmt *parser.Node, line
 		return ""
 	}
 
-	// Check if the comment spans multiple lines
-	if strings.Contains(afterDot, "/*") && !strings.Contains(afterDot, "*/") {
+	// Check if the comment spans multiple lines.
+	// For statements expecting inline data the following lines are data, so an
+	// unclosed comment after the dot must not swallow them.
+	if strings.Contains(afterDot, "/*") && !strings.Contains(afterDot, "*/") && !p.stmtExpectsInlineData(stmt) {
 		// Multi-line comment - collect all lines until we find */
 		var commentLines []string
 		commentLines = append(commentLines, afterDot)
