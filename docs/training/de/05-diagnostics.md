@@ -109,6 +109,7 @@ Vollständige Liste aller Einstellungen:
 | `smpe.diagnostics.contentBeyondColumn72` | `true` |
 | `smpe.diagnostics.mutuallyExclusive` | `true` |
 | `smpe.diagnostics.standaloneCommentBetweenMCS` | `true` |
+| `smpe.diagnostics.commentInColumn1` | `true` |
 | `smpe.diagnostics.duplicateOperand` | `true` |
 | `smpe.diagnostics.emptyOperandParameter` | `true` |
 | `smpe.diagnostics.dependencyViolation` | `true` |

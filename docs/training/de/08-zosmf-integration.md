@@ -184,13 +184,33 @@ Die Extension analysiert alle `.smpe`-Dateien im Workspace und prüft ob die
 referenzierten Input-Member-Dateien vorhanden sind. Das Ergebnis erscheint in
 einer Tabelle:
 
-| SMP/E File | Statement | Member | Found |
-|------------|-----------|--------|-------|
-| mymod.smpe | ++PARM | RSSPRMI.parm | No |
-| mymod.smpe | ++SRC | MYSRC.hlasm | Yes |
+| SMP/E File | Statement | Member | Source | Found |
+|------------|-----------|--------|--------|-------|
+| mymod.smpe | ++PARM | RSSPRMI.parm | convention | No |
+| mymod.smpe | ++SRC | MYSRC.hlasm | convention | Yes |
+| mymod.smpe | ++PROC | ./customization/IIQACD.jcl | placeholder | Yes |
 
 Die Tabelle kann nach allen Spalten sortiert und gefiltert werden (z.B. nur
 fehlende Member anzeigen).
+
+**Zwei Wege, auf ein Input-Member zu zeigen**
+
+Die Spalte **Source** zeigt, wie der erwartete Member ermittelt wurde:
+
+- `convention` - Das Statement hat keine Inline-Daten, der Member wird als
+  `<Elementname><Endung>` unterhalb der Suchordner erwartet. Die Endung ergibt
+  sich aus dem Statement-Namen (`++BOOK` erwartet `<Element>.book`); etablierte
+  Ausnahmen wie `++SRC` → `.hlasm` oder `++PROC` → `.jcl` bleiben bestehen.
+  Sprachvarianten lösen auf ihr Basis-Statement auf, `++PNLDEU` erwartet also
+  `<Element>.pnl`.
+- `placeholder` - Im Inline-Daten-Bereich des Statements steht eine
+  `{{ pfad }}`-Zeile, die eine Build-Pipeline durch den Inhalt dieser Datei
+  ersetzt. Der Pfad ist relativ zum Repository-Root und wird exakt so geprüft,
+  wie er dasteht - er darf also auch außerhalb der Suchordner zeigen.
+
+Kein Member wird erwartet, wenn das Statement seine Inline-Daten direkt enthält
+oder wenn `FROMDS`, `RELFILE`, `TXLIB` oder `DELETE` die Daten anderweitig
+bereitstellt.
 
 **Konfiguration:**
 

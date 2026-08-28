@@ -60,7 +60,7 @@ Enable automatic formatting on save:
 | `smpe.formatting.oneOperandPerLine` | `true` | Place each operand on its own line |
 | `smpe.formatting.wrapListsAfterN` | `2` | Wrap lists after N items (0 = never) |
 | `smpe.formatting.formatOnSave` | `false` | Automatically format when saving |
-| `smpe.formatting.moveLeadingComments` | `true` | Move comments before first statement into the statement |
+| `smpe.formatting.moveLeadingComments` | `false` | Move comments before first statement into the statement |
 
 ## Note on Inline Data
 

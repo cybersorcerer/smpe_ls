@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-1.3.9-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-1.3.10-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -267,6 +267,25 @@ make release
 ```
 
 ## 📋 What's New
+
+### Version 1.3.10
+
+**New Features**
+
+- 📚 **Check Missing Input Members resolves `{{ path }}` placeholders** - A statement can point at its input member with a `{{ ./path }}` line, which the build pipeline replaces with that file's contents. The path is relative to the repository root and is checked as written, so it may point outside the configured search folders. Such statements were skipped before, because a placeholder counts as inline data. A new **Source** column tells `placeholder` and `convention` results apart.
+- 📚 **New diagnostic: comment beginning in column 1** - A `/*` in column 1 marks the end of an input data set, so SMP/E stops reading the member there. Reported as an error on every affected line, with quick fixes to indent either the single line or the whole comment block. Toggle with `smpe.diagnostics.commentInColumn1`.
+
+**Bug Fixes**
+
+- 🩹 **The formatter no longer rewrites comment text** - Comments were reflowed and re-indented, destroying box drawings, tables and aligned metadata blocks such as generated GITLAB-META headers. Comment text is now reproduced exactly as written; only its position may change. Comments the formatter relocates itself are shifted as a whole block so they do not land in column 1.
+- 🩹 **Comments after operand values containing dots are kept** - A dot in a dataset name (`DSN(HLQ.MID.LLQ)`) or a quoted value was mistaken for the statement terminator, dropping the comment. Terminator detection now tracks parenthesis depth, quoted strings and comments across line breaks.
+- 🩹 **Formatting no longer reaches into inline data** - An unclosed comment after the terminator could pull the following data lines into the statement.
+- 🩹 **Fewer false positives in Check Missing Input Members** - No member is demanded for `FROMDS`, `RELFILE` or `DELETE`. Statements without an explicit mapping derive their extension from the statement name (`++BOOK` → `.book`), and language variants resolve to their base statement (`++PNLDEU` → `.pnl`). Three mappings that never matched a statement were corrected.
+- 🩹 **`smpe_outl` reports parameterless flag operands** - `DELETE`, `USER` and similar operands either vanished from the outline or absorbed the value of the following operand.
+
+**Changed**
+
+- 🔧 **Language definitions come from `smpe.json`** - The 32 national language identifiers and the base statements accepting a language suffix are no longer duplicated in Go code. `++HFS` is now correctly flagged as accepting language variants.
 
 ### Version 1.3.9
 

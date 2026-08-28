@@ -719,6 +719,8 @@ Oder per Rechtsklick auf eine `.smpe`-Datei im Explorer.
 
 Eine filterbare und sortierbare Tabelle mit Status **Found** / **Missing** für jeden referenzierten Member.
 
+Die Spalte **Source** zeigt, wie der Member ermittelt wurde: `convention` (Elementname + Endung unterhalb der Suchordner) oder `placeholder` (eine `{{ pfad }}`-Zeile, relativ zum Repository-Root).
+
 ## Settings
 
 | Setting | Standard | Beschreibung |
@@ -862,6 +864,7 @@ Cmd+Shift+P  →  SMP/E: Create z/OSMF Config
 | `smpe.diagnostics.dependencyViolation` | `true` |
 | `smpe.diagnostics.contentBeyondColumn72` | `true` |
 | `smpe.diagnostics.missingInlineData` | `true` |
+| `smpe.diagnostics.commentInColumn1` | `true` |
 
 ---
 

@@ -2,6 +2,15 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 1.3.10
+
+- **Check Missing Input Members understands `{{ path }}` placeholders** - Statements pointing at their input member with a `{{ ./path }}` line are now resolved against the repository root instead of being skipped. A new **Source** column distinguishes `placeholder` from `convention`.
+- **New diagnostic: comment beginning in column 1** - A `/*` in column 1 ends the input data set and truncates the member. Reported as an error with quick fixes to indent the line or the whole comment block. Toggle via `smpe.diagnostics.commentInColumn1`.
+- **Comments survive formatting unchanged** - Box drawings, tables and aligned metadata blocks are no longer reflowed or re-indented, and comments after dotted operand values are no longer dropped.
+- **Fewer false positives in Check Missing Input Members** - No member is demanded for `FROMDS`, `RELFILE` or `DELETE`, and statements without an explicit mapping derive their extension from the statement name.
+
+See the [CHANGELOG](https://github.com/cybersorcerer/smpe_ls/blob/main/client/vscode-smpe/CHANGELOG.md) for full details.
+
 ## What's New in 1.3.9
 
 - **LEPARM and sub-operand containers fixed end-to-end** - Parsing, completion (nested context, already-used filtering, pipe-value suggestions like `AMODE`/`UPCASE`/`FETCHOPT`), Outline view, and formatting (separator preservation, list wrapping) all work correctly now for `LEPARM`, `FROMDS`, and similar sub-operand operands.
@@ -98,7 +107,7 @@ The extension supports all common SMP/E MCS statements, including:
 | `smpe.formatting.oneOperandPerLine` | `true` | Place each operand on its own line |
 | `smpe.formatting.wrapListsAfterN` | `2` | Wrap comma-separated lists after N items per line (0 = disabled) |
 | `smpe.formatting.formatOnSave` | `false` | Automatically format document when saving |
-| `smpe.formatting.moveLeadingComments` | `true` | Move comments from before the first statement into the statement during formatting |
+| `smpe.formatting.moveLeadingComments` | `false` | Move comments from before the first statement into the statement during formatting |
 
 ### Diagnostics
 

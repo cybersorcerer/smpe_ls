@@ -60,7 +60,7 @@ Automatisches Formatieren beim Speichern aktivieren:
 | `smpe.formatting.oneOperandPerLine` | `true` | Jeden Operanden auf eigene Zeile |
 | `smpe.formatting.wrapListsAfterN` | `2` | Listen nach N Einträgen umbrechen (0 = nie) |
 | `smpe.formatting.formatOnSave` | `false` | Beim Speichern automatisch formatieren |
-| `smpe.formatting.moveLeadingComments` | `true` | Kommentare vor dem ersten Statement ins Statement verschieben |
+| `smpe.formatting.moveLeadingComments` | `false` | Kommentare vor dem ersten Statement ins Statement verschieben |
 
 ## Hinweis zu Inline-Data
 

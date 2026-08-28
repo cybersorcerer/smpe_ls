@@ -2,6 +2,27 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.10] - 2026-08-28
+
+### Added
+
+- **Check Missing Input Members resolves `{{ path }}` placeholders** - A statement can point at its input member with a `{{ ./path }}` line in its inline data area, which the build pipeline replaces with the contents of that file. The path is relative to the repository root and is checked exactly as written, so it may point outside the configured search folders. Such statements were skipped entirely before, because a placeholder line counts as inline data. Results now carry a **Source** column telling the two checks apart: `placeholder` for a resolved `{{ path }}`, `convention` for the established `<element name><extension>` lookup below `smpe.checkMissingInputMembers.searchFolders`.
+- **New diagnostic: comment beginning in column 1** - A `/*` in column 1 marks the end of an input data set, so SMP/E stops reading the member at that line. Reported as an error on every affected line, including continuation lines of a block comment and lines inside inline data, where the same truncation applies. Two quick fixes are offered: indent only the reported line, or shift the whole comment block by the same amount so a box drawing keeps its layout. Toggle with `smpe.diagnostics.commentInColumn1` (default `true`).
+
+### Fixed
+
+- **The formatter no longer rewrites comment text** - Comments were reflowed, re-indented and re-wrapped at column 72, which destroyed box drawings, tables and column-aligned metadata blocks such as generated GITLAB-META headers. The formatter now decides only where a comment sits, never what it says: the text is reproduced exactly as written, including its original indentation. Lines past column 72 and comments in column 1 are reported by diagnostics instead of being silently rewritten. The one exception is a comment the formatter relocates itself (`smpe.formatting.moveLeadingComments`), which is shifted as a whole block so it does not end up in column 1.
+- **Comments after operand values containing dots are kept** - A dot inside an operand value, such as the dataset name in `FROMDS(DSN(HLQ.MID.LLQ))` or a quoted `DESC('R+V IIQ. Started')`, was treated as the statement terminator, so a comment following that operand was classified as a post-terminator comment and dropped from the formatted output. Terminator detection now tracks parenthesis depth, quoted strings and comments, and works across line breaks.
+- **Formatting no longer reaches into inline data** - An unclosed comment after the terminator made the formatter search on for `*/` into the following lines, pulling inline data into the statement text. For statements expecting inline data the scan now stops at the terminator line.
+- **No input member demanded for FROMDS, RELFILE or DELETE** - These operands mean the element data comes from elsewhere or the element is being deleted, so no member file is expected. Only `TXLIB` was excluded before, making every such statement a false positive.
+- **Input member extensions for all statements** - Statements without an explicit mapping now derive their extension from the statement name (`++BOOK` expects `<element>.book`), provided `smpe.json` marks them as expecting inline data. Language variants resolve to their base statement, so `++PNLDEU` expects `<element>.pnl` and `++SKLDEU` keeps `.skl.jcl`. Three entries never matched a statement and were corrected: `++SHELLSRC` was a typo for `++SHELLSCR` (its `.sh` mapping is preserved), `++SHSCRIPT` is an operand rather than a statement, and `++PNLENU` covered exactly one of 32 languages. Existing mappings keep their extensions unchanged.
+- **`smpe_outl` reports parameterless flag operands** - The sub-operand fallback searched forward for the next `(`, so an operand without a value absorbed the value of a later one (`DELETE DISTLIB(AMACLIB)` became `DELETE(AMACLIB)`) or vanished when no parenthesized operand followed. Operands such as `DELETE` and `USER` now appear under their bare name.
+- **CHANGELOG link in the extension README** - Relative links in the extension README resolve against the repository root rather than `client/vscode-smpe/`, so the link returned a 404.
+
+### Changed
+
+- **Language definitions come from `smpe.json`** - The 32 national language identifiers were hardcoded in Go, and the base statements accepting a language suffix existed twice: in Go and as `language_variants` in `smpe.json`. Both now live in `smpe.json` alone. `++HFS` was missing its `language_variants` flag although its own description names `++HFSxxx`.
+
 ## [1.3.9] - 2026-08-25
 
 ### Added

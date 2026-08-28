@@ -181,12 +181,31 @@ Or: right-click on a `.smpe` file → `SMP/E: Check Missing Input Members`
 The extension analyzes all `.smpe` files in the workspace and checks whether the
 referenced input member files exist. The result appears in a table:
 
-| SMP/E File | Statement | Member | Found |
-|------------|-----------|--------|-------|
-| mymod.smpe | ++PARM | RSSPRMI.parm | No |
-| mymod.smpe | ++SRC | MYSRC.hlasm | Yes |
+| SMP/E File | Statement | Member | Source | Found |
+|------------|-----------|--------|--------|-------|
+| mymod.smpe | ++PARM | RSSPRMI.parm | convention | No |
+| mymod.smpe | ++SRC | MYSRC.hlasm | convention | Yes |
+| mymod.smpe | ++PROC | ./customization/IIQACD.jcl | placeholder | Yes |
 
 The table can be sorted and filtered by all columns (e.g. show only missing members).
+
+**Two ways to point at an input member**
+
+The **Source** column shows how the expected member was determined:
+
+- `convention` - the statement carries no inline data, so the member is expected
+  as `<element name><extension>` somewhere below the search folders. The
+  extension comes from the statement name (`++BOOK` expects `<element>.book`);
+  established exceptions such as `++SRC` → `.hlasm` or `++PROC` → `.jcl` are
+  kept. Language variants resolve to their base statement, so `++PNLDEU`
+  expects `<element>.pnl`.
+- `placeholder` - the statement's inline data area contains a `{{ path }}` line
+  that a build pipeline replaces with that file's contents. The path is relative
+  to the repository root and is checked exactly as written, so it may point
+  outside the search folders.
+
+No member is expected when the statement carries its inline data directly, or
+when `FROMDS`, `RELFILE`, `TXLIB` or `DELETE` supplies the data from elsewhere.
 
 **Configuration:**
 
