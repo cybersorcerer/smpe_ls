@@ -207,3 +207,59 @@ func TestBuildOperandSymbols_RangeMatchesActualText(t *testing.T) {
 			wantLine, wantChar, child.Range.End.Line, child.Range.End.Character)
 	}
 }
+
+// flagOperandStatements mirrors a ++MAC-like statement carrying both a
+// parameterless flag operand (DELETE) and a normal one (DISTLIB).
+func flagOperandStatements() map[string]data.MCSStatement {
+	return map[string]data.MCSStatement{
+		"++MAC": {
+			Name:      "++MAC",
+			Parameter: "name",
+			Operands: []data.Operand{
+				{Name: "DELETE", Type: "boolean"},
+				{Name: "DISTLIB", Parameter: "ddname", Type: "string"},
+			},
+		},
+	}
+}
+
+// A parameterless flag operand must not absorb the parenthesized text of a
+// LATER operand. The sub-operand fallback searched forward for the next "("
+// on the line, so "DELETE DISTLIB(AMACLIB)" produced "DELETE(AMACLIB)".
+func TestBuildOperandSymbols_FlagOperandKeepsNoParameter(t *testing.T) {
+	src := "++MAC(M1) DELETE DISTLIB(AMACLIB)\n."
+	p := parser.NewParser(flagOperandStatements())
+	doc := p.Parse(src)
+	if len(doc.Statements) != 1 {
+		t.Fatalf("expected 1 statement, got %d", len(doc.Statements))
+	}
+	lines := strings.Split(src, "\n")
+
+	names := symbolNames(buildSymbols(doc, lines, false, false)[0].Children)
+	if contains(names, "DELETE(AMACLIB)") {
+		t.Errorf("DELETE stole the parameter of a later operand: %v", names)
+	}
+	if !contains(names, "DELETE") {
+		t.Errorf("expected bare DELETE among children, got %v", names)
+	}
+	if !contains(names, "DISTLIB(AMACLIB)") {
+		t.Errorf("expected DISTLIB(AMACLIB) among children, got %v", names)
+	}
+}
+
+// The same flag operand at the end of a statement, with no parenthesized
+// operand following it, must still be reported instead of vanishing.
+func TestBuildOperandSymbols_TrailingFlagOperandIsReported(t *testing.T) {
+	src := "++MAC(M2) DISTLIB(AMACLIB) DELETE\n."
+	p := parser.NewParser(flagOperandStatements())
+	doc := p.Parse(src)
+	lines := strings.Split(src, "\n")
+
+	names := symbolNames(buildSymbols(doc, lines, false, false)[0].Children)
+	if !contains(names, "DELETE") {
+		t.Errorf("trailing flag operand was dropped, got %v", names)
+	}
+	if !contains(names, "DISTLIB(AMACLIB)") {
+		t.Errorf("expected DISTLIB(AMACLIB) among children, got %v", names)
+	}
+}

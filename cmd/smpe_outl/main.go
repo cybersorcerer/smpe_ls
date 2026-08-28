@@ -238,15 +238,21 @@ func buildOperandSymbols(stmt *parser.Node, lines []string, withRanges bool) []O
 		hasRange := false
 		if paramValue == "" {
 			raw, rEndLine, rEndChar, ok := extractParenthesizedText(lines, child.Position.Line, child.Position.Character+child.Position.Length)
-			if !ok {
-				continue
+			if ok {
+				paramValue = raw
+				endLine, endChar = rEndLine, rEndChar
+				hasRange = true
 			}
-			paramValue = raw
-			endLine, endChar = rEndLine, rEndChar
-			hasRange = true
 		}
 
-		name := child.Name + "(" + paramValue + ")"
+		// A parameterless flag operand (DELETE, USER, ...) carries no value at
+		// all, so it is reported under its bare name. It must still appear:
+		// consumers rely on it, e.g. to tell a deletion from an element whose
+		// input member is missing.
+		name := child.Name
+		if paramValue != "" {
+			name += "(" + paramValue + ")"
+		}
 
 		childSym := OutlineSymbol{
 			Name: name,
@@ -256,7 +262,11 @@ func buildOperandSymbols(stmt *parser.Node, lines []string, withRanges bool) []O
 		if withRanges {
 			if !hasRange {
 				endLine = child.Position.Line
-				endChar = child.Position.Character + child.Position.Length + len(paramValue) + 2
+				endChar = child.Position.Character + child.Position.Length
+				if paramValue != "" {
+					// name + "(" + value + ")"
+					endChar += len(paramValue) + 2
+				}
 			}
 			r := lsp.Range{
 				Start: lsp.Position{Line: child.Position.Line, Character: child.Position.Character},
@@ -293,6 +303,13 @@ func extractParenthesizedText(lines []string, line, char int) (text string, endL
 			start = char
 		}
 		if idx := strings.IndexByte(lines[l][start:], '('); idx >= 0 {
+			// The '(' must belong to this operand, so only whitespace may
+			// separate it from the operand name. Anything else means the
+			// parenthesis belongs to a later operand - a parameterless flag
+			// operand would otherwise absorb its value.
+			if strings.TrimSpace(lines[l][start:start+idx]) != "" {
+				return "", 0, 0, false
+			}
 			startLine, startChar = l, start+idx
 			break
 		}
