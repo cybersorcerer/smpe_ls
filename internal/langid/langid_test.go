@@ -4,7 +4,27 @@ import (
 	"testing"
 )
 
+// The language lists are populated from smpe.json at load time, so a unit test
+// of this package has to supply them itself. Importing the data package here
+// would be an import cycle (data depends on langid).
+func setupLanguageData() {
+	SetNationalLanguageIdentifiers([]string{
+		"ARA", "CHS", "CHT", "DAN", "DES", "DEU", "ELL", "ENG",
+		"ENP", "ENU", "ESP", "FIN", "FRA", "FRB", "FRC", "FRS",
+		"HEB", "ISL", "ITA", "ITS", "JPN", "KOR", "NLB", "NLD",
+		"NOR", "PTB", "PTG", "RMS", "RUS", "SVE", "THA", "TRK",
+	})
+	SetLanguageVariantStatements([]string{
+		"++BOOK", "++BSIND", "++CGM", "++DATA6", "++FONT", "++GDF",
+		"++HFS", "++HELP", "++IMG", "++MSG", "++PNL", "++PROBJ",
+		"++PRSRC", "++PSEG", "++PUBLB", "++SAMP", "++SKL", "++TBL",
+		"++TEXT", "++UTIN", "++UTOUT",
+	})
+}
+
 func TestHFSLanguageID(t *testing.T) {
+	setupLanguageData()
+
 	// Test that ++HFS is recognized as a language variant statement
 	if !IsLanguageVariantStatement("++HFS") {
 		t.Error("++HFS should be a language variant statement")

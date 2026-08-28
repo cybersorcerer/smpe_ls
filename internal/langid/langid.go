@@ -1,40 +1,14 @@
 package langid
 
-// NationalLanguageIdentifiers contains all valid 3-character language identifiers
-// as defined in the SMP/E Reference Manual Table 3
-var NationalLanguageIdentifiers = []string{
-	"ARA", // Arabic
-	"CHS", // Simplified Chinese
-	"CHT", // Traditional Chinese
-	"DAN", // Danish
-	"DES", // German (Switzerland)
-	"DEU", // German (Germany)
-	"ELL", // Greek
-	"ENG", // English (United Kingdom)
-	"ENP", // Uppercase English
-	"ENU", // English (United States)
-	"ESP", // Spanish
-	"FIN", // Finnish
-	"FRA", // French (France)
-	"FRB", // French (Belgium)
-	"FRC", // French (Canada)
-	"FRS", // French (Switzerland)
-	"HEB", // Hebrew
-	"ISL", // Icelandic
-	"ITA", // Italian (Italy)
-	"ITS", // Italian (Switzerland)
-	"JPN", // Japanese
-	"KOR", // Korean
-	"NLB", // Dutch (Belgium)
-	"NLD", // Dutch (Netherlands)
-	"NOR", // Norwegian
-	"PTB", // Portuguese (Brazil)
-	"PTG", // Portuguese (Portugal)
-	"RMS", // Rhaeto-Romanic
-	"RUS", // Russian
-	"SVE", // Swedish
-	"THA", // Thai
-	"TRK", // Turkish
+// NationalLanguageIdentifiers holds all valid 3-character language
+// identifiers. It is populated from smpe.json ("language_identifiers") when
+// the data store is loaded, so the definitions live in one place only.
+var NationalLanguageIdentifiers []string
+
+// SetNationalLanguageIdentifiers replaces the identifier list. Called by the
+// data package after reading smpe.json.
+func SetNationalLanguageIdentifiers(ids []string) {
+	NationalLanguageIdentifiers = ids
 }
 
 // IsValidLanguageID checks if the given string is a valid national language identifier
@@ -47,30 +21,15 @@ func IsValidLanguageID(id string) bool {
 	return false
 }
 
-// LanguageVariantStatements contains all MCS statement base names that require
-// a national language identifier suffix (e.g., ++BOOK becomes ++BOOKENU, ++HFS becomes ++HFSENU)
-var LanguageVariantStatements = []string{
-	"++BOOK",
-	"++BSIND",
-	"++CGM",
-	"++DATA6",
-	"++FONT",
-	"++GDF",
-	"++HFS",   // HFS can also be coded as ++HFSxxx where xxx is one of 23 national language identifiers
-	"++HELP",
-	"++IMG",
-	"++MSG",
-	"++PNL",
-	"++PROBJ",
-	"++PRSRC",
-	"++PSEG",
-	"++PUBLB",
-	"++SAMP",
-	"++SKL",
-	"++TBL",
-	"++TEXT",
-	"++UTIN",
-	"++UTOUT",
+// LanguageVariantStatements holds the MCS statement base names that may carry
+// a national language identifier suffix (++BOOK -> ++BOOKENU). It is populated
+// from the "language_variants" flag in smpe.json when the store is loaded.
+var LanguageVariantStatements []string
+
+// SetLanguageVariantStatements replaces the base name list. Called by the data
+// package after reading smpe.json.
+func SetLanguageVariantStatements(names []string) {
+	LanguageVariantStatements = names
 }
 
 // IsLanguageVariantStatement checks if the given statement base name requires

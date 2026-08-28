@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+
+	"github.com/cybersorcerer/smpe_ls/internal/langid"
 )
 
 // MCSStatement represents a MCS statement definition from smpe.json
@@ -40,15 +42,25 @@ type Operand struct {
 type AllowedValue struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Parameter   string `json:"parameter,omitempty"`   // Parameter syntax (e.g., "24|31|64" for AMODE)
-	Type        string `json:"type,omitempty"`        // Type constraint (string, integer, etc.) for sub-operands
-	Length      int    `json:"length,omitempty"`      // Maximum length constraint for sub-operands
+	Parameter   string `json:"parameter,omitempty"` // Parameter syntax (e.g., "24|31|64" for AMODE)
+	Type        string `json:"type,omitempty"`      // Type constraint (string, integer, etc.) for sub-operands
+	Length      int    `json:"length,omitempty"`    // Maximum length constraint for sub-operands
 }
 
 // Store holds the shared MCS statement data
 type Store struct {
 	Statements map[string]MCSStatement
 	List       []MCSStatement
+	// LanguageIdentifiers holds the national language identifiers a data
+	// element statement may be suffixed with (++PNL -> ++PNLENU).
+	LanguageIdentifiers []LanguageIdentifier
+}
+
+// LanguageIdentifier is one national language identifier from
+// SMP/E Reference Manual Table 3.
+type LanguageIdentifier struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 // --- private types for new-format parsing ---
@@ -56,8 +68,9 @@ type Store struct {
 // smpeFileNew is the top-level structure of the new smpe.json format:
 // { "templates": { ... }, "statements": [ ... ] }
 type smpeFileNew struct {
-	Templates  map[string][]Operand `json:"templates"`
-	Statements []mcsStatementRaw    `json:"statements"`
+	LanguageIdentifiers []LanguageIdentifier `json:"language_identifiers"`
+	Templates           map[string][]Operand `json:"templates"`
+	Statements          []mcsStatementRaw    `json:"statements"`
 }
 
 // mcsStatementRaw mirrors MCSStatement but keeps Operands as raw JSON
@@ -129,7 +142,33 @@ func loadNewFormat(fileBytes []byte) (*Store, error) {
 		statements = append(statements, stmt)
 	}
 
-	return buildStore(statements), nil
+	store := buildStore(statements)
+	store.LanguageIdentifiers = wrapper.LanguageIdentifiers
+	publishLanguageData(store)
+	return store, nil
+}
+
+// publishLanguageData hands the language definitions read from smpe.json to
+// the langid package, which the parser, completion and diagnostics consult.
+// smpe.json stays the single source of truth for both lists.
+func publishLanguageData(store *Store) {
+	ids := make([]string, 0, len(store.LanguageIdentifiers))
+	for _, li := range store.LanguageIdentifiers {
+		ids = append(ids, li.ID)
+	}
+	if len(ids) > 0 {
+		langid.SetNationalLanguageIdentifiers(ids)
+	}
+
+	var variants []string
+	for _, stmt := range store.List {
+		if stmt.LanguageVariants {
+			variants = append(variants, stmt.Name)
+		}
+	}
+	if len(variants) > 0 {
+		langid.SetLanguageVariantStatements(variants)
+	}
 }
 
 func loadLegacyFormat(fileBytes []byte) (*Store, error) {

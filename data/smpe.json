@@ -1,4 +1,38 @@
 {
+  "language_identifiers": [
+    { "id": "ARA", "name": "Arabic" },
+    { "id": "CHS", "name": "Simplified Chinese" },
+    { "id": "CHT", "name": "Traditional Chinese" },
+    { "id": "DAN", "name": "Danish" },
+    { "id": "DES", "name": "German (Switzerland)" },
+    { "id": "DEU", "name": "German (Germany)" },
+    { "id": "ELL", "name": "Greek" },
+    { "id": "ENG", "name": "English (United Kingdom)" },
+    { "id": "ENP", "name": "Uppercase English" },
+    { "id": "ENU", "name": "English (United States)" },
+    { "id": "ESP", "name": "Spanish" },
+    { "id": "FIN", "name": "Finnish" },
+    { "id": "FRA", "name": "French (France)" },
+    { "id": "FRB", "name": "French (Belgium)" },
+    { "id": "FRC", "name": "French (Canada)" },
+    { "id": "FRS", "name": "French (Switzerland)" },
+    { "id": "HEB", "name": "Hebrew" },
+    { "id": "ISL", "name": "Icelandic" },
+    { "id": "ITA", "name": "Italian (Italy)" },
+    { "id": "ITS", "name": "Italian (Switzerland)" },
+    { "id": "JPN", "name": "Japanese" },
+    { "id": "KOR", "name": "Korean" },
+    { "id": "NLB", "name": "Dutch (Belgium)" },
+    { "id": "NLD", "name": "Dutch (Netherlands)" },
+    { "id": "NOR", "name": "Norwegian" },
+    { "id": "PTB", "name": "Portuguese (Brazil)" },
+    { "id": "PTG", "name": "Portuguese (Portugal)" },
+    { "id": "RMS", "name": "Rhaeto-Romanic" },
+    { "id": "RUS", "name": "Russian" },
+    { "id": "SVE", "name": "Swedish" },
+    { "id": "THA", "name": "Thai" },
+    { "id": "TRK", "name": "Turkish" }
+  ],
   "templates": {
     "hfs_data_element_operands": [
       {
