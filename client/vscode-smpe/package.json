@@ -2,7 +2,7 @@
   "name": "cybersorcerer66-smpe-mcs",
   "displayName": "IBM z/OS SMP/E MCS Tools",
   "description": "Language support for SMP/E MCS statements",
-  "version": "1.3.10",
+  "version": "1.3.11",
   "publisher": "Cybersorcerer66",
   "icon": "images/icon.png",
   "license": "AGPL-3.0",
@@ -151,7 +151,7 @@
         "smpe.diagnostics.commentInColumn1": {
           "type": "boolean",
           "default": true,
-          "description": "Report comments beginning in column 1 (a \"/*\" in column 1 indicates the end of an input data set)"
+          "description": "Report comments beginning in column 1 (a \"/*\" in column 1 indicates the end of an input data set). Inline data is not checked, where a \"/*\" in column 1 is valid JCL."
         },
         "smpe.formatting.enabled": {
           "type": "boolean",

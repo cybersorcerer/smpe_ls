@@ -128,7 +128,7 @@ func (p *Provider) AnalyzeASTWithConfigAndText(doc *parser.Document, config *Con
 
 	// Check for comments starting in column 1
 	if config.CommentInColumn1 && text != "" {
-		diagnostics = append(diagnostics, p.checkCommentInColumn1(text)...)
+		diagnostics = append(diagnostics, p.checkCommentInColumn1(doc, text)...)
 	}
 
 	logger.Debug("Found %d diagnostics from AST", len(diagnostics))
@@ -759,23 +759,85 @@ func (p *Provider) checkContentBeyondColumn72(doc *parser.Document, text string)
 	return diagnostics
 }
 
-// checkCommentInColumn1 reports every line that starts with "/*" in column 1.
+// inlineDataLinePredicate returns a test for "this line belongs to an inline
+// data region". A region starts after the last AST node of a statement that
+// expects inline data and runs up to the next statement, or to the end of the
+// file for the last one.
+func inlineDataLinePredicate(doc *parser.Document, lineCount int) func(int) bool {
+	type lineRange struct{ start, end int }
+	var ranges []lineRange
+
+	if doc != nil {
+		for i, stmt := range doc.Statements {
+			if !statementExpectsInlineData(stmt) {
+				continue
+			}
+			regionEnd := lineCount
+			if i+1 < len(doc.Statements) {
+				regionEnd = doc.Statements[i+1].Position.Line
+			}
+			regionStart := stmt.Position.Line
+			for _, child := range stmt.Children {
+				if child.Position.Line > regionStart {
+					regionStart = child.Position.Line
+				}
+			}
+			ranges = append(ranges, lineRange{regionStart + 1, regionEnd})
+		}
+	}
+
+	return func(lineNum int) bool {
+		for _, r := range ranges {
+			if lineNum >= r.start && lineNum < r.end {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+// statementExpectsInlineData reports whether a statement carries its element
+// data inline, i.e. inline_data is set and no operand supplies the data from
+// elsewhere or deletes the element.
+func statementExpectsInlineData(stmt *parser.Node) bool {
+	if stmt == nil || stmt.StatementDef == nil || !stmt.StatementDef.InlineData {
+		return false
+	}
+	for _, child := range stmt.Children {
+		if child.Type == parser.NodeTypeOperand {
+			switch child.Name {
+			case "FROMDS", "RELFILE", "TXLIB", "DELETE":
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// checkCommentInColumn1 reports every line of MCS text that starts with "/*" in
+// column 1.
 //
 // Per the SMP/E reference: a comment "should not start before a statement, nor
 // begin in column 1. (When "/*" starts in column 1, it indicates the end of an
-// input data set.)" The end-of-data-set marker is recognized by the reader on
-// any line, so continuation lines of a block comment and lines inside inline
-// data are checked as well - a "/*" in column 1 there truncates the input just
-// the same.
+// input data set.)" Continuation lines of a block comment are checked too,
+// since the reader sees that marker on any line.
+//
+// Inline data is never inspected. It is not MCS text: in JCLIN a "/*" in
+// column 1 is the regular delimiter closing a "DD *" stream and has to sit
+// there, and element data is passed through verbatim.
 //
 // The diagnostic carries the comment's block range so the quick fixes can
 // either indent just the reported line or shift the whole block.
-func (p *Provider) checkCommentInColumn1(text string) []lsp.Diagnostic {
+func (p *Provider) checkCommentInColumn1(doc *parser.Document, text string) []lsp.Diagnostic {
 	var diagnostics []lsp.Diagnostic
 	lines := strings.Split(text, "\n")
+	isInlineDataLine := inlineDataLinePredicate(doc, len(lines))
 
 	for lineNum, line := range lines {
 		if !strings.HasPrefix(line, "/*") {
+			continue
+		}
+		if isInlineDataLine(lineNum) {
 			continue
 		}
 

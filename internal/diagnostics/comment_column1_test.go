@@ -88,15 +88,46 @@ func TestCommentInColumn1CarriesBlockRange(t *testing.T) {
 	}
 }
 
-// Inline data is checked too: a "/*" in column 1 there truncates the input the
-// same way, which is exactly the REXX-source trap.
-func TestCommentInColumn1CoversInlineData(t *testing.T) {
+// Inline data is never checked. It is not MCS text: in JCLIN a "/*" in column 1
+// is the regular delimiter ending a "DD *" stream, and element data is passed
+// through verbatim, so the statement region is the only thing to inspect.
+func TestCommentInColumn1SkipsInlineData(t *testing.T) {
 	text := "++SRC(MYEXEC) DISTLIB(AOSB3) .\n" +
+		"/* REXX */\n" +
+		"say 'hello'\n"
+	if diags := commentColumn1Diags(t, text); len(diags) != 0 {
+		t.Errorf("Expected no diagnostics in inline data, got %+v", diags)
+	}
+}
+
+// The JCL delimiter closing a "DD *" stream inside JCLIN data must not be
+// reported - it has to sit in column 1.
+func TestCommentInColumn1SkipsJclinDelimiter(t *testing.T) {
+	text := "++JCLIN .\n" +
+		"//STEP1  EXEC PGM=IEWL\n" +
+		"//SYSLIN   DD *\n" +
+		"  INCLUDE AIOALOAD(RCFU83A)\n" +
+		"    NAME  RCFU83A(R)\n" +
+		"/*\n" +
+		"++SRC(RCFU83A) DISTLIB(AIOALOAD) .\n"
+	if diags := commentColumn1Diags(t, text); len(diags) != 0 {
+		t.Errorf("Expected no diagnostics for the JCL delimiter, got %+v", diags)
+	}
+}
+
+// A comment in column 1 inside a statement region is still reported, even when
+// the file also contains inline data further down.
+func TestCommentInColumn1StillReportedOutsideInlineData(t *testing.T) {
+	text := "++VER(Z038)\n" +
+		"/* comment in column 1 */\n" +
+		"    FMID(FXY1040)\n" +
+		".\n" +
+		"++SRC(MYEXEC) DISTLIB(AOSB3) .\n" +
 		"/* REXX */\n" +
 		"say 'hello'\n"
 	diags := commentColumn1Diags(t, text)
 	if len(diags) != 1 {
-		t.Fatalf("Expected 1 diagnostic in inline data, got %d: %+v", len(diags), diags)
+		t.Fatalf("Expected exactly 1 diagnostic, got %d: %+v", len(diags), diags)
 	}
 	if diags[0].Range.Start.Line != 1 {
 		t.Errorf("Expected line 1, got %d", diags[0].Range.Start.Line)

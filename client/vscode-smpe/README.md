@@ -2,6 +2,10 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 1.3.11
+
+- **Fixed: false error on the JCLIN `/*` delimiter** - The column-1 comment check no longer runs over inline data, where a `/*` in column 1 is valid JCL rather than a comment.
+
 ## What's New in 1.3.10
 
 - **Check Missing Input Members understands `{{ path }}` placeholders** - Statements pointing at their input member with a `{{ ./path }}` line are now resolved against the repository root instead of being skipped. A new **Source** column distinguishes `placeholder` from `convention`.
@@ -132,7 +136,7 @@ All diagnostics are enabled by default. Set to `false` to disable specific check
 | `smpe.diagnostics.subOperandValidation` | Report sub-operand validation errors |
 | `smpe.diagnostics.contentBeyondColumn72` | Report content that extends beyond column 72 |
 | `smpe.diagnostics.standaloneCommentBetweenMCS` | Report standalone comments between MCS statements (causes SMP/E syntax error) |
-| `smpe.diagnostics.commentInColumn1` | Report comments beginning in column 1 (a `/*` in column 1 indicates the end of an input data set) |
+| `smpe.diagnostics.commentInColumn1` | Report comments beginning in column 1 (a `/*` in column 1 indicates the end of an input data set); inline data is not checked |
 
 ### z/OSMF Integration
 

@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.11] - 2026-09-01
+
+### Fixed
+
+- **`commentInColumn1` no longer fires inside inline data** - Inline data is not MCS text and is now excluded from the check. In JCLIN a `/*` in column 1 is the regular JCL delimiter closing a `//... DD *` stream and has to sit exactly there, so the diagnostic introduced in 1.3.10 reported it as an error. Element data is passed through verbatim as well, so only the statement regions are inspected. A `/*` in column 1 within a statement region is still reported, including in files that contain inline data further down.
+
 ## [1.3.10] - 2026-08-28
 
 ### Added

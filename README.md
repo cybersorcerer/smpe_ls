@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-1.3.10-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-1.3.11-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -267,6 +267,12 @@ make release
 ```
 
 ## 📋 What's New
+
+### Version 1.3.11
+
+**Bug Fixes**
+
+- 🩹 **`commentInColumn1` no longer fires inside inline data** - In JCLIN a `/*` in column 1 is the regular JCL delimiter closing a `DD *` stream and has to sit there, so the check introduced in 1.3.10 flagged valid usermods. Inline data is not MCS text and is now excluded; comments in column 1 within a statement region are still reported.
 
 ### Version 1.3.10
 
