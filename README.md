@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-1.3.11-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-1.3.12-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -267,6 +267,12 @@ make release
 ```
 
 ## 📋 What's New
+
+### Version 1.3.12
+
+**Bug Fixes**
+
+- 🩹 **`LKLIB` counts as an external data source** - A module in the data set named by the `LKLIB` ddname is not packaged inline, so `++MOD(X) DISTLIB(Y) LKLIB(DD1) .` must not be flagged. `LKLIB` was missing from every check deciding whether a statement expects inline data: the `missingInlineData` diagnostic, the column 72, standalone comment and comment-in-column-1 checks, the formatter, and Check Missing Input Members. It now also appears among the alternatives in the diagnostic message.
 
 ### Version 1.3.11
 

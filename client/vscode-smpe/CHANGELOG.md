@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.12] - 2026-09-11
+
+### Fixed
+
+- **`LKLIB` counts as an external data source** - Per the ++MOD usage notes a module in the data set named by the `LKLIB` ddname is not packaged inline; `LKLIB` is mutually exclusive with inline packaging just like `FROMDS`, `RELFILE` and `TXLIB`. It was missing from every check that decides whether a statement expects inline data, so `++MOD(X) DISTLIB(Y) LKLIB(DD1) .` was reported as missing its inline data. This affected the `missingInlineData` diagnostic, the column 72 and standalone comment checks, the comment-in-column-1 check, the formatter, and Check Missing Input Members, which demanded an input member for such a statement. `LKLIB` now also appears among the alternatives listed in the diagnostic message. The `mutuallyExclusive` diagnostic was already correct, since it reads the relations from `smpe.json`.
+
 ## [1.3.11] - 2026-09-01
 
 ### Fixed
