@@ -205,7 +205,8 @@ The **Source** column shows how the expected member was determined:
   outside the search folders.
 
 No member is expected when the statement carries its inline data directly, or
-when `FROMDS`, `RELFILE`, `TXLIB` or `DELETE` supplies the data from elsewhere.
+when `FROMDS`, `RELFILE`, `TXLIB`, `LKLIB` or `DELETE` supplies the data from
+elsewhere.
 
 **Configuration:**
 

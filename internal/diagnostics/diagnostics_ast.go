@@ -680,7 +680,7 @@ func (p *Provider) checkContentBeyondColumn72(doc *parser.Document, text string)
 		for _, child := range stmt.Children {
 			if child.Type == parser.NodeTypeOperand {
 				opName := child.Name
-				if opName == "FROMDS" || opName == "RELFILE" || opName == "TXLIB" || opName == "DELETE" {
+				if opName == "FROMDS" || opName == "RELFILE" || opName == "TXLIB" || opName == "LKLIB" || opName == "DELETE" {
 					return false
 				}
 			}
@@ -806,7 +806,7 @@ func statementExpectsInlineData(stmt *parser.Node) bool {
 	for _, child := range stmt.Children {
 		if child.Type == parser.NodeTypeOperand {
 			switch child.Name {
-			case "FROMDS", "RELFILE", "TXLIB", "DELETE":
+			case "FROMDS", "RELFILE", "TXLIB", "LKLIB", "DELETE":
 				return false
 			}
 		}
@@ -947,7 +947,7 @@ func (p *Provider) checkStandaloneCommentsBetweenMCS(doc *parser.Document, text 
 		for _, child := range stmt.Children {
 			if child.Type == parser.NodeTypeOperand {
 				opName := child.Name
-				if opName == "FROMDS" || opName == "RELFILE" || opName == "TXLIB" || opName == "DELETE" {
+				if opName == "FROMDS" || opName == "RELFILE" || opName == "TXLIB" || opName == "LKLIB" || opName == "DELETE" {
 					return false
 				}
 			}
@@ -1063,13 +1063,13 @@ func (p *Provider) checkMissingInlineData(doc *parser.Document) []lsp.Diagnostic
 	// it means the inline data is missing
 	for _, stmt := range doc.StatementsExpectingInline {
 		// Check if statement has operands that indicate data is NOT inline
-		// FROMDS, RELFILE, TXLIB mean data comes from elsewhere
+		// FROMDS, RELFILE, TXLIB, LKLIB mean data comes from elsewhere
 		// DELETE is a special case for HFS that removes files (no inline data needed)
 		hasExternalDataSource := false
 		for _, child := range stmt.Children {
 			if child.Type == parser.NodeTypeOperand {
 				opName := child.Name
-				if opName == "FROMDS" || opName == "RELFILE" || opName == "TXLIB" || opName == "DELETE" {
+				if opName == "FROMDS" || opName == "RELFILE" || opName == "TXLIB" || opName == "LKLIB" || opName == "DELETE" {
 					hasExternalDataSource = true
 					break
 				}
@@ -1125,7 +1125,7 @@ func (p *Provider) getMissingInlineDataMessage(stmt *parser.Node) string {
 
 			// These operands indicate external data sources
 			if primaryName == "FROMDS" || primaryName == "RELFILE" ||
-				primaryName == "TXLIB" {
+				primaryName == "TXLIB" || primaryName == "LKLIB" {
 				alternatives = append(alternatives, primaryName)
 			}
 		}

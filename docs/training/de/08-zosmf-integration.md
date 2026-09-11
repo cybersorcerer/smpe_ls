@@ -209,7 +209,8 @@ Die Spalte **Source** zeigt, wie der erwartete Member ermittelt wurde:
   wie er dasteht - er darf also auch außerhalb der Suchordner zeigen.
 
 Kein Member wird erwartet, wenn das Statement seine Inline-Daten direkt enthält
-oder wenn `FROMDS`, `RELFILE`, `TXLIB` oder `DELETE` die Daten anderweitig
+oder wenn `FROMDS`, `RELFILE`, `TXLIB`, `LKLIB` oder `DELETE` die Daten
+anderweitig
 bereitstellt.
 
 **Konfiguration:**

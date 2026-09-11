@@ -198,7 +198,7 @@ func (p *Parser) Parse(text string) *Document {
 								hasDelete = true
 								break
 							}
-							if child.Name == "TXLIB" || child.Name == "RELFILE" || child.Name == "FROMDS" {
+							if child.Name == "TXLIB" || child.Name == "RELFILE" || child.Name == "FROMDS" || child.Name == "LKLIB" {
 								hasExternalSource = true
 							}
 						}

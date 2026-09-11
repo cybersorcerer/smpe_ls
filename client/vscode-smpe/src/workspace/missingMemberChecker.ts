@@ -413,12 +413,14 @@ export class MissingMemberChecker {
             // Skip if statement carries its inline data directly
             if (sym.hasInlineData) { continue; }
 
-            // Skip if an operand supplies the data from elsewhere, or deletes
-            // the element - in those cases no member file is expected.
+            // Skip if an operand supplies the data from elsewhere (FROMDS,
+            // RELFILE, TXLIB, LKLIB), or deletes the element - in those cases
+            // no member file is expected.
             const hasExternalSource = (sym.children ?? []).some(c =>
                 c.name.startsWith('TXLIB(') ||
                 c.name.startsWith('FROMDS(') ||
                 c.name.startsWith('RELFILE(') ||
+                c.name.startsWith('LKLIB(') ||
                 c.name === 'DELETE' || c.name.startsWith('DELETE('));
             if (hasExternalSource) { continue; }
 

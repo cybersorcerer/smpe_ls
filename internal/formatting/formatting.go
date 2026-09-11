@@ -156,7 +156,7 @@ func (p *Provider) FormatDocument(doc *parser.Document, text string) []lsp.TextE
 // stmtExpectsInlineData checks if a statement expects inline data
 // A statement expects inline data if:
 // 1. inline_data is true in smpe.json AND
-// 2. NO external data source operands (FROMDS, RELFILE, TXLIB) AND
+// 2. NO external data source operands (FROMDS, RELFILE, TXLIB, LKLIB) AND
 // 3. NO DELETE operand (DELETE means deletion mode, no inline data needed)
 func (p *Provider) stmtExpectsInlineData(stmt *parser.Node) bool {
 	// First check if statement definition indicates inline data
@@ -165,12 +165,12 @@ func (p *Provider) stmtExpectsInlineData(stmt *parser.Node) bool {
 	}
 
 	// Check if statement has operands that indicate data is NOT inline
-	// FROMDS, RELFILE, TXLIB mean data comes from elsewhere
+	// FROMDS, RELFILE, TXLIB, LKLIB mean data comes from elsewhere
 	// DELETE means the element is being deleted (no inline data needed)
 	for _, child := range stmt.Children {
 		if child.Type == parser.NodeTypeOperand {
 			opName := child.Name
-			if opName == "FROMDS" || opName == "RELFILE" || opName == "TXLIB" || opName == "DELETE" {
+			if opName == "FROMDS" || opName == "RELFILE" || opName == "TXLIB" || opName == "LKLIB" || opName == "DELETE" {
 				return false
 			}
 		}
