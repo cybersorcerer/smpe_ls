@@ -113,10 +113,11 @@ func (p *Provider) getStatementDetail(stmt *parser.Node) string {
 	return ""
 }
 
-// GetStatementEndPosition finds the end position of a statement: the '.'
-// terminator following the statement's last child, skipping over any
-// /* ... */ block comments so a '.' inside a comment (e.g. a "dd.mm.yy"
-// date) is never mistaken for the terminator.
+// GetStatementEndPosition finds the end position of a statement: its '.'
+// terminator. Only a '.' at parenthesis depth 0, outside /* ... */ block
+// comments and single-quoted strings counts. A dot inside an operand value -
+// a free-text DESC, a dotted dataset name, a "dd.mm.yy" date in a comment -
+// is not the terminator and must not cut the range short.
 func (p *Provider) GetStatementEndPosition(stmt *parser.Node, lines []string) (int, int) {
 	endLine := stmt.Position.Line
 	endChar := stmt.Position.Character + stmt.Position.Length
@@ -141,11 +142,13 @@ func (p *Provider) GetStatementEndPosition(stmt *parser.Node, lines []string) (i
 		}
 	}
 
-	// Look for terminator, skipping over /* ... */ block comments so a '.'
-	// inside a comment (e.g. a "dd.mm.yy" date) is never mistaken for the
-	// statement terminator.
+	// Look for the terminator. The scan starts at the statement's own line so
+	// parenthesis and string state are complete: an operand may open its
+	// parenthesis on an earlier line than the one carrying a dot.
 	inBlockComment := false
-	for i := endLine; i < len(lines); i++ {
+	inQuote := false
+	parenDepth := 0
+	for i := stmt.Position.Line; i < len(lines); i++ {
 		line := lines[i]
 		for j := 0; j < len(line); j++ {
 			if inBlockComment {
@@ -155,12 +158,35 @@ func (p *Provider) GetStatementEndPosition(stmt *parser.Node, lines []string) (i
 				}
 				continue
 			}
+			if inQuote {
+				if line[j] == '\'' {
+					inQuote = false
+				}
+				continue
+			}
 			if j+1 < len(line) && line[j] == '/' && line[j+1] == '*' {
 				inBlockComment = true
 				j++
 				continue
 			}
-			if line[j] == '.' {
+			switch line[j] {
+			case '\'':
+				// Only track strings outside parentheses; inside them the
+				// depth already keeps dots from counting.
+				if parenDepth == 0 {
+					inQuote = true
+				}
+				continue
+			case '(':
+				parenDepth++
+				continue
+			case ')':
+				if parenDepth > 0 {
+					parenDepth--
+				}
+				continue
+			}
+			if line[j] == '.' && parenDepth == 0 {
 				return i, j + 1
 			}
 		}
