@@ -2,6 +2,10 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 1.3.13
+
+- **Fixed: a dot in `DESC` no longer ends the statement** - The Outline view, folding, breadcrumbs and `smpe_outl` cut a statement short at the first dot in an operand value; the terminator is now detected correctly.
+
 ## What's New in 1.3.12
 
 - **Fixed: `LKLIB` no longer demands inline data** - A `++MOD` whose module comes from the `LKLIB` ddname is not packaged inline, but was reported as missing its inline data and as missing an input member.

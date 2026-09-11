@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.13] - 2026-09-11
+
+### Fixed
+
+- **A dot in an operand value ended the statement in the Outline** - The symbol range of a statement stopped at the first `.` outside a block comment, so a free-text `DESC(R+V IIQ. SMF Exit 83)`, a dotted dataset name or a quoted value cut the range short at that operand instead of reaching the terminator. `++USERMOD(LIIQ101)` ended at the dot inside `DESC` rather than on the terminator line, truncating the Outline view, folding ranges, breadcrumbs, workspace symbols and `smpe_outl` output. Terminator detection now tracks parenthesis depth and single-quoted strings as well, and scans from the statement's first line so an operand opening its parenthesis on an earlier line is accounted for. The 1.3.8 fix for dots inside comments is unaffected and covered by a regression test.
+
 ## [1.3.12] - 2026-09-11
 
 ### Fixed
