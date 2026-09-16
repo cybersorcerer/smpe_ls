@@ -1,6 +1,8 @@
 package symbols
 
 import (
+	"strings"
+
 	"github.com/cybersorcerer/smpe_ls/internal/parser"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
@@ -148,8 +150,23 @@ func (p *Provider) GetStatementEndPosition(stmt *parser.Node, lines []string) (i
 	inBlockComment := false
 	inQuote := false
 	parenDepth := 0
+	// With unbalanced parentheses the depth is meaningless - the statement is
+	// already reported as malformed by its own diagnostic - so the terminator
+	// is accepted at any depth rather than never being found at all.
+	ignoreDepth := stmt.UnbalancedParens != 0
 	for i := stmt.Position.Line; i < len(lines); i++ {
 		line := lines[i]
+
+		// A following statement ends the search. Only a "++" at the start of
+		// the line counts: "++APAR" inside a comment is text, not a statement.
+		// Checked before scanning the line so the next statement's terminator
+		// is never taken for this one's. inBlockComment still holds the state
+		// at the start of this line, and a line inside an open block comment
+		// cannot begin a statement.
+		if i > stmt.Position.Line && !inBlockComment && strings.HasPrefix(strings.TrimSpace(line), "++") {
+			return endLine, endChar
+		}
+
 		for j := 0; j < len(line); j++ {
 			if inBlockComment {
 				if j+1 < len(line) && line[j] == '*' && line[j+1] == '/' {
@@ -186,16 +203,8 @@ func (p *Provider) GetStatementEndPosition(stmt *parser.Node, lines []string) (i
 				}
 				continue
 			}
-			if line[j] == '.' && parenDepth == 0 {
+			if line[j] == '.' && (parenDepth == 0 || ignoreDepth) {
 				return i, j + 1
-			}
-		}
-		// Stop if we hit another statement
-		if i > stmt.Position.Line && !inBlockComment {
-			for j := 0; j < len(line)-1; j++ {
-				if line[j] == '+' && line[j+1] == '+' {
-					return endLine, endChar
-				}
 			}
 		}
 	}

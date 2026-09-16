@@ -67,3 +67,84 @@ func TestStatementEndFindsTerminatorOnOperandLine(t *testing.T) {
 		t.Errorf("Expected end line 0, got %d", got)
 	}
 }
+
+// A "++" inside a comment is text, not the start of the next statement. Only a
+// "++" at the beginning of a line ends the search.
+func TestStatementEndIgnoresPlusPlusInComment(t *testing.T) {
+	src := "++USERMOD(U1)\n" +
+		"  /* Test file for ++USERMOD MCS statement */\n" +
+		"  /* Valid: Minimal ++USERMOD */\n" +
+		".\n"
+	if got := endLineFor(t, src); got != 3 {
+		t.Errorf("Expected end line 3 (the terminator), got %d", got)
+	}
+}
+
+// The next statement still ends the search when it starts the line.
+func TestStatementEndStopsAtNextStatement(t *testing.T) {
+	src := "++USERMOD(U1)\n" +
+		"++VER(Z038) FMID(F1) .\n"
+	if got := endLineFor(t, src); got != 0 {
+		t.Errorf("Expected end line 0, got %d", got)
+	}
+}
+
+// With unbalanced parentheses the depth is meaningless: the statement is
+// already reported as malformed, and the terminator must still be found so no
+// follow-up diagnostics are produced.
+func TestStatementEndWithUnbalancedParens(t *testing.T) {
+	src := "++USERMOD(U44444\n" +
+		"/* malformed parentheses */\n" +
+		"    DESC(Missing closing paren)\n" +
+		"    .\n"
+	if got := endLineFor(t, src); got != 3 {
+		t.Errorf("Expected end line 3 (the terminator), got %d", got)
+	}
+}
+
+// Leading whitespace does not hide a statement: what counts is a "++" as the
+// first non-whitespace character of the line, not literally column 1.
+func TestStatementEndStopsAtIndentedNextStatement(t *testing.T) {
+	src := "++USERMOD(U1)\n" +
+		"     ++VER(Z038) FMID(F1) .\n"
+	if got := endLineFor(t, src); got != 0 {
+		t.Errorf("Expected end line 0, got %d", got)
+	}
+}
+
+// An indented statement that does have a terminator still finds it.
+func TestStatementEndFindsTerminatorOfIndentedStatement(t *testing.T) {
+	src := "  ++USERMOD(U1)\n" +
+		"      REWORK(2026259)\n" +
+		"  .\n"
+	if got := endLineFor(t, src); got != 2 {
+		t.Errorf("Expected end line 2, got %d", got)
+	}
+}
+
+// A statement written inside a comment is text. Neither the "++" nor the
+// terminator in "/* ++APAR(A1) . */" may end the enclosing statement.
+func TestStatementEndIgnoresStatementInsideComment(t *testing.T) {
+	src := "++USERMOD(U1)\n" +
+		"/* ++APAR(A1) . */\n" +
+		"    REWORK(2026259)\n" +
+		".\n"
+	if got := endLineFor(t, src); got != 3 {
+		t.Errorf("Expected end line 3 (the terminator), got %d", got)
+	}
+}
+
+// The same across lines: a line inside an open block comment may start with
+// "++" and still is not a statement. This is why the check runs before the
+// line is scanned, while inBlockComment still holds the state at line start.
+func TestStatementEndIgnoresStatementInsideMultiLineComment(t *testing.T) {
+	src := "++USERMOD(U1)\n" +
+		"/* example:\n" +
+		"++APAR(A1) .\n" +
+		"*/\n" +
+		"    REWORK(2026259)\n" +
+		".\n"
+	if got := endLineFor(t, src); got != 5 {
+		t.Errorf("Expected end line 5 (the terminator), got %d", got)
+	}
+}

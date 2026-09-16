@@ -9,6 +9,7 @@ import (
 	"github.com/cybersorcerer/smpe_ls/internal/langid"
 	"github.com/cybersorcerer/smpe_ls/internal/logger"
 	"github.com/cybersorcerer/smpe_ls/internal/parser"
+	"github.com/cybersorcerer/smpe_ls/internal/symbols"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
@@ -889,44 +890,14 @@ func (p *Provider) checkStandaloneCommentsBetweenMCS(doc *parser.Document, text 
 
 	lines := strings.Split(text, "\n")
 
-	// Helper function to find the end line of a statement (including terminator)
+	// Find the end line of a statement (including terminator). The shared
+	// symbol logic is used so the terminator is recognized the same way
+	// everywhere: only a '.' at parenthesis depth 0, outside block comments
+	// and quoted strings counts. Its own comment stripping only worked within
+	// a single line, so a dot inside a multi-line comment ended the statement.
+	symbolProvider := symbols.NewProvider()
 	findStmtEndLine := func(stmt *parser.Node) int {
-		endLine := stmt.Position.Line
-		for _, child := range stmt.Children {
-			if child.Position.Line > endLine {
-				endLine = child.Position.Line
-			}
-		}
-
-		// Also check for the terminator line - it might be on a later line
-		// Search from endLine forward until we find the terminator or next statement
-		for i := endLine; i < len(lines); i++ {
-			line := lines[i]
-			// Remove comments to find the actual terminator
-			cleanLine := line
-			for {
-				start := strings.Index(cleanLine, "/*")
-				if start == -1 {
-					break
-				}
-				end := strings.Index(cleanLine[start:], "*/")
-				if end == -1 {
-					cleanLine = cleanLine[:start]
-					break
-				}
-				cleanLine = cleanLine[:start] + cleanLine[start+end+2:]
-			}
-			cleanLine = strings.TrimSpace(cleanLine)
-
-			if strings.HasSuffix(cleanLine, ".") || cleanLine == "." {
-				endLine = i
-				break
-			}
-			// Stop if we hit another statement
-			if strings.HasPrefix(strings.TrimSpace(line), "++") && i > stmt.Position.Line {
-				break
-			}
-		}
+		endLine, _ := symbolProvider.GetStatementEndPosition(stmt, lines)
 		return endLine
 	}
 
