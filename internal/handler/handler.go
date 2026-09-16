@@ -328,8 +328,19 @@ func (h *Handler) TextDocumentCompletion(params lsp.CompletionParams) ([]lsp.Com
 	}
 
 	// Always use AST-based completion
-	items := h.completionProvider.GetCompletionsAST(doc, text, params.Position.Line, params.Position.Character)
+	triggerKind := lsp.CompletionTriggerInvoked
+	if params.Context != nil {
+		triggerKind = params.Context.TriggerKind
+	}
+	items := h.completionProvider.GetCompletionsAST(doc, text, params.Position.Line, params.Position.Character, triggerKind)
 	logger.Debug("Using AST-based completion, returning %d items", len(items))
+
+	// Always answer with a list, never nil: a JSON null result makes the client
+	// treat the response as malformed. Same reason the code action and
+	// diagnostics providers return empty slices.
+	if items == nil {
+		items = []lsp.CompletionItem{}
+	}
 
 	return items, nil
 }

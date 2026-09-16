@@ -9,6 +9,7 @@ import (
 	"github.com/cybersorcerer/smpe_ls/internal/langid"
 	"github.com/cybersorcerer/smpe_ls/internal/logger"
 	"github.com/cybersorcerer/smpe_ls/internal/parser"
+	"github.com/cybersorcerer/smpe_ls/internal/symbols"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
@@ -66,8 +67,12 @@ func NewProvider(store *data.Store) *Provider {
 	}
 }
 
-// GetCompletionsAST returns completion items using the AST
-func (p *Provider) GetCompletionsAST(doc *parser.Document, text string, line, character int) []lsp.CompletionItem {
+// GetCompletionsAST returns completion items using the AST.
+//
+// triggerKind says why the client asked (lsp.CompletionTrigger*). It matters on
+// an empty line: typing a space there should not pop up the full statement
+// list, while Ctrl+Space explicitly asks for it.
+func (p *Provider) GetCompletionsAST(doc *parser.Document, text string, line, character int, triggerKind int) []lsp.CompletionItem {
 	// Convert line/character to absolute position
 	lines := strings.Split(text, "\n")
 	if line < 0 || line >= len(lines) {
@@ -85,14 +90,25 @@ func (p *Provider) GetCompletionsAST(doc *parser.Document, text string, line, ch
 	textBefore := currentLine[:character]
 	trimmedBefore := strings.TrimSpace(textBefore)
 
-	// Check if this is a continuation line (line > 0, starts with whitespace, has statement before)
+	// Check if this is a continuation line: an indented line that still belongs
+	// to an unfinished statement. Once that statement is terminated the line is
+	// free again and a new statement may start on it, indented or not - so it
+	// is not enough that some statement began earlier in the file.
 	isContinuationLine := false
 	if line > 0 && len(currentLine) > 0 && (currentLine[0] == ' ' || currentLine[0] == '\t') {
-		// Check if there's a statement on a previous line
+		var enclosing *parser.Node
 		for _, stmt := range doc.Statements {
 			if stmt.Position.Line < line {
+				enclosing = stmt
+			}
+		}
+		if enclosing != nil {
+			if !enclosing.HasTerminator {
+				// Still open, so the line belongs to it.
 				isContinuationLine = true
-				break
+			} else {
+				endLine, _ := symbols.NewProvider().GetStatementEndPosition(enclosing, lines)
+				isContinuationLine = line <= endLine
 			}
 		}
 	}
@@ -104,6 +120,15 @@ func (p *Provider) GetCompletionsAST(doc *parser.Document, text string, line, ch
 	// paren follows we are past the statement name and operand completion
 	// takes over.
 	if !isContinuationLine && (trimmedBefore == "" || isTypingMCSPrefix(textBefore)) {
+		// Nothing but whitespace before the cursor and the client asked because
+		// a trigger character was typed: that was the space itself, so stay
+		// quiet. An explicit request (Ctrl+Space) still gets the full list, and
+		// once a "+" is typed trimmedBefore is no longer empty.
+		if trimmedBefore == "" && triggerKind == lsp.CompletionTriggerCharacter {
+			logger.Debug("Whitespace-only trigger on an empty line - no completions")
+			return nil
+		}
+
 		// Compute the range we want the client to replace when an item is
 		// accepted: the leading `+` chars PLUS any uppercase letters
 		// already typed after them. Without including the letters the
@@ -246,7 +271,7 @@ func (p *Provider) findNodeAtPosition(doc *parser.Document, text string, line, c
 		if firstChild.Type == parser.NodeTypeParameter && firstChild.Parent == targetStmt {
 			// Check if cursor is on same line and within parameter range
 			if line == firstChild.Position.Line {
-				paramStart := firstChild.Position.Character - 1 // -1 for opening (
+				paramStart := firstChild.Position.Character - 1                            // -1 for opening (
 				paramEnd := firstChild.Position.Character + firstChild.Position.Length + 1 // +1 for closing )
 				if character >= paramStart && character <= paramEnd {
 					return targetStmt, ContextStatementParameter
@@ -265,7 +290,7 @@ func (p *Provider) findNodeAtPosition(doc *parser.Document, text string, line, c
 				hasParameterNode = true
 				// Check if cursor is within parameter range
 				if line == child.Position.Line {
-					paramStart := child.Position.Character - 1 // -1 for opening (
+					paramStart := child.Position.Character - 1                       // -1 for opening (
 					paramEnd := child.Position.Character + child.Position.Length + 1 // +1 for closing )
 					if character >= paramStart && character <= paramEnd {
 						return operandNode, ContextOperandParameter

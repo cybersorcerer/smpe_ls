@@ -71,7 +71,7 @@ func TestCompletionMCSStatements(t *testing.T) {
 
 	text := "+"
 	doc := p.Parse(text)
-	items := cp.GetCompletionsAST(doc, text, 0, 1)
+	items := cp.GetCompletionsAST(doc, text, 0, 1, lsp.CompletionTriggerInvoked)
 
 	if len(items) == 0 {
 		t.Error("Expected MCS statement completions, got none")
@@ -134,7 +134,7 @@ func TestCompletionMCSPrefixKeepsMenuOpen(t *testing.T) {
 	for _, text := range mcsCases {
 		t.Run("mcs:"+text, func(t *testing.T) {
 			doc := p.Parse(text)
-			items := cp.GetCompletionsAST(doc, text, 0, len(text))
+			items := cp.GetCompletionsAST(doc, text, 0, len(text), lsp.CompletionTriggerInvoked)
 
 			if len(items) == 0 {
 				t.Fatalf("Expected MCS completions for %q, got none", text)
@@ -169,7 +169,7 @@ func TestCompletionOperandPrefixKeepsMenuOpen(t *testing.T) {
 	for _, tc := range operandCases {
 		t.Run("operand:"+tc.text, func(t *testing.T) {
 			doc := p.Parse(tc.text)
-			items := cp.GetCompletionsAST(doc, tc.text, 0, len(tc.text))
+			items := cp.GetCompletionsAST(doc, tc.text, 0, len(tc.text), lsp.CompletionTriggerInvoked)
 
 			if len(items) == 0 {
 				t.Fatalf("Expected operand completions for %q, got none", tc.text)
@@ -214,7 +214,7 @@ func TestCompletionSubOperandPrefixKeepsMenuOpen(t *testing.T) {
 	for _, tc := range cases {
 		t.Run("subop:"+tc.text, func(t *testing.T) {
 			doc := p.Parse(tc.text)
-			items := cp.GetCompletionsAST(doc, tc.text, 0, len(tc.text))
+			items := cp.GetCompletionsAST(doc, tc.text, 0, len(tc.text), lsp.CompletionTriggerInvoked)
 
 			if len(items) == 0 {
 				t.Fatalf("Expected sub-operand completions for %q, got none", tc.text)
@@ -299,7 +299,7 @@ func TestCompletionMultilineContexts(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			doc := p.Parse(tc.text)
-			items := cp.GetCompletionsAST(doc, tc.text, tc.line, tc.col)
+			items := cp.GetCompletionsAST(doc, tc.text, tc.line, tc.col, lsp.CompletionTriggerInvoked)
 
 			if len(items) == 0 {
 				t.Fatalf("Expected completions for %q at (%d,%d), got none",
@@ -331,7 +331,7 @@ func TestCompletionOperandPrefixOnContinuationLine(t *testing.T) {
 	text := "++USERMOD(LJS2012)\n  RE"
 	doc := p.Parse(text)
 	// Cursor on line 1 (zero-indexed), after the "RE"
-	items := cp.GetCompletionsAST(doc, text, 1, 4)
+	items := cp.GetCompletionsAST(doc, text, 1, 4, lsp.CompletionTriggerInvoked)
 
 	if len(items) == 0 {
 		t.Fatal("Expected operand completions on continuation line, got none")
@@ -378,7 +378,7 @@ func TestCompletionMCSSnippetsAreOffered(t *testing.T) {
 	for _, prefix := range prefixes {
 		t.Run("prefix:"+prefix, func(t *testing.T) {
 			doc := p.Parse(prefix)
-			items := cp.GetCompletionsAST(doc, prefix, 0, len(prefix))
+			items := cp.GetCompletionsAST(doc, prefix, 0, len(prefix), lsp.CompletionTriggerInvoked)
 
 			hasKeyword := false
 			hasSnippet := false
@@ -425,7 +425,7 @@ func TestCompletionNonMCSAfterStatement(t *testing.T) {
 	for _, text := range nonMcsCases {
 		t.Run("nonmcs:"+text, func(t *testing.T) {
 			doc := p.Parse(text)
-			items := cp.GetCompletionsAST(doc, text, 0, len(text))
+			items := cp.GetCompletionsAST(doc, text, 0, len(text), lsp.CompletionTriggerInvoked)
 
 			for _, item := range items {
 				if strings.HasPrefix(item.Label, "++") {
@@ -443,7 +443,7 @@ func TestCompletionOperandsAfterStatement(t *testing.T) {
 
 	text := "++USERMOD(LJS2012) "
 	doc := p.Parse(text)
-	items := cp.GetCompletionsAST(doc, text, 0, 19)
+	items := cp.GetCompletionsAST(doc, text, 0, 19, lsp.CompletionTriggerInvoked)
 
 	if len(items) == 0 {
 		t.Error("Expected operand completions, got none")
@@ -476,7 +476,7 @@ func TestCompletionNoCompletionInStatementParameter(t *testing.T) {
 
 	text := "++USERMOD(LJS"
 	doc := p.Parse(text)
-	items := cp.GetCompletionsAST(doc, text, 0, 13)
+	items := cp.GetCompletionsAST(doc, text, 0, 13, lsp.CompletionTriggerInvoked)
 
 	// Should not offer completions inside statement parameter
 	if len(items) > 0 {
@@ -509,7 +509,7 @@ func TestCompletionSubOperandsInFromDS(t *testing.T) {
 		}
 	}
 
-	items := cp.GetCompletionsAST(doc, text, 0, 20)
+	items := cp.GetCompletionsAST(doc, text, 0, 20, lsp.CompletionTriggerInvoked)
 
 	t.Logf("Got %d completions:", len(items))
 	for _, item := range items {
@@ -561,7 +561,7 @@ func TestCompletionOperandsAfterFirstOperand(t *testing.T) {
 
 	text := "++USERMOD(LJS2012) REWORK(2022056) "
 	doc := p.Parse(text)
-	items := cp.GetCompletionsAST(doc, text, 0, 35) // Position 35 = after trailing space
+	items := cp.GetCompletionsAST(doc, text, 0, 35, lsp.CompletionTriggerInvoked) // Position 35 = after trailing space
 
 	if len(items) == 0 {
 		t.Error("Expected operand completions after first operand, got none")
@@ -601,7 +601,7 @@ func TestCompletionMultilineOperands(t *testing.T) {
 		}
 	}
 
-	items := cp.GetCompletionsAST(doc, text, 1, 2)
+	items := cp.GetCompletionsAST(doc, text, 1, 2, lsp.CompletionTriggerInvoked)
 
 	t.Logf("Got %d completions:", len(items))
 	for _, item := range items {
@@ -652,7 +652,7 @@ func TestCompletionAparOperands(t *testing.T) {
 
 	text := "++APAR(UA12345) "
 	doc := p.Parse(text)
-	items := cp.GetCompletionsAST(doc, text, 0, 16)
+	items := cp.GetCompletionsAST(doc, text, 0, 16, lsp.CompletionTriggerInvoked)
 
 	if len(items) == 0 {
 		t.Error("Expected operand completions for ++APAR, got none")
@@ -711,7 +711,7 @@ func TestCompletionAssignOperands(t *testing.T) {
 
 	text := "++ASSIGN "
 	doc := p.Parse(text)
-	items := cp.GetCompletionsAST(doc, text, 0, 9)
+	items := cp.GetCompletionsAST(doc, text, 0, 9, lsp.CompletionTriggerInvoked)
 
 	if len(items) == 0 {
 		t.Error("Expected operand completions for ++ASSIGN, got none")
@@ -763,7 +763,7 @@ func TestCompletionDeleteOperands(t *testing.T) {
 
 	text := "++DELETE(MYMODULE) "
 	doc := p.Parse(text)
-	items := cp.GetCompletionsAST(doc, text, 0, 19)
+	items := cp.GetCompletionsAST(doc, text, 0, 19, lsp.CompletionTriggerInvoked)
 
 	if len(items) == 0 {
 		t.Error("Expected operand completions for ++DELETE, got none")
@@ -818,7 +818,7 @@ func TestCompletionHoldOperands(t *testing.T) {
 
 	text := "++HOLD(UA12345) "
 	doc := p.Parse(text)
-	items := cp.GetCompletionsAST(doc, text, 0, 16)
+	items := cp.GetCompletionsAST(doc, text, 0, 16, lsp.CompletionTriggerInvoked)
 
 	if len(items) == 0 {
 		t.Error("Expected operand completions for ++HOLD, got none")
@@ -878,7 +878,7 @@ func TestCompletionIfOperands(t *testing.T) {
 
 	text := "++IF "
 	doc := p.Parse(text)
-	items := cp.GetCompletionsAST(doc, text, 0, 5)
+	items := cp.GetCompletionsAST(doc, text, 0, 5, lsp.CompletionTriggerInvoked)
 
 	if len(items) == 0 {
 		t.Error("Expected operand completions for ++IF, got none")
@@ -940,7 +940,7 @@ func TestCompletionFeatureOperands(t *testing.T) {
 
 	text := "++FEATURE(MYFEATURE) "
 	doc := p.Parse(text)
-	items := cp.GetCompletionsAST(doc, text, 0, 21)
+	items := cp.GetCompletionsAST(doc, text, 0, 21, lsp.CompletionTriggerInvoked)
 
 	if len(items) == 0 {
 		t.Error("Expected operand completions for ++FEATURE, got none")
@@ -995,7 +995,7 @@ func TestCompletionRealFileNewStatement(t *testing.T) {
 	doc := p.Parse(text)
 
 	// Cursor is at line 5, char 2 (after ++)
-	items := cp.GetCompletionsAST(doc, text, 5, 2)
+	items := cp.GetCompletionsAST(doc, text, 5, 2, lsp.CompletionTriggerInvoked)
 
 	t.Logf("Got %d completions:", len(items))
 	for i, item := range items {
@@ -1049,7 +1049,7 @@ func TestCompletionNoOperandsForStatementWithoutOperands(t *testing.T) {
 
 	text := "++VER(Z038) "
 	doc := p.Parse(text)
-	items := cp.GetCompletionsAST(doc, text, 0, 12)
+	items := cp.GetCompletionsAST(doc, text, 0, 12, lsp.CompletionTriggerInvoked)
 
 	// ++VER has no operands defined, so no operand completions
 	if len(items) > 0 {
@@ -1080,7 +1080,7 @@ func TestCompletionSnippetItem(t *testing.T) {
 	p := parser.NewParser(statements)
 	text := "+"
 	doc := p.Parse(text)
-	items := cp.GetCompletionsAST(doc, text, 0, 1)
+	items := cp.GetCompletionsAST(doc, text, 0, 1, lsp.CompletionTriggerInvoked)
 
 	foundSnippet := false
 	for _, item := range items {
@@ -1113,7 +1113,7 @@ func TestCompletionTextEditRange(t *testing.T) {
 
 	text := "++"
 	doc := p.Parse(text)
-	items := cp.GetCompletionsAST(doc, text, 0, 2)
+	items := cp.GetCompletionsAST(doc, text, 0, 2, lsp.CompletionTriggerInvoked)
 
 	if len(items) == 0 {
 		t.Error("Expected MCS statement completions, got none")
@@ -1153,7 +1153,7 @@ func TestCompletionSnippetItemWithReplaceRange(t *testing.T) {
 	// Simulate user typing "++" — triggers replaceRange path
 	text := "++"
 	doc := p.Parse(text)
-	items := cp.GetCompletionsAST(doc, text, 0, 2)
+	items := cp.GetCompletionsAST(doc, text, 0, 2, lsp.CompletionTriggerInvoked)
 
 	foundSnippet := false
 	for _, item := range items {
@@ -1194,7 +1194,7 @@ func TestCompletionSnippetItemNoReplaceRange(t *testing.T) {
 	// findNodeAtPosition nil branch which calls getMCSCompletions(nil).
 	text := "SOMETHING"
 	doc := p.Parse(text)
-	items := cp.GetCompletionsAST(doc, text, 0, 5)
+	items := cp.GetCompletionsAST(doc, text, 0, 5, lsp.CompletionTriggerInvoked)
 
 	foundSnippet := false
 	for _, item := range items {

@@ -7,6 +7,7 @@ import (
 	"github.com/cybersorcerer/smpe_ls/internal/completion"
 	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/parser"
+	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
 func main() {
@@ -85,7 +86,7 @@ func main() {
 		fmt.Println()
 
 		// Get completions
-		items := cp.GetCompletionsAST(doc, content, tc.line, tc.character)
+		items := cp.GetCompletionsAST(doc, content, tc.line, tc.character, lsp.CompletionTriggerInvoked)
 
 		fmt.Printf("Completions: %d\n", len(items))
 		if len(items) == 0 {

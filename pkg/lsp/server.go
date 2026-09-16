@@ -434,6 +434,22 @@ type DidCloseTextDocumentParams struct {
 type CompletionParams struct {
 	TextDocument TextDocumentIdentifier `json:"textDocument"`
 	Position     Position               `json:"position"`
+	// Context tells why completion was requested. Absent from older clients,
+	// in which case TriggerKind stays 0 and the request is treated as invoked.
+	Context *CompletionContext `json:"context,omitempty"`
+}
+
+// CompletionTriggerKind values per the LSP specification.
+const (
+	CompletionTriggerInvoked       = 1
+	CompletionTriggerCharacter     = 2
+	CompletionTriggerForIncomplete = 3
+)
+
+// CompletionContext carries why a completion request was sent.
+type CompletionContext struct {
+	TriggerKind      int    `json:"triggerKind"`
+	TriggerCharacter string `json:"triggerCharacter,omitempty"`
 }
 
 type HoverParams struct {

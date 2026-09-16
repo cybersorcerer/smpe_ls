@@ -59,7 +59,7 @@ func TestCompletionInsideLeparmSubOperandParens(t *testing.T) {
 	// Cursor right after "LEPARM(AC(" — inside AC's own parentheses.
 	src := "++MOD(MYPROG)\n    LEPARM(AC(),ALIGN2)\n    DISTLIB(D1)\n."
 	doc := p.Parse(src)
-	items := cp.GetCompletionsAST(doc, src, 1, 14) // position right after "AC("
+	items := cp.GetCompletionsAST(doc, src, 1, 14, lsp.CompletionTriggerInvoked) // position right after "AC("
 
 	for _, item := range items {
 		if item.Label == "ALIGN2" || item.Label == "AMODE" || item.Label == "AMOD" {
@@ -80,7 +80,7 @@ func TestCompletionAfterLeparmCommaStillOffersSiblings(t *testing.T) {
 
 	src := "++MOD(MYPROG)\n    LEPARM(AC(1),)\n    DISTLIB(D1)\n."
 	doc := p.Parse(src)
-	items := cp.GetCompletionsAST(doc, src, 1, 17) // position right after the comma
+	items := cp.GetCompletionsAST(doc, src, 1, 17, lsp.CompletionTriggerInvoked) // position right after the comma
 
 	found := map[string]bool{}
 	for _, item := range items {
@@ -106,7 +106,7 @@ func TestCompletionLeparmDoesNotReofferUsedSubOperand(t *testing.T) {
 
 	src := "++MOD(MYPROG)\n    LEPARM(AC(1),)\n."
 	doc := p.Parse(src)
-	items := cp.GetCompletionsAST(doc, src, 1, 17) // position right after the comma
+	items := cp.GetCompletionsAST(doc, src, 1, 17, lsp.CompletionTriggerInvoked) // position right after the comma
 
 	for _, item := range items {
 		if item.Label == "AC" {
@@ -126,7 +126,7 @@ func TestCompletionLeparmAliasUsageExcludesBothNames(t *testing.T) {
 	// ')' at 18, ',' at 19, final ')' at 20. Right after the comma is 20.
 	src := "++MOD(MYPROG)\n    LEPARM(AMOD(31),)\n."
 	doc := p.Parse(src)
-	items := cp.GetCompletionsAST(doc, src, 1, 20) // position right after the comma
+	items := cp.GetCompletionsAST(doc, src, 1, 20, lsp.CompletionTriggerInvoked) // position right after the comma
 
 	for _, item := range items {
 		if item.Label == "AMODE" || item.Label == "AMOD" {
@@ -160,7 +160,7 @@ func TestCompletionInsideFromdsSubOperandParens(t *testing.T) {
 	// Indices: ...FROMDS( at 19, DSN( at 20-23 ('(' is index 23), ')' at 24, ')' at 25.
 	src := "++MAC(MYMAC) FROMDS(DSN())"
 	doc := p.Parse(src)
-	items := cp.GetCompletionsAST(doc, src, 0, 24) // position right after "DSN(", i.e. inside DSN's own parens
+	items := cp.GetCompletionsAST(doc, src, 0, 24, lsp.CompletionTriggerInvoked) // position right after "DSN(", i.e. inside DSN's own parens
 
 	for _, item := range items {
 		if item.Label == "VOL" || item.Label == "UNIT" || item.Label == "NUMBER" {
@@ -185,7 +185,7 @@ func TestCompletionPipeSeparatedParameterValues(t *testing.T) {
 	// AMODE(│) — Parameter is "24|31|64|ANY|MIN", no Values entries.
 	src := "++MOD(MYPROG)\n    LEPARM(AMODE())\n."
 	doc := p.Parse(src)
-	items := cp.GetCompletionsAST(doc, src, 1, 17) // inside AMODE(
+	items := cp.GetCompletionsAST(doc, src, 1, 17, lsp.CompletionTriggerInvoked) // inside AMODE(
 
 	found := map[string]bool{}
 	for _, item := range items {
@@ -207,7 +207,7 @@ func TestCompletionPipeSeparatedValuesDoNotLeakSiblings(t *testing.T) {
 
 	src := "++MOD(MYPROG)\n    LEPARM(AC())\n."
 	doc := p.Parse(src)
-	items := cp.GetCompletionsAST(doc, src, 1, 14) // inside AC(
+	items := cp.GetCompletionsAST(doc, src, 1, 14, lsp.CompletionTriggerInvoked) // inside AC(
 
 	for _, item := range items {
 		t.Errorf("expected no completions inside AC(...) (plain integer parameter), got %q", item.Label)
@@ -226,7 +226,7 @@ func TestCompletionFromdsDoesNotReofferUsedSubOperand(t *testing.T) {
 	// right after it (still inside FROMDS's parens) is 36.
 	src := "++MAC(MYMAC) FROMDS(DSN(MY.DATASET) )"
 	doc := p.Parse(src)
-	items := cp.GetCompletionsAST(doc, src, 0, 36)
+	items := cp.GetCompletionsAST(doc, src, 0, 36, lsp.CompletionTriggerInvoked)
 
 	found := map[string]bool{}
 	for _, item := range items {

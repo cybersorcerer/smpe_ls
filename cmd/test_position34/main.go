@@ -7,6 +7,7 @@ import (
 	"github.com/cybersorcerer/smpe_ls/internal/completion"
 	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/parser"
+	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
 
 func main() {
@@ -49,7 +50,7 @@ func main() {
 	fmt.Println()
 
 	// Get completions at position 34 (after DSN(my.test) )
-	items := cp.GetCompletionsAST(doc, content, 0, 34)
+	items := cp.GetCompletionsAST(doc, content, 0, 34, lsp.CompletionTriggerInvoked)
 
 	fmt.Printf("Completions at position 34: %d\n", len(items))
 	if len(items) == 0 {
