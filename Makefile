@@ -63,12 +63,19 @@ build-outl:
 install: build build-lint build-outl
 	@echo "Installing $(BINARY_NAME) to $(INSTALL_DIR)..."
 	@mkdir -p $(INSTALL_DIR)
+# Remove the target before copying. Overwriting a binary that is currently
+# running rewrites the pages the kernel has mapped, the code signature no
+# longer matches and macOS kills the process with SIGKILL. Deleting first
+# gives the new file its own inode and leaves any running process alone.
+	@rm -f $(INSTALL_DIR)/$(BINARY_NAME)
 	@cp $(BUILD_DIR)/$(BINARY_NAME) $(INSTALL_DIR)/
 	@chmod +x $(INSTALL_DIR)/$(BINARY_NAME)
 	@echo "Installed binary to $(INSTALL_DIR)/$(BINARY_NAME)"
+	@rm -f $(INSTALL_DIR)/$(LINT_BINARY_NAME)
 	@cp $(BUILD_DIR)/$(LINT_BINARY_NAME) $(INSTALL_DIR)/
 	@chmod +x $(INSTALL_DIR)/$(LINT_BINARY_NAME)
 	@echo "Installed binary to $(INSTALL_DIR)/$(LINT_BINARY_NAME)"
+	@rm -f $(INSTALL_DIR)/$(OUTL_BINARY_NAME)
 	@cp $(BUILD_DIR)/$(OUTL_BINARY_NAME) $(INSTALL_DIR)/
 	@chmod +x $(INSTALL_DIR)/$(OUTL_BINARY_NAME)
 	@echo "Installed binary to $(INSTALL_DIR)/$(OUTL_BINARY_NAME)"
