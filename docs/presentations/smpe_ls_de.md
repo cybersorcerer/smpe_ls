@@ -569,7 +569,7 @@ Klick auf die Glühbirne (oder `Cmd+.` / `Ctrl+.`) öffnet das Quick-Fix-Menü.
 | Setting | Standard | Beschreibung |
 |---------|----------|-------------|
 | `smpe.formatting.enabled` | `true` | Formatierung aktivieren |
-| `smpe.formatting.indentContinuation` | `3` | Einrückung Fortsetzungszeilen |
+| `smpe.formatting.indentContinuation` | `4` | Einrückung Fortsetzungszeilen |
 | `smpe.formatting.oneOperandPerLine` | `true` | Jeder Operand in eigener Zeile |
 | `smpe.formatting.wrapListsAfterN` | `2` | Listen umbrechen nach N Einträgen |
 | `smpe.formatting.formatOnSave` | `false` | Beim Speichern formatieren |
@@ -840,11 +840,11 @@ Cmd+Shift+P  →  SMP/E: Create z/OSMF Config
 | Setting | Standard | Beschreibung |
 |---------|----------|-------------|
 | `smpe.formatting.enabled` | `true` | Formatierung aktiv |
-| `smpe.formatting.indentContinuation` | `3` | Einrückung Folgezeilen |
+| `smpe.formatting.indentContinuation` | `4` | Einrückung Folgezeilen |
 | `smpe.formatting.oneOperandPerLine` | `true` | Ein Operand pro Zeile |
 | `smpe.formatting.wrapListsAfterN` | `2` | Listen umbrechen |
 | `smpe.formatting.formatOnSave` | `false` | Format beim Speichern |
-| `smpe.formatting.moveLeadingComments` | `false` | Kommentare in Statement verschieben |
+| `smpe.formatting.moveLeadingComments` | `true` | Kommentare in Statement verschieben |
 
 ---
 

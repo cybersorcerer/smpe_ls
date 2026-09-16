@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.14] - 2026-09-16
+
+### Fixed
+
+- **A dot in a multi-line comment ended the statement** - The standalone-comment check had its own terminator search that stripped comments only within a single line, so a `.` inside a `/* ... */` block (a sentence ending in a period, for instance) closed the statement and the comment that followed was reported as standing between MCS statements. It now shares `GetStatementEndPosition` with the Outline. That shared search had two flaws of its own, fixed here as well: a `++` anywhere in a line ended it, so `++APAR` inside a comment cut the statement short - only a `++` as the first non-blank character outside a block comment counts now, checked before the line is scanned so the next statement's terminator is never mistaken for this one's. And with unbalanced parentheses the depth made the terminator unfindable, producing follow-up diagnostics on a statement that is already reported as malformed.
+- **Completion continued statements that were already finished** - An indented line after a terminated statement offered that statement's operands, and typing `++` there did not switch to the statement list because the line still counted as a continuation. A line now continues a statement only while that statement is open.
+- **Typing a space no longer pops up the statement list** - The server evaluates the LSP trigger kind: a space on a free line stays quiet, while an explicit request still lists every statement. Inside an open statement a space keeps triggering operand completion, and `+` opens the statement list as before.
+- **Completion never answers with `null`** - A JSON null result makes the client treat the response as malformed. Code actions and diagnostics already guarded against this; completion now does too.
+
 ## [1.3.13] - 2026-09-11
 
 ### Fixed

@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-1.3.13-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-1.3.14-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -267,6 +267,15 @@ make release
 ```
 
 ## 📋 What's New
+
+### Version 1.3.14
+
+**Bug Fixes**
+
+- 🩹 **A dot in a multi-line comment ended the statement** - A `.` inside a `/* ... */` block closed the statement, so the following comment was reported as standing between MCS statements. The check now shares the Outline's terminator search, which in turn no longer treats a `++` inside a comment as the next statement and still finds the terminator when parentheses are unbalanced.
+- 🩹 **Completion continued finished statements** - An indented line after a terminator offered the previous statement's operands, and `++` there did not switch to the statement list.
+- 🩹 **Typing a space no longer opens the statement list** - The server evaluates the LSP trigger kind; an explicit request still lists everything, and inside an open statement a space keeps completing operands.
+- 🩹 **Completion never answers with `null`** - A JSON null result makes the client treat the response as malformed.
 
 ### Version 1.3.13
 

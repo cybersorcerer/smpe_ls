@@ -12,8 +12,8 @@ Extension installed — see [Module 01](01-installation.md).
 
 ## Statement Completion
 
-Type `++` on an empty line and press `Ctrl+Space` (Windows/Linux) or `Cmd+Space`
-(macOS). A list of all available MCS statements appears:
+Type `++` on an empty line. The list of all available MCS statements opens while
+you type and narrows down with every further character:
 
 ```
 ++APAR
@@ -29,6 +29,18 @@ Type `++` on an empty line and press `Ctrl+Space` (Windows/Linux) or `Cmd+Space`
 
 Each entry shows a short description from the IBM documentation.
 
+## When Completion Opens
+
+Completion is triggered by `+`, by letters, and — inside a statement — by a space.
+A space on an otherwise empty line deliberately opens nothing: there it would
+only get in the way while you indent. To see the statement list without typing,
+request completion explicitly with `Ctrl+Space`.
+
+> On macOS `Ctrl+Space` is claimed by the system for switching the input source,
+> so it may never reach the editor. Either free it up in System Settings →
+> Keyboard → Keyboard Shortcuts → Input Sources, or simply type `+` — the list
+> opens on its own.
+
 ## Operand Completion
 
 After opening a statement, only the operands valid for that statement are offered.
@@ -36,7 +48,7 @@ Example: after `++VER(`, completion offers:
 
 ```smpe
 ++VER(Z038)
-    FMID(      ← Ctrl+Space here shows: FMID, PRE, REQ, SUP, ...
+    FMID(      ← typing here shows: FMID, PRE, REQ, SUP, ...
 ```
 
 Operands already used are not suggested again (except list operands like `PRE`, `REQ`).
@@ -47,9 +59,9 @@ How to build a complete `++VER` statement using completion:
 
 1. New line, type `++VER(` — completion suggests known FMIDs
 2. Select or type the FMID, close with `)` and press Enter
-3. Type `FM` + `Ctrl+Space` → suggestion `FMID(`
+3. Type `FM` → suggestion `FMID(`
 4. Select `FMID(`, type the value, close with `)`
-5. Type `PR` + `Ctrl+Space` → suggestion `PRE(`
+5. Type `PR` → suggestion `PRE(`
 6. Finish with `.` on a new line
 
 Result:
@@ -96,7 +108,7 @@ Both are shown in completion — validation happens via Diagnostics (see Module 
 
 ## Summary
 
-- `++` + `Ctrl+Space` shows all available statements
+- Typing `++` shows all available statements; a space on an empty line does not
 - Operand completion is context-sensitive — only valid operands are shown
 - Already-used operands are not suggested again
 - Completion works after inline data when `++` is typed

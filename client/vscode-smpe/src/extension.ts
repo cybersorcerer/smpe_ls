@@ -27,7 +27,7 @@ function log(message: string) {
 }
 
 function debugLog(message: string) {
-	const debug = vscode.workspace.getConfiguration('smpe').get<boolean>('debug', true);
+	const debug = vscode.workspace.getConfiguration('smpe').get<boolean>('debug', false);
 	if (!debug) { return; }
 	log(message);
 }

@@ -12,8 +12,8 @@ Extension installiert — siehe [Modul 01](01-installation.md).
 
 ## Statement-Vervollständigung
 
-Tippe `++` in einer leeren Zeile und drücke `Ctrl+Space` (Windows/Linux) bzw.
-`Cmd+Space` (macOS). Es erscheint eine Liste aller verfügbaren MCS-Statements:
+Tippe `++` in einer leeren Zeile. Die Liste aller verfügbaren MCS-Statements
+öffnet sich beim Tippen und filtert sich mit jedem weiteren Zeichen:
 
 ```
 ++APAR
@@ -29,6 +29,19 @@ Tippe `++` in einer leeren Zeile und drücke `Ctrl+Space` (Windows/Linux) bzw.
 
 Jeder Eintrag zeigt eine kurze Beschreibung aus der IBM-Dokumentation.
 
+## Wann die Vervollständigung erscheint
+
+Ausgelöst wird sie durch `+`, durch Buchstaben und — innerhalb eines Statements —
+durch ein Leerzeichen. Auf einer ansonsten leeren Zeile öffnet ein Leerzeichen
+bewusst nichts: dort würde die Liste beim Einrücken nur stören. Wer die
+Statement-Liste ohne Tippen sehen will, fordert die Vervollständigung mit
+`Ctrl+Space` explizit an.
+
+> Unter macOS belegt das System `Ctrl+Space` für den Wechsel der Eingabequelle,
+> sodass die Tastenkombination den Editor womöglich nie erreicht. Entweder in den
+> Systemeinstellungen → Tastatur → Tastaturkurzbefehle → Eingabequellen
+> freigeben, oder einfach `+` tippen — die Liste öffnet sich von selbst.
+
 ## Operanden-Vervollständigung
 
 Nach dem Öffnen eines Statements werden nur die für dieses Statement gültigen
@@ -37,7 +50,7 @@ Operanden an:
 
 ```smpe
 ++VER(Z038)
-    FMID(      ← Ctrl+Space hier zeigt: FMID, PRE, REQ, SUP, ...
+    FMID(      ← Tippen zeigt hier: FMID, PRE, REQ, SUP, ...
 ```
 
 Operanden die bereits verwendet wurden, werden nicht erneut vorgeschlagen
@@ -49,9 +62,9 @@ So entsteht ein vollständiges `++VER`-Statement mit Completion:
 
 1. Neue Zeile, tippe `++VER(` — Completion schlägt bekannte FMIDs vor
 2. Wähle oder tippe die FMID, schließe mit `)` und drücke Enter
-3. Tippe `FM` + `Ctrl+Space` → Vorschlag `FMID(`
+3. Tippe `FM` → Vorschlag `FMID(`
 4. Wähle `FMID(`, tippe den Wert, schließe mit `)`
-5. Tippe `PR` + `Ctrl+Space` → Vorschlag `PRE(`
+5. Tippe `PR` → Vorschlag `PRE(`
 6. Abschließen mit `.` auf einer neuen Zeile
 
 Ergebnis:
@@ -99,7 +112,7 @@ Manche Operanden schließen sich gegenseitig aus (z.B. `SYSLIB` und `TXLIB` bei
 
 ## Zusammenfassung
 
-- `++` + `Ctrl+Space` zeigt alle verfügbaren Statements
+- `++` tippen zeigt alle verfügbaren Statements; ein Leerzeichen auf leerer Zeile nicht
 - Operanden-Completion ist kontextsensitiv — nur gültige Operanden werden gezeigt
 - Bereits verwendete Operanden werden nicht erneut vorgeschlagen
 - Completion funktioniert auch nach Inline-Data wenn `++` getippt wird

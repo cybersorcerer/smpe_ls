@@ -2,7 +2,7 @@
   "name": "cybersorcerer66-smpe-mcs",
   "displayName": "IBM z/OS SMP/E MCS Tools",
   "description": "Language support for SMP/E MCS statements",
-  "version": "1.3.13",
+  "version": "1.3.14",
   "publisher": "Cybersorcerer66",
   "icon": "images/icon.png",
   "license": "AGPL-3.0",
@@ -60,7 +60,7 @@
         },
         "smpe.debug": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "Enable debug logging"
         },
         "smpe.diagnostics.unknownStatement": {

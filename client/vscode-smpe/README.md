@@ -2,6 +2,11 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
+## What's New in 1.3.14
+
+- **Fixed: a dot in a block comment ended the statement** - Outline ranges and the standalone-comment check were cut short; a `++` inside a comment had the same effect.
+- **Fixed: completion after a finished statement** - An indented line following a terminator offered the previous statement's operands instead of MCS statements. Typing a space on a free line no longer opens the list.
+
 ## What's New in 1.3.13
 
 - **Fixed: a dot in `DESC` no longer ends the statement** - The Outline view, folding, breadcrumbs and `smpe_outl` cut a statement short at the first dot in an operand value; the terminator is now detected correctly.
@@ -107,7 +112,7 @@ The extension supports all common SMP/E MCS statements, including:
 | `smpe.serverPath` | `""` | Path to the smpe_ls executable (uses bundled server if empty) |
 | `smpe.dataPath` | `""` | Path to the smpe.json data file (uses bundled file if empty) |
 | `smpe.outlPath` | `""` | Path to the smpe_outl executable (uses bundled binary if empty) |
-| `smpe.debug` | `true` | Enable debug logging |
+| `smpe.debug` | `false` | Enable debug logging |
 | `smpe.signatureHelp.enabled` | `true` | Enable Signature Help for operand parameters |
 
 ### Formatting
@@ -119,7 +124,7 @@ The extension supports all common SMP/E MCS statements, including:
 | `smpe.formatting.oneOperandPerLine` | `true` | Place each operand on its own line |
 | `smpe.formatting.wrapListsAfterN` | `2` | Wrap comma-separated lists after N items per line (0 = disabled) |
 | `smpe.formatting.formatOnSave` | `false` | Automatically format document when saving |
-| `smpe.formatting.moveLeadingComments` | `false` | Move comments from before the first statement into the statement during formatting |
+| `smpe.formatting.moveLeadingComments` | `true` | Move comments from before the first statement into the statement during formatting |
 
 ### Diagnostics
 
