@@ -40,35 +40,6 @@ export interface MemberCheckResult {
  */
 const PLACEHOLDER_RE = /^\s*\{\{\s*(.+?)\s*\}\}\s*$/;
 
-/**
- * File extensions that deviate from the default rule.
- *
- * The default is the statement name without "++", lower case: ++BOOK expects
- * "<element>.book". Only statements whose extension differs are listed here.
- * An entry also makes a statement eligible for the convention check at all
- * when it carries no inline_data flag in smpe.json.
- */
-const STATEMENT_FILE_MAP: Record<string, string> = {
-    '++EXEC':     '.rexx',
-    '++PARM':     '.parm',
-    '++TBL':      '.tbl',
-    '++SRC':      '.hlasm',
-    '++MAC':      '.hlasm',
-    '++SKL':      '.skl.jcl',
-    '++MSG':      '.msg',
-    '++HFS':      '.hfs',
-    '++MOD':      '.mod',
-    '++ZAP':      '.zap',
-    '++CLIST':    '.clist',
-    '++USER':     '.usr',
-    '++PROC':     '.jcl',
-    '++DATA':     '.data',
-    '++SAMP':     '.samp',
-    '++HELP':     '.help',
-    '++PROGRAM':  '.bin',
-    '++SHELLSCR': '.sh',
-};
-
 // Shape of smpe_outl --json --meta --ranges output
 interface OutlinePosition {
     line: number;
@@ -101,11 +72,21 @@ interface StatementData {
     variantBases: string[];
     /** Statements that expect inline data, and therefore an input member. */
     inlineData: Set<string>;
+    /**
+     * File extensions that deviate from the default rule, keyed by statement
+     * name ("file_ext" in smpe.json). The default is the statement name
+     * without "++", lower case: ++BOOK expects "<element>.book". Only the
+     * statements whose extension differs are listed there. An entry also
+     * makes a statement eligible for the convention check at all when it
+     * carries no inline_data flag.
+     */
+    fileExt: Record<string, string>;
 }
 
 /** Shape of the parts of smpe.json read here. */
 interface SmpeJson {
     language_identifiers?: { id: string }[];
+    file_ext?: Record<string, string>;
     statements?: { name: string; language_variants?: boolean; inline_data?: boolean }[];
 }
 
@@ -153,18 +134,19 @@ export class MissingMemberChecker {
 
     /**
      * Read the statement definitions from smpe.json. They decide which
-     * statements expect an input member and how a language variant maps back
-     * onto its base statement, so smpe.json stays the single source of truth.
-     * On failure the checker falls back to STATEMENT_FILE_MAP alone.
+     * statements expect an input member, which file extension such a member
+     * carries and how a language variant maps back onto its base statement,
+     * so smpe.json stays the single source of truth. Without them no statement
+     * can be resolved, and the check reports nothing rather than guessing.
      */
     private loadStatementData(): StatementData {
         if (this.statementData) {
             return this.statementData;
         }
 
-        const empty: StatementData = { languageIds: new Set(), variantBases: [], inlineData: new Set() };
+        const empty: StatementData = { languageIds: new Set(), variantBases: [], inlineData: new Set(), fileExt: {} };
         if (!this.dataBinaryPath) {
-            this.log('No smpe.json path configured, statement rules limited to STATEMENT_FILE_MAP');
+            this.log('No smpe.json path configured, no member check possible');
             this.statementData = empty;
             return empty;
         }
@@ -175,8 +157,9 @@ export class MissingMemberChecker {
                 languageIds: new Set((raw.language_identifiers ?? []).map(l => l.id)),
                 variantBases: (raw.statements ?? []).filter(st => st.language_variants).map(st => st.name),
                 inlineData: new Set((raw.statements ?? []).filter(st => st.inline_data).map(st => st.name)),
+                fileExt: raw.file_ext ?? {},
             };
-            this.log(`smpe.json: ${data.languageIds.size} language ids, ${data.variantBases.length} variant bases, ${data.inlineData.size} inline-data statements`);
+            this.log(`smpe.json: ${data.languageIds.size} language ids, ${data.variantBases.length} variant bases, ${data.inlineData.size} inline-data statements, ${Object.keys(data.fileExt).length} file extensions`);
             this.statementData = data;
             return data;
         } catch (err) {
@@ -203,18 +186,19 @@ export class MissingMemberChecker {
 
     /**
      * Expected file extension for a statement, or undefined when it needs no
-     * input member. STATEMENT_FILE_MAP wins so the established conventions
-     * (++SRC -> .hlasm, ++PROC -> .jcl) keep working; everything else falls
-     * back to the statement name without "++", provided it expects inline data.
+     * input member. The "file_ext" entries from smpe.json win so the
+     * established conventions (++SRC -> .hlasm, ++PROC -> .jcl) keep working;
+     * everything else falls back to the statement name without "++", provided
+     * it expects inline data.
      */
     private extensionFor(stmtName: string, data: StatementData): string | undefined {
-        const mapped = STATEMENT_FILE_MAP[stmtName];
+        const mapped = data.fileExt[stmtName];
         if (mapped) {
             return mapped;
         }
 
         const base = this.baseStatement(stmtName, data);
-        const mappedBase = STATEMENT_FILE_MAP[base];
+        const mappedBase = data.fileExt[base];
         if (mappedBase) {
             return mappedBase;
         }
@@ -389,9 +373,9 @@ export class MissingMemberChecker {
             if (!nameMatch) { continue; }
             const stmtName = nameMatch[1];
 
-            // 1. Placeholder check. Independent of STATEMENT_FILE_MAP: the path
-            // is stated explicitly, so it works for statements the map does not
-            // cover (++JCLIN and friends) too.
+            // 1. Placeholder check. Independent of the file_ext entries: the
+            // path is stated explicitly, so it works for statements they do
+            // not cover (++JCLIN and friends) too.
             const placeholders = this.placeholderPathsFor(symbols, i, lines);
             if (placeholders.length > 0) {
                 for (const rel of placeholders) {

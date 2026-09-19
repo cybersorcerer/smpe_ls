@@ -33,6 +33,26 @@
     { "id": "THA", "name": "Thai" },
     { "id": "TRK", "name": "Turkish" }
   ],
+  "file_ext": {
+    "++EXEC": ".rexx",
+    "++PARM": ".parm",
+    "++TBL": ".tbl",
+    "++SRC": ".hlasm",
+    "++MAC": ".hlasm",
+    "++SKL": ".skl.jcl",
+    "++MSG": ".msg",
+    "++HFS": ".hfs",
+    "++MOD": ".mod",
+    "++ZAP": ".zap",
+    "++CLIST": ".clist",
+    "++USER": ".usr",
+    "++PROC": ".jcl",
+    "++DATA": ".data",
+    "++SAMP": ".samp",
+    "++HELP": ".help",
+    "++PROGRAM": ".bin",
+    "++SHELLSCR": ".sh"
+  },
   "templates": {
     "hfs_data_element_operands": [
       {
