@@ -73,6 +73,13 @@ interface StatementData {
     /** Statements that expect inline data, and therefore an input member. */
     inlineData: Set<string>;
     /**
+     * Operands that supply the element data from outside the SYSMOD
+     * ("element_source" in smpe.json). A statement carrying one of them needs
+     * no input member. DELETE is not among them - it names no source, it
+     * removes the element - so it is handled separately.
+     */
+    elementSource: Set<string>;
+    /**
      * File extensions that deviate from the default rule, keyed by statement
      * name ("file_ext" in smpe.json). The default is the statement name
      * without "++", lower case: ++BOOK expects "<element>.book". Only the
@@ -86,9 +93,18 @@ interface StatementData {
 /** Shape of the parts of smpe.json read here. */
 interface SmpeJson {
     language_identifiers?: { id: string }[];
+    element_source?: string[];
     file_ext?: Record<string, string>;
     statements?: { name: string; language_variants?: boolean; inline_data?: boolean }[];
 }
+
+/**
+ * Used when smpe.json carries no "element_source" list, which is the case for
+ * a file written before the list was introduced. Without it no operand would
+ * be recognized as a source and a member would be demanded for statements
+ * that have none.
+ */
+const DEFAULT_ELEMENT_SOURCE = ['FROMDS', 'RELFILE', 'TXLIB', 'LKLIB'];
 
 export class MissingMemberChecker {
     private outputChannel: vscode.OutputChannel;
@@ -144,7 +160,10 @@ export class MissingMemberChecker {
             return this.statementData;
         }
 
-        const empty: StatementData = { languageIds: new Set(), variantBases: [], inlineData: new Set(), fileExt: {} };
+        const empty: StatementData = {
+            languageIds: new Set(), variantBases: [], inlineData: new Set(), fileExt: {},
+            elementSource: new Set(DEFAULT_ELEMENT_SOURCE),
+        };
         if (!this.dataBinaryPath) {
             this.log('No smpe.json path configured, no member check possible');
             this.statementData = empty;
@@ -158,8 +177,9 @@ export class MissingMemberChecker {
                 variantBases: (raw.statements ?? []).filter(st => st.language_variants).map(st => st.name),
                 inlineData: new Set((raw.statements ?? []).filter(st => st.inline_data).map(st => st.name)),
                 fileExt: raw.file_ext ?? {},
+                elementSource: new Set(raw.element_source?.length ? raw.element_source : DEFAULT_ELEMENT_SOURCE),
             };
-            this.log(`smpe.json: ${data.languageIds.size} language ids, ${data.variantBases.length} variant bases, ${data.inlineData.size} inline-data statements, ${Object.keys(data.fileExt).length} file extensions`);
+            this.log(`smpe.json: ${data.languageIds.size} language ids, ${data.variantBases.length} variant bases, ${data.inlineData.size} inline-data statements, ${Object.keys(data.fileExt).length} file extensions, ${data.elementSource.size} element sources`);
             this.statementData = data;
             return data;
         } catch (err) {
@@ -402,15 +422,14 @@ export class MissingMemberChecker {
             // Skip if statement carries its inline data directly
             if (sym.hasInlineData) { continue; }
 
-            // Skip if an operand supplies the data from elsewhere (FROMDS,
-            // RELFILE, TXLIB, LKLIB), or deletes the element - in those cases
-            // no member file is expected.
-            const hasExternalSource = (sym.children ?? []).some(c =>
-                c.name.startsWith('TXLIB(') ||
-                c.name.startsWith('FROMDS(') ||
-                c.name.startsWith('RELFILE(') ||
-                c.name.startsWith('LKLIB(') ||
-                c.name === 'DELETE' || c.name.startsWith('DELETE('));
+            // Skip if an element source operand supplies the data from
+            // elsewhere, or DELETE removes the element - in those cases no
+            // member file is expected. smpe_outl reports an operand either as
+            // a bare name or as "NAME(value)", so both forms are matched.
+            const hasExternalSource = (sym.children ?? []).some(c => {
+                const opName = c.name.split('(')[0];
+                return statementData.elementSource.has(opName) || opName === 'DELETE';
+            });
             if (hasExternalSource) { continue; }
 
             const expectedFile = elementName + ext;
