@@ -1,6 +1,7 @@
 package diagnostics
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
@@ -47,6 +48,40 @@ func TestElementCarryingMCSMissingInlineDataReported(t *testing.T) {
 		if diags := diagsWith(t, cfg, text); len(diags) != 1 {
 			t.Errorf("%s: expected 1 missing-inline-data diagnostic, got %d: %+v", stmt, len(diags), diags)
 		}
+	}
+}
+
+// ++ZAP names no external source, so the message must not offer one. It says
+// what the SMP/E reference says: the IMASPZAP control statements follow the
+// ++ZAP MCS immediately.
+func TestZapMessageNamesIMASPZAP(t *testing.T) {
+	cfg := &Config{MissingInlineData: true}
+	for _, text := range []string{
+		"++ZAP(MYMOD) DISTLIB(ALIB) .\n++VER(Z038) FMID(F1) .\n",
+		"++VER(Z038) FMID(F1) .\n++ZAP(MYMOD) DISTLIB(ALIB) .\n",
+	} {
+		diags := diagsWith(t, cfg, text)
+		if len(diags) != 1 {
+			t.Fatalf("Expected 1 diagnostic, got %d: %+v", len(diags), diags)
+		}
+		want := "++ZAP expects the IMASPZAP control statements to follow immediately"
+		if !strings.HasSuffix(diags[0].Message, want) {
+			t.Errorf("Message %q, want it to end with %q", diags[0].Message, want)
+		}
+	}
+}
+
+// A statement without alternatives must still read correctly when another
+// statement follows - the two message parts have to fit together.
+func TestMissingInlineDataMessageReadsCorrectly(t *testing.T) {
+	cfg := &Config{MissingInlineData: true}
+	diags := diagsWith(t, cfg, "++CLIST(E1) DISTLIB(ALIB) .\n++VER(Z038) FMID(F1) .\n")
+	if len(diags) != 1 {
+		t.Fatalf("Expected 1 diagnostic, got %d: %+v", len(diags), diags)
+	}
+	want := "++CLIST expects inline data or one of FROMDS, RELFILE, TXLIB before next statement"
+	if !strings.HasSuffix(diags[0].Message, want) {
+		t.Errorf("Message %q, want it to end with %q", diags[0].Message, want)
 	}
 }
 

@@ -396,7 +396,10 @@ func determineDiagnosticCode(message string) DiagnosticCode {
 	}
 
 	// Structural errors
-	if strings.Contains(msg, "expects inline data") {
+	// ++ZAP phrases the same diagnostic in its own terms: its data are the
+	// IMASPZAP control statements, not "inline data".
+	if strings.Contains(msg, "expects inline data") ||
+		strings.Contains(msg, "imaspzap control statements") {
 		return DiagMissingInlineData
 	}
 	if strings.Contains(msg, "comment not allowed") {

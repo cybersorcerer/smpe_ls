@@ -1067,14 +1067,14 @@ func (p *Provider) checkMissingInlineData(doc *parser.Document) []lsp.Diagnostic
 				diagnostics = append(diagnostics, p.createDiagnosticFromNode(
 					stmt,
 					lsp.SeverityWarning,
-					p.getMissingInlineDataMessage(stmt)+" before next statement",
+					p.getMissingInlineDataMessage(stmt, true),
 				))
 			} else if stmtIndex == len(doc.Statements)-1 {
 				// This is the last statement in the document - inline data is missing
 				diagnostics = append(diagnostics, p.createDiagnosticFromNode(
 					stmt,
 					lsp.SeverityWarning,
-					p.getMissingInlineDataMessage(stmt),
+					p.getMissingInlineDataMessage(stmt, false),
 				))
 			}
 		}
@@ -1083,8 +1083,19 @@ func (p *Provider) checkMissingInlineData(doc *parser.Document) []lsp.Diagnostic
 	return diagnostics
 }
 
-// getMissingInlineDataMessage returns a statement-specific message for missing inline data
-func (p *Provider) getMissingInlineDataMessage(stmt *parser.Node) string {
+// getMissingInlineDataMessage returns a statement-specific message for missing
+// inline data. beforeNextStatement tells whether another statement follows, so
+// the message can say where the data was expected.
+func (p *Provider) getMissingInlineDataMessage(stmt *parser.Node, beforeNextStatement bool) string {
+	// ++ZAP is the one statement that names no external source at all. Its
+	// data are the IMASPZAP control statements, and the SMP/E reference is
+	// specific about where they belong: "The changes for the module must
+	// immediately follow the ++ZAP MCS". Saying "inline data ... before next
+	// statement" would be both vaguer and less correct.
+	if stmt.Name == "++ZAP" {
+		return "++ZAP expects the IMASPZAP control statements to follow immediately"
+	}
+
 	// Build list of alternative operands based on statement type
 	var alternatives []string
 
@@ -1106,10 +1117,16 @@ func (p *Provider) getMissingInlineDataMessage(stmt *parser.Node) string {
 	baseMsg := stmt.Name + " expects inline data"
 
 	if len(alternatives) > 0 {
-		return baseMsg + " or one of " + strings.Join(alternatives, ", ")
+		baseMsg += " or one of " + strings.Join(alternatives, ", ")
+	} else {
+		baseMsg += ", none found"
 	}
 
-	return baseMsg + " but none found"
+	if beforeNextStatement {
+		baseMsg += " before next statement"
+	}
+
+	return baseMsg
 }
 
 // validateSubOperandsASTWithConfig validates sub-operands within an operand's parameter using AST
