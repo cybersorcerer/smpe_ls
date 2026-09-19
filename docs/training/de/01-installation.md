@@ -16,14 +16,16 @@ und stellt alle Language-Server-Features bereit.
 Die passende VSIX-Datei befindet sich auf der
 [GitHub Releases Seite](https://github.com/cybersorcerer/smpe_ls/releases/latest):
 
+`<version>` steht dabei für die Versionsnummer des Releases, z.B. `1.3.15`.
+
 | Plattform | Datei |
 |-----------|-------|
-| Windows x64 | `smpe-mcs-language-server-win32-x64-1.3.8.vsix` |
-| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-1.3.8.vsix` |
-| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-1.3.8.vsix` |
-| macOS Intel | `smpe-mcs-language-server-darwin-x64-1.3.8.vsix` |
-| Linux x64 | `smpe-mcs-language-server-linux-x64-1.3.8.vsix` |
-| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-1.3.8.vsix` |
+| Windows x64 | `smpe-mcs-language-server-win32-x64-<version>.vsix` |
+| Windows ARM64 | `smpe-mcs-language-server-win32-arm64-<version>.vsix` |
+| macOS Apple Silicon | `smpe-mcs-language-server-darwin-arm64-<version>.vsix` |
+| macOS Intel | `smpe-mcs-language-server-darwin-x64-<version>.vsix` |
+| Linux x64 | `smpe-mcs-language-server-linux-x64-<version>.vsix` |
+| Linux ARM64 | `smpe-mcs-language-server-linux-arm64-<version>.vsix` |
 
 Der Language Server ist bereits in der Extension enthalten — keine separate
 Installation notwendig.
@@ -38,7 +40,7 @@ Installation notwendig.
 ## Installation über das Terminal
 
 ```bash
-code --install-extension smpe-mcs-language-server-darwin-arm64-1.3.8.vsix
+code --install-extension smpe-mcs-language-server-darwin-arm64-<version>.vsix
 ```
 
 Danach VSCode neu laden.

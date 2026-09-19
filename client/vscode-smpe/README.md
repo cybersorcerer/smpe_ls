@@ -2,77 +2,9 @@
 
 Language Server Extension for IBM SMP/E MCS (Modification Control Statements).
 
-## What's New in 1.3.14
-
-- **Fixed: a dot in a block comment ended the statement** - Outline ranges and the standalone-comment check were cut short; a `++` inside a comment had the same effect.
-- **Fixed: completion after a finished statement** - An indented line following a terminator offered the previous statement's operands instead of MCS statements. Typing a space on a free line no longer opens the list.
-
-## What's New in 1.3.13
-
-- **Fixed: a dot in `DESC` no longer ends the statement** - The Outline view, folding, breadcrumbs and `smpe_outl` cut a statement short at the first dot in an operand value; the terminator is now detected correctly.
-
-## What's New in 1.3.12
-
-- **Fixed: `LKLIB` no longer demands inline data** - A `++MOD` whose module comes from the `LKLIB` ddname is not packaged inline, but was reported as missing its inline data and as missing an input member.
-
-## What's New in 1.3.11
-
-- **Fixed: false error on the JCLIN `/*` delimiter** - The column-1 comment check no longer runs over inline data, where a `/*` in column 1 is valid JCL rather than a comment.
-
-## What's New in 1.3.10
-
-- **Check Missing Input Members understands `{{ path }}` placeholders** - Statements pointing at their input member with a `{{ ./path }}` line are now resolved against the repository root instead of being skipped. A new **Source** column distinguishes `placeholder` from `convention`.
-- **New diagnostic: comment beginning in column 1** - A `/*` in column 1 ends the input data set and truncates the member. Reported as an error with quick fixes to indent the line or the whole comment block. Toggle via `smpe.diagnostics.commentInColumn1`.
-- **Comments survive formatting unchanged** - Box drawings, tables and aligned metadata blocks are no longer reflowed or re-indented, and comments after dotted operand values are no longer dropped.
-- **Fewer false positives in Check Missing Input Members** - No member is demanded for `FROMDS`, `RELFILE` or `DELETE`, and statements without an explicit mapping derive their extension from the statement name.
-
-See the [CHANGELOG](https://github.com/cybersorcerer/smpe_ls/blob/main/client/vscode-smpe/CHANGELOG.md) for full details.
-
-## What's New in 1.3.9
-
-- **LEPARM and sub-operand containers fixed end-to-end** - Parsing, completion (nested context, already-used filtering, pipe-value suggestions like `AMODE`/`UPCASE`/`FETCHOPT`), Outline view, and formatting (separator preservation, list wrapping) all work correctly now for `LEPARM`, `FROMDS`, and similar sub-operand operands.
-
-## What's New in 1.3.8
-
-- Internal fixes only — see [CHANGELOG](https://github.com/cybersorcerer/smpe_ls/blob/main/client/vscode-smpe/CHANGELOG.md) for details.
-
-## What's New in 1.3.7
-
-- **New Quick Fix: "Update REWORK to current date"** - Refreshes a stale, already-filled `REWORK()` value from the cursor, no diagnostic needed. The existing empty-value fix is unchanged.
-
-## What's New in 1.3.6
-
-- **smpe_lint `--data` flag** - Set the smpe.json location explicitly (`--data <path>`) for Docker containers and CI runners without a usable home directory; default lookup now also works on Windows.
-
-## What's New in 1.3.5
-
-- **Free Form Query entry types complete** - The entry type picklist now covers all SMP/E CSI entry types (46 → 86): added `HFS`, `SHELLSCR`, the `ELEMENT` pseudo-entry and all data element types, each with its valid subentries.
-- **National language variants** - Entry types like `HFSESP` or `MSGENU` automatically resolve to the subentries of their base type.
-
-## What's New in 1.3.4
-
-- **Free Form Query subentry picker fix** - Already selected subentries show a checkmark again when reopening the picker, and new picks are merged alphabetically instead of appended to the end.
-
-## What's New in 1.3.3
-
-- **Signature Help** - When the cursor is inside an operand's parentheses (`DISTLIB(│)`), a floating box shows the expected parameter, a short description and the type. It triggers automatically while typing `(` and after accepting an operand from the completion list; boolean flag operands show no box. Toggle with `smpe.signatureHelp.enabled` (default `true`).
-- **Fix language discrepancies** - Free Form Query now has only english button labels.
-
-## What's New in 1.3.2
-
-- **Code Actions (Quick Fixes)** - The editor lightbulb (`Cmd+.` / `Ctrl+.`) offers one-click fixes for diagnostics: **Add statement terminator** (inserts the missing `.`), **Insert operand X** / **Insert all required operands** (inserts skeletons for missing required operands), and **Set REWORK to current date** (fills an empty `REWORK()` with today's Julian date `yyyyddd`).
-
-## What's New in 1.3.1
-
-- **MCS completion menu stays open while typing `++STATEMENT` prefix** - Typing `++S`, `++SR`, `++SRC`, … no longer dismisses the completion list. The completion menu remains open and continues to filter MCS statements as more characters are typed.
-- **Snippet items respect VSCode/blink prefix filter** - Boilerplate snippet completion items now carry an explicit `filterText` so VSCode (and blink-cmp in Neovim) match them against the typed prefix. Snippets are no longer hidden when typing `++P`, `++PT`, etc.
-
-## What's New in 1.3.0
-
-- **Saved Queries in Free Form Query** - Save and reuse complete CSI queries. Queries are stored in `.smpe-saved-queries.yaml` in the workspace root. The Free Form Query panel shows a collapsible saved queries section below the input form.
-- **Auto-Detect Language Mode Toggle** - New setting `smpe.editor.autoDetectLanguage` (default: `true`) and command `SMP/E: Toggle Auto-Detect Language Mode`. When disabled, manual language mode changes (e.g. switching a `.smpe` buffer to REXX) are preserved and no longer overridden by the extension.
-
-See the [CHANGELOG](https://github.com/cybersorcerer/smpe_ls/blob/main/client/vscode-smpe/CHANGELOG.md) for full details.
+Release notes for every version are in the
+[CHANGELOG](https://github.com/cybersorcerer/smpe_ls/blob/main/client/vscode-smpe/CHANGELOG.md),
+or in the Changelog tab next to this page in VS Code.
 
 ## Features
 

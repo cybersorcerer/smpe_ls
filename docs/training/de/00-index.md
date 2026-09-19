@@ -1,6 +1,6 @@
 # SMP/E Language Server — Schulungsunterlagen
 
-**Version:** 1.3.8  
+**Version:** 1.3.15  
 **Zielgruppe:** SMP/E-Entwickler, neu in VSCode
 
 ## Voraussetzungen

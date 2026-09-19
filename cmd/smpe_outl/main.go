@@ -17,7 +17,7 @@ import (
 var symbolProvider = symbols.NewProvider()
 
 var (
-	version = "v1.3.14"
+	version = "v1.3.15"
 	commit  = "unknown"
 )
 
