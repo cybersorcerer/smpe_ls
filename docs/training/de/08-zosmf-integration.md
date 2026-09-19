@@ -199,10 +199,11 @@ Die Spalte **Source** zeigt, wie der erwartete Member ermittelt wurde:
 
 - `convention` - Das Statement hat keine Inline-Daten, der Member wird als
   `<Elementname><Endung>` unterhalb der Suchordner erwartet. Die Endung ergibt
-  sich aus dem Statement-Namen (`++BOOK` erwartet `<Element>.book`); etablierte
-  Ausnahmen wie `++SRC` → `.hlasm` oder `++PROC` → `.jcl` bleiben bestehen.
-  Sprachvarianten lösen auf ihr Basis-Statement auf, `++PNLDEU` erwartet also
-  `<Element>.pnl`.
+  sich aus dem Statement-Namen, klein geschrieben und samt Ziffer (`++BOOK`
+  erwartet `<Element>.book`, `++AIX1` erwartet `<Element>.aix1`). Ausnahmen wie
+  `++SRC` → `.hlasm` oder `++PROC` → `.jcl` stehen im Objekt `file_ext` der
+  `smpe.json`. Sprachvarianten lösen auf ihr Basis-Statement auf, `++PNLDEU`
+  erwartet also `<Element>.pnl`.
 - `placeholder` - Im Inline-Daten-Bereich des Statements steht eine
   `{{ pfad }}`-Zeile, die eine Build-Pipeline durch den Inhalt dieser Datei
   ersetzt. Der Pfad ist relativ zum Repository-Root und wird exakt so geprüft,

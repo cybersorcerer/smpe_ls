@@ -195,10 +195,11 @@ The **Source** column shows how the expected member was determined:
 
 - `convention` - the statement carries no inline data, so the member is expected
   as `<element name><extension>` somewhere below the search folders. The
-  extension comes from the statement name (`++BOOK` expects `<element>.book`);
-  established exceptions such as `++SRC` → `.hlasm` or `++PROC` → `.jcl` are
-  kept. Language variants resolve to their base statement, so `++PNLDEU`
-  expects `<element>.pnl`.
+  extension comes from the statement name, lower case and including any digit
+  (`++BOOK` expects `<element>.book`, `++AIX1` expects `<element>.aix1`).
+  Exceptions such as `++SRC` → `.hlasm` or `++PROC` → `.jcl` are listed in the
+  `file_ext` object of `smpe.json`. Language variants resolve to their base
+  statement, so `++PNLDEU` expects `<element>.pnl`.
 - `placeholder` - the statement's inline data area contains a `{{ path }}` line
   that a build pipeline replaces with that file's contents. The path is relative
   to the repository root and is checked exactly as written, so it may point

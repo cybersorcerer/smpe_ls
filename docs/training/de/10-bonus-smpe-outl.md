@@ -120,18 +120,27 @@ exit ${exit_code:-0}
 
 **Zuordnung Statement → Dateiendung:**
 
-| Statement | Endung |
-|-----------|--------|
-| `++PARM` | `.parm` |
-| `++SRC` | `.hlasm` |
-| `++MAC` | `.hlasm` |
-| `++EXEC` | `.rexx` |
-| `++MOD` | `.mod` |
-| `++ZAP` | `.zap` |
-| `++PROC` | `.jcl` |
-| `++CLIST` | `.clist` |
-| `++MSG` | `.msg` |
-| `++HELP` | `.help` |
+Die Zuordnung steht im Objekt `file_ext` der `smpe.json` und umfasst nur die
+Statements, deren Endung von der Regel abweicht:
+
+| Statement | Endung | | Statement | Endung |
+|-----------|--------|---|-----------|--------|
+| `++CLIST` | `.clist` | | `++PROC` | `.jcl` |
+| `++DATA`, `++DATA1`–`++DATA6` | `.data` | | `++PROGRAM` | `.bin` |
+| `++EXEC` | `.rexx` | | `++SAMP` | `.samp` |
+| `++HELP` | `.help` | | `++SHELLSCR` | `.sh` |
+| `++HFS` | `.hfs` | | `++SKL` | `.skl.jcl` |
+| `++MAC` | `.hlasm` | | `++SRC` | `.hlasm` |
+| `++MOD` | `.mod` | | `++TBL` | `.tbl` |
+| `++MSG` | `.msg` | | `++ZAP` | `.zap` |
+| `++PARM` | `.parm` | | | |
+
+Alle übrigen Statements leiten die Endung aus ihrem Namen ab: Name ohne `++`,
+klein geschrieben. `++BOOK` erwartet also `<Element>.book`. Nummerierte
+Familien behalten ihre Ziffer, `++AIX1` erwartet `<Element>.aix1` — sonst
+würde eine Datei für `++AIX1` bis `++AIX5` gleichermaßen gelten.
+Sprachvarianten lösen auf ihr Basis-Statement auf, `++PNLDEU` erwartet
+`<Element>.pnl`.
 
 ## Pfad zur smpe.json (`--data`)
 

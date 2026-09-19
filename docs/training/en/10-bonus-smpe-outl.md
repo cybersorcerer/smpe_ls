@@ -120,18 +120,26 @@ exit ${exit_code:-0}
 
 **Statement to file extension mapping:**
 
-| Statement | Extension |
-|-----------|-----------|
-| `++PARM` | `.parm` |
-| `++SRC` | `.hlasm` |
-| `++MAC` | `.hlasm` |
-| `++EXEC` | `.rexx` |
-| `++MOD` | `.mod` |
-| `++ZAP` | `.zap` |
-| `++PROC` | `.jcl` |
-| `++CLIST` | `.clist` |
-| `++MSG` | `.msg` |
-| `++HELP` | `.help` |
+The mapping lives in the `file_ext` object of `smpe.json` and lists only the
+statements whose extension deviates from the rule:
+
+| Statement | Extension | | Statement | Extension |
+|-----------|-----------|---|-----------|-----------|
+| `++CLIST` | `.clist` | | `++PROC` | `.jcl` |
+| `++DATA`, `++DATA1`–`++DATA6` | `.data` | | `++PROGRAM` | `.bin` |
+| `++EXEC` | `.rexx` | | `++SAMP` | `.samp` |
+| `++HELP` | `.help` | | `++SHELLSCR` | `.sh` |
+| `++HFS` | `.hfs` | | `++SKL` | `.skl.jcl` |
+| `++MAC` | `.hlasm` | | `++SRC` | `.hlasm` |
+| `++MOD` | `.mod` | | `++TBL` | `.tbl` |
+| `++MSG` | `.msg` | | `++ZAP` | `.zap` |
+| `++PARM` | `.parm` | | | |
+
+Every other statement derives its extension from its name: the name without
+`++`, lower case. So `++BOOK` expects `<element>.book`. Numbered families keep
+their digit, `++AIX1` expects `<element>.aix1` — otherwise one file would
+answer for `++AIX1` through `++AIX5` alike. Language variants resolve to their
+base statement, so `++PNLDEU` expects `<element>.pnl`.
 
 ## Path to smpe.json (`--data`)
 

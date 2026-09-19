@@ -45,7 +45,6 @@
     "++MOD": ".mod",
     "++ZAP": ".zap",
     "++CLIST": ".clist",
-    "++USER": ".usr",
     "++PROC": ".jcl",
     "++DATA": ".data",
     "++DATA1": ".data",
