@@ -676,6 +676,7 @@
     },
     {
       "name": "++JAR",
+      "inline_data": true,
       "parameter": "NAME",
       "length": 8,
       "type": "MCS",
@@ -837,6 +838,7 @@
     },
     {
       "name": "++JARUPD",
+      "inline_data": true,
       "parameter": "NAME",
       "length": 7,
       "type": "MCS",
@@ -1060,6 +1062,7 @@
     },
     {
       "name": "++ZAP",
+      "inline_data": true,
       "parameter": "name",
       "length": 8,
       "type": "MCS",
@@ -1416,6 +1419,7 @@
     },
     {
       "name": "++CLIST",
+      "inline_data": true,
       "parameter": "name",
       "length": 8,
       "type": "Data Element MCS",
@@ -1521,6 +1525,7 @@
     },
     {
       "name": "++DATA",
+      "inline_data": true,
       "parameter": "name",
       "length": 8,
       "type": "Data Element MCS",
@@ -1626,6 +1631,7 @@
     },
     {
       "name": "++DATA1",
+      "inline_data": true,
       "parameter": "name",
       "length": 8,
       "type": "Data Element MCS",
@@ -1731,6 +1737,7 @@
     },
     {
       "name": "++DATA2",
+      "inline_data": true,
       "parameter": "name",
       "length": 8,
       "type": "Data Element MCS",
@@ -1836,6 +1843,7 @@
     },
     {
       "name": "++DATA3",
+      "inline_data": true,
       "parameter": "name",
       "length": 8,
       "type": "Data Element MCS",
@@ -1941,6 +1949,7 @@
     },
     {
       "name": "++DATA4",
+      "inline_data": true,
       "parameter": "name",
       "length": 8,
       "type": "Data Element MCS",
@@ -2046,6 +2055,7 @@
     },
     {
       "name": "++DATA5",
+      "inline_data": true,
       "parameter": "name",
       "length": 8,
       "type": "Data Element MCS",
@@ -5563,6 +5573,7 @@
     },
     {
       "name": "++PROGRAM",
+      "inline_data": true,
       "parameter": "NAME",
       "length": 8,
       "type": "MCS",

@@ -45,9 +45,8 @@ const PLACEHOLDER_RE = /^\s*\{\{\s*(.+?)\s*\}\}\s*$/;
  *
  * The default is the statement name without "++", lower case: ++BOOK expects
  * "<element>.book". Only statements whose extension differs are listed here.
- * Entries are also what makes a statement eligible for the convention check at
- * all when it carries no inline_data flag (++ZAP, ++CLIST, ++PROGRAM, ++DATA1
- * to ++DATA5), so this list must not be trimmed.
+ * An entry also makes a statement eligible for the convention check at all
+ * when it carries no inline_data flag in smpe.json.
  */
 const STATEMENT_FILE_MAP: Record<string, string> = {
     '++EXEC':     '.rexx',
