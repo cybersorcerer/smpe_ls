@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-1.3.14-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-1.3.15-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -268,126 +268,8 @@ make release
 
 ## 📋 What's New
 
-### Version 1.3.14
-
-**Bug Fixes**
-
-- 🩹 **A dot in a multi-line comment ended the statement** - A `.` inside a `/* ... */` block closed the statement, so the following comment was reported as standing between MCS statements. The check now shares the Outline's terminator search, which in turn no longer treats a `++` inside a comment as the next statement and still finds the terminator when parentheses are unbalanced.
-- 🩹 **Completion continued finished statements** - An indented line after a terminator offered the previous statement's operands, and `++` there did not switch to the statement list.
-- 🩹 **Typing a space no longer opens the statement list** - The server evaluates the LSP trigger kind; an explicit request still lists everything, and inside an open statement a space keeps completing operands.
-- 🩹 **Completion never answers with `null`** - A JSON null result makes the client treat the response as malformed.
-
-### Version 1.3.13
-
-**Bug Fixes**
-
-- 🩹 **A dot in an operand value ended the statement** - The symbol range stopped at the first `.` outside a block comment, so `DESC(R+V IIQ. SMF Exit 83)` ended the `++USERMOD` at that dot instead of at its terminator. This truncated the Outline view, folding ranges, breadcrumbs, workspace symbols and `smpe_outl` output. Terminator detection now also tracks parenthesis depth and quoted strings.
-
-### Version 1.3.12
-
-**Bug Fixes**
-
-- 🩹 **`LKLIB` counts as an external data source** - A module in the data set named by the `LKLIB` ddname is not packaged inline, so `++MOD(X) DISTLIB(Y) LKLIB(DD1) .` must not be flagged. `LKLIB` was missing from every check deciding whether a statement expects inline data: the `missingInlineData` diagnostic, the column 72, standalone comment and comment-in-column-1 checks, the formatter, and Check Missing Input Members. It now also appears among the alternatives in the diagnostic message.
-
-### Version 1.3.11
-
-**Bug Fixes**
-
-- 🩹 **`commentInColumn1` no longer fires inside inline data** - In JCLIN a `/*` in column 1 is the regular JCL delimiter closing a `DD *` stream and has to sit there, so the check introduced in 1.3.10 flagged valid usermods. Inline data is not MCS text and is now excluded; comments in column 1 within a statement region are still reported.
-
-### Version 1.3.10
-
-**New Features**
-
-- 📚 **Check Missing Input Members resolves `{{ path }}` placeholders** - A statement can point at its input member with a `{{ ./path }}` line, which the build pipeline replaces with that file's contents. The path is relative to the repository root and is checked as written, so it may point outside the configured search folders. Such statements were skipped before, because a placeholder counts as inline data. A new **Source** column tells `placeholder` and `convention` results apart.
-- 📚 **New diagnostic: comment beginning in column 1** - A `/*` in column 1 marks the end of an input data set, so SMP/E stops reading the member there. Reported as an error on every affected line, with quick fixes to indent either the single line or the whole comment block. Toggle with `smpe.diagnostics.commentInColumn1`.
-
-**Bug Fixes**
-
-- 🩹 **The formatter no longer rewrites comment text** - Comments were reflowed and re-indented, destroying box drawings, tables and aligned metadata blocks such as generated GITLAB-META headers. Comment text is now reproduced exactly as written; only its position may change. Comments the formatter relocates itself are shifted as a whole block so they do not land in column 1.
-- 🩹 **Comments after operand values containing dots are kept** - A dot in a dataset name (`DSN(HLQ.MID.LLQ)`) or a quoted value was mistaken for the statement terminator, dropping the comment. Terminator detection now tracks parenthesis depth, quoted strings and comments across line breaks.
-- 🩹 **Formatting no longer reaches into inline data** - An unclosed comment after the terminator could pull the following data lines into the statement.
-- 🩹 **Fewer false positives in Check Missing Input Members** - No member is demanded for `FROMDS`, `RELFILE` or `DELETE`. Statements without an explicit mapping derive their extension from the statement name (`++BOOK` → `.book`), and language variants resolve to their base statement (`++PNLDEU` → `.pnl`). Three mappings that never matched a statement were corrected.
-- 🩹 **`smpe_outl` reports parameterless flag operands** - `DELETE`, `USER` and similar operands either vanished from the outline or absorbed the value of the following operand.
-
-**Changed**
-
-- 🔧 **Language definitions come from `smpe.json`** - The 32 national language identifiers and the base statements accepting a language suffix are no longer duplicated in Go code. `++HFS` is now correctly flagged as accepting language variants.
-
-### Version 1.3.9
-
-**New Features**
-
-- 📚 **FETCHOPT parameter values** - `FETCHOPT(PACK|NOPACK)` is now correctly declared in `data/smpe.json`, so it gets hover, completion, and formatting support like `LEPARM`'s other attributes.
-
-**Bug Fixes**
-
-- 🩹 **LEPARM and other sub-operand containers (parsing, completion, outline, formatting)** - A parser bug duplicated every operand's parameter value into two identical AST nodes, corrupting semantic-highlighting tokens and silently dropping `LEPARM`/`FROMDS` from the Outline view and `smpe_outl` output. Completion inside a nested sub-operand leaked the parent's suggestion list; already-used sub-operands (including aliases) were re-offered; enumerated pipe-value operands offered no completions at all. Formatting of comma- or space-separated sub-operand lists dropped the original separator and never wrapped long lists.
-
-### Version 1.3.8
-
-Internal fixes only — see [CHANGELOG](client/vscode-smpe/CHANGELOG.md) for details.
-
-### Version 1.3.7
-
-**New Features**
-
-- 💡 **New Quick Fix: "Update REWORK to current date"** - Refreshes a stale, already-filled `REWORK()` value to today's date, triggered from the cursor without needing a diagnostic first. The existing "Set REWORK to current date" fix for an *empty* `REWORK()` is unchanged and keeps handling that case.
-
-### Version 1.3.6
-
-**New Features**
-
-- 🐳 **smpe_lint `--data` flag** - Set the smpe.json location explicitly with `--data <path>` — for Docker containers and CI runners without a usable home directory (matching `smpe_outl`). The default lookup now uses the OS home directory resolution, so it also works on Windows.
-
-### Version 1.3.5
-
-**New Features**
-
-- 📚 **Free Form Query entry types complete** - The entry type picklist now covers all SMP/E CSI entry types: added `HFS`, `SHELLSCR`, the `ELEMENT` pseudo-entry and all data element types (BOOK, CLIST, EXEC, MSG, PARM, PROC, SAMP, USER1-USER5 and more), each with its valid subentries (46 → 86 entry types). National language variants (e.g. `HFSESP`, `MSGENU`) automatically resolve to the subentries of their base type.
-
-**Bug Fixes**
-
-- 🩹 **Free Form Query HFS entries** - `HFS` was missing from the entry type picklist, so its subentries could not be selected.
-
-### Version 1.3.4
-
-**Bug Fixes**
-
-- 🩹 **Free Form Query subentry picker** - Already selected subentries show a checkmark again when the picker is reopened, and newly picked subentries are merged alphabetically into the list instead of being appended to the end.
-
-### Version 1.3.3
-
-**New Features**
-
-- 🖋️ **Signature Help** - When the cursor is inside an operand's parentheses (`DISTLIB(│)`), a floating box shows the expected parameter, a short description and the type (from `smpe.json`). It triggers automatically while typing `(` and after accepting an operand from the completion list; boolean flag operands show no box. Toggle with `smpe.signatureHelp.enabled` (default `true`).
-
-**Bug Fixes**
-
-- **Fix language discrepancies** - Free Form Query now has only english button labels
-
-### Version 1.3.2
-
-**New Features:**
-
-- 💡 **Code Actions (Quick Fixes)** - The editor lightbulb (`Cmd+.` / `Ctrl+.`) now offers one-click fixes for diagnostics:
-  - **Add statement terminator** - inserts the missing `.`
-  - **Insert operand X** / **Insert all required operands** - inserts skeletons for missing required operands
-  - **Set REWORK to current date** - fills an empty `REWORK()` with today's Julian date (`yyyyddd`)
-
-### Version 1.3.1
-
-**Bug Fixes:**
-
-- 🐛 **MCS completion menu stays open while typing `++STATEMENT` prefix** - Typing `++S`, `++SR`, `++SRC`, … no longer dismisses the completion list. The completion menu remains open and continues to filter MCS statements as more characters are typed.
-- 🐛 **Snippet items respect VSCode/blink prefix filter** - Boilerplate snippet completion items now carry an explicit `filterText` so that VSCode (and blink-cmp in Neovim) match them against the typed prefix. Snippets are no longer hidden when typing `++P`, `++PT`, etc.
-
-### Version 1.3.0
-
-**New Features:**
-
-- ✨ **Saved Queries in Free Form Query** - Save, manage and reuse CSI queries. Queries are stored in `.smpe-saved-queries.yaml` in the workspace root. The Free Form Query panel shows a collapsible saved queries section below the input form.
-- ⚙️ **Auto-Detect Language Mode Toggle** - New setting `smpe.editor.autoDetectLanguage` (default: `true`) and command `SMP/E: Toggle Auto-Detect Language Mode`. When disabled, manual language mode changes (e.g. switching a `.smpe` buffer to REXX) are preserved.
+Release notes for every version are in the
+[CHANGELOG](client/vscode-smpe/CHANGELOG.md).
 
 ## 🔧 Configuration
 

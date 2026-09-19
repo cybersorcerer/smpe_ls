@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.15] - 2026-09-19
+
+### Fixed
+
+- **Statements carrying element data were not marked as expecting inline data** - `++CLIST`, `++DATA`, `++DATA1` to `++DATA5`, `++ZAP`, `++PROGRAM`, `++JAR` and `++JARUPD` all carry element data, but `smpe.json` did not mark them with `inline_data`. Nothing that depends on that flag applied to them: the `missingInlineData` diagnostic never fired, the formatter treated their data lines as statement text, and the comment-in-column-1 and standalone-comment checks reported the data as if it were MCS text. `++ZAP` was the clearest case - its IMASPZAP control statements can only follow inline, since it names no external source at all. `++DATA1` to `++DATA5` were additionally skipped by Check Missing Input Members, which knew no extension for them.
+- **`++ZAP` now names what it is missing** - It is the one statement with no `FROMDS`, `RELFILE`, `TXLIB` or `LKLIB` to offer, so the diagnostic no longer suggests an alternative that does not exist. It states what the SMP/E reference states: the IMASPZAP control statements follow the `++ZAP` MCS immediately.
+- **Numbered statement families keep their digit in the expected file name** - `++AIX1` now expects `<element>.aix1`. The extension was derived with the trailing digits removed, so `++AIX1` through `++AIX5` all expected `<element>.aix`, and one file answered for all five. The same applied to `++CLIENT1`-`5`, `++OS21`-`25`, `++UNIX1`-`5`, `++USER1`-`5` and `++WIN1`-`5`. `++DATA1` to `++DATA6` keep sharing `.data` and are listed explicitly.
+- **A comment before an operand hid the element source** - In `++MAC(A) /* c */ FROMDS(DSN(X)) .` the operand was reported without its parameter, so Check Missing Input Members did not recognize `FROMDS` as supplying the data and demanded an input member. Operand names are now matched on their own.
+- **`make install` no longer kills a running server** - Copying over a binary that is currently running invalidates the pages macOS has mapped, and the process dies with SIGKILL. The target is removed before the copy.
+
+### Changed
+
+- **Input member file extensions moved into `smpe.json`** - The mapping of statements whose extension deviates from the default rule now lives in the `file_ext` object rather than in the extension's source, so it is maintained in one place with the rest of the statement data.
+- **The operands that replace inline data moved into `smpe.json`** - `FROMDS`, `RELFILE`, `TXLIB` and `LKLIB` are listed once under `element_source`. The rule was spelled out as a hardcoded list in eight places, which is how `LKLIB` came to be missing from some of them before 1.3.13. Adding another source operand is now a single edit.
+
 ## [1.3.14] - 2026-09-16
 
 ### Fixed
