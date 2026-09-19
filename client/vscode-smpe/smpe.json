@@ -33,6 +33,7 @@
     { "id": "THA", "name": "Thai" },
     { "id": "TRK", "name": "Turkish" }
   ],
+  "element_source": ["FROMDS", "RELFILE", "TXLIB", "LKLIB"],
   "file_ext": {
     "++EXEC": ".rexx",
     "++PARM": ".parm",

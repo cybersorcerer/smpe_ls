@@ -680,8 +680,7 @@ func (p *Provider) checkContentBeyondColumn72(doc *parser.Document, text string)
 		}
 		for _, child := range stmt.Children {
 			if child.Type == parser.NodeTypeOperand {
-				opName := child.Name
-				if opName == "FROMDS" || opName == "RELFILE" || opName == "TXLIB" || opName == "LKLIB" || opName == "DELETE" {
+				if data.IsElementSource(child.Name) || child.Name == "DELETE" {
 					return false
 				}
 			}
@@ -806,8 +805,7 @@ func statementExpectsInlineData(stmt *parser.Node) bool {
 	}
 	for _, child := range stmt.Children {
 		if child.Type == parser.NodeTypeOperand {
-			switch child.Name {
-			case "FROMDS", "RELFILE", "TXLIB", "LKLIB", "DELETE":
+			if data.IsElementSource(child.Name) || child.Name == "DELETE" {
 				return false
 			}
 		}
@@ -904,7 +902,7 @@ func (p *Provider) checkStandaloneCommentsBetweenMCS(doc *parser.Document, text 
 	// Helper function to check if a statement expects inline data
 	// A statement expects inline data if:
 	// 1. inline_data is true in smpe.json AND
-	// 2. NO external data source operands (FROMDS, RELFILE, TXLIB) AND
+	// 2. NO element source operand (see smpe.json "element_source") AND
 	// 3. NO DELETE operand (DELETE means deletion mode, no inline data needed)
 	stmtExpectsInlineData := func(stmt *parser.Node) bool {
 		// First check if statement definition indicates inline data
@@ -913,12 +911,9 @@ func (p *Provider) checkStandaloneCommentsBetweenMCS(doc *parser.Document, text 
 		}
 
 		// Check if statement has operands that indicate data is NOT inline
-		// FROMDS, RELFILE, TXLIB mean data comes from elsewhere
-		// DELETE means the element is being deleted (no inline data needed)
 		for _, child := range stmt.Children {
 			if child.Type == parser.NodeTypeOperand {
-				opName := child.Name
-				if opName == "FROMDS" || opName == "RELFILE" || opName == "TXLIB" || opName == "LKLIB" || opName == "DELETE" {
+				if data.IsElementSource(child.Name) || child.Name == "DELETE" {
 					return false
 				}
 			}
@@ -1033,14 +1028,13 @@ func (p *Provider) checkMissingInlineData(doc *parser.Document) []lsp.Diagnostic
 	// If a statement expecting inline data is followed by another statement (or comment + statement),
 	// it means the inline data is missing
 	for _, stmt := range doc.StatementsExpectingInline {
-		// Check if statement has operands that indicate data is NOT inline
-		// FROMDS, RELFILE, TXLIB, LKLIB mean data comes from elsewhere
-		// DELETE is a special case for HFS that removes files (no inline data needed)
+		// Check if statement has operands that indicate data is NOT inline.
+		// The element source operands come from smpe.json; DELETE removes the
+		// element instead of installing it, so it needs no data either.
 		hasExternalDataSource := false
 		for _, child := range stmt.Children {
 			if child.Type == parser.NodeTypeOperand {
-				opName := child.Name
-				if opName == "FROMDS" || opName == "RELFILE" || opName == "TXLIB" || opName == "LKLIB" || opName == "DELETE" {
+				if data.IsElementSource(child.Name) || child.Name == "DELETE" {
 					hasExternalDataSource = true
 					break
 				}
@@ -1099,15 +1093,12 @@ func (p *Provider) getMissingInlineDataMessage(stmt *parser.Node, beforeNextStat
 	// Build list of alternative operands based on statement type
 	var alternatives []string
 
-	// Check which operands are available for this statement
+	// Check which operands are available for this statement. Only the element
+	// sources are offered as an alternative; DELETE is not one, it deletes.
 	if stmt.StatementDef != nil {
 		for _, op := range stmt.StatementDef.Operands {
-			opNames := strings.Split(op.Name, "|")
-			primaryName := opNames[0]
-
-			// These operands indicate external data sources
-			if primaryName == "FROMDS" || primaryName == "RELFILE" ||
-				primaryName == "TXLIB" || primaryName == "LKLIB" {
+			primaryName := strings.Split(op.Name, "|")[0]
+			if data.IsElementSource(primaryName) {
 				alternatives = append(alternatives, primaryName)
 			}
 		}

@@ -4,6 +4,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/cybersorcerer/smpe_ls/internal/data"
 	"github.com/cybersorcerer/smpe_ls/internal/parser"
 	"github.com/cybersorcerer/smpe_ls/pkg/lsp"
 )
@@ -156,7 +157,7 @@ func (p *Provider) FormatDocument(doc *parser.Document, text string) []lsp.TextE
 // stmtExpectsInlineData checks if a statement expects inline data
 // A statement expects inline data if:
 // 1. inline_data is true in smpe.json AND
-// 2. NO external data source operands (FROMDS, RELFILE, TXLIB, LKLIB) AND
+// 2. NO element source operand (see smpe.json "element_source") AND
 // 3. NO DELETE operand (DELETE means deletion mode, no inline data needed)
 func (p *Provider) stmtExpectsInlineData(stmt *parser.Node) bool {
 	// First check if statement definition indicates inline data
@@ -164,13 +165,12 @@ func (p *Provider) stmtExpectsInlineData(stmt *parser.Node) bool {
 		return false
 	}
 
-	// Check if statement has operands that indicate data is NOT inline
-	// FROMDS, RELFILE, TXLIB, LKLIB mean data comes from elsewhere
-	// DELETE means the element is being deleted (no inline data needed)
+	// Check if statement has operands that indicate data is NOT inline.
+	// The element source operands come from smpe.json; DELETE means the
+	// element is being deleted, so no inline data is needed either.
 	for _, child := range stmt.Children {
 		if child.Type == parser.NodeTypeOperand {
-			opName := child.Name
-			if opName == "FROMDS" || opName == "RELFILE" || opName == "TXLIB" || opName == "LKLIB" || opName == "DELETE" {
+			if data.IsElementSource(child.Name) || child.Name == "DELETE" {
 				return false
 			}
 		}

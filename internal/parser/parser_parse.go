@@ -2,6 +2,8 @@ package parser
 
 import (
 	"strings"
+
+	"github.com/cybersorcerer/smpe_ls/internal/data"
 )
 
 // Parse parses the given text and returns a Document with AST
@@ -198,7 +200,7 @@ func (p *Parser) Parse(text string) *Document {
 								hasDelete = true
 								break
 							}
-							if child.Name == "TXLIB" || child.Name == "RELFILE" || child.Name == "FROMDS" || child.Name == "LKLIB" {
+							if data.IsElementSource(child.Name) {
 								hasExternalSource = true
 							}
 						}

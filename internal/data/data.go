@@ -69,6 +69,7 @@ type LanguageIdentifier struct {
 // { "templates": { ... }, "statements": [ ... ] }
 type smpeFileNew struct {
 	LanguageIdentifiers []LanguageIdentifier `json:"language_identifiers"`
+	ElementSource       []string             `json:"element_source"`
 	Templates           map[string][]Operand `json:"templates"`
 	Statements          []mcsStatementRaw    `json:"statements"`
 }
@@ -145,6 +146,7 @@ func loadNewFormat(fileBytes []byte) (*Store, error) {
 	store := buildStore(statements)
 	store.LanguageIdentifiers = wrapper.LanguageIdentifiers
 	publishLanguageData(store)
+	SetElementSourceOperands(wrapper.ElementSource)
 	return store, nil
 }
 
