@@ -190,6 +190,12 @@ export class MissingMemberChecker {
      * established conventions (++SRC -> .hlasm, ++PROC -> .jcl) keep working;
      * everything else falls back to the statement name without "++", provided
      * it expects inline data.
+     *
+     * Numbered statement families keep their digit: ++AIX1 expects
+     * "<element>.aix1". Dropping it would give all five members of a family
+     * the same extension, so one file would answer for ++AIX1 through ++AIX5
+     * alike. The ++DATA family is the documented exception and shares ".data"
+     * through its file_ext entries.
      */
     private extensionFor(stmtName: string, data: StatementData): string | undefined {
         const mapped = data.fileExt[stmtName];
@@ -206,7 +212,7 @@ export class MissingMemberChecker {
         if (!data.inlineData.has(base)) {
             return undefined;
         }
-        return '.' + base.slice(2).replace(/\d+$/, '').toLowerCase();
+        return '.' + base.slice(2).toLowerCase();
     }
 
     private async buildFileIndex(): Promise<Map<string, string>> {
