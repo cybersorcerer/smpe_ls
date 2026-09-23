@@ -152,7 +152,7 @@ export class ZosmfClient {
      * {
      *   "zones": zone,
      *   "entries": ["SYSMOD","TARGETZONE"],
-     *   "subentries": ["DELBY,ERROR,FMID,LASTSUP,RECDATE,RECTIME,REWORK,RELATED,SMODTYPE,VERSION,ZONEINDEX"],
+     *   "subentries": ["APPID,APPLY,ERROR,HOLDDATA,IFREQ,INSTALLDATE,INSTALLTIME,LASTUPD,PRE,RECDATE,RECTIME,REQ,REWORK,SUPBY,SUPING"],
      *   "filter": "RELATED!=''|ENAME='sysmod1'|ENAME='sysmod2'"
      * }
      */
@@ -170,14 +170,17 @@ export class ZosmfClient {
             filterString += `|ENAME='${id}'`;
         }
 
+        const subentries = 'APPID,APPLY,ERROR,HOLDDATA,IFREQ,INSTALLDATE,INSTALLTIME,LASTUPD,PRE,RECDATE,RECTIME,REQ,REWORK,SUPBY,SUPING';
+
         const body = {
             zones: zones,
             entries: ['SYSMOD', 'TARGETZONE'],
-            subentries: ['DELBY,ERROR,FMID,LASTSUP,RECDATE,RECTIME,REWORK,RELATED,SMODTYPE,VERSION,ZONEINDEX'],
+            subentries: [subentries],
             filter: filterString
         };
 
-        return this.executeQuery(server, credentials, body, progress);
+        const result = await this.executeQuery(server, credentials, body, progress);
+        return { ...result, subentries: subentries.split(',') };
     }
 
     /**
@@ -186,7 +189,7 @@ export class ZosmfClient {
      * {
      *   "zones": zone,
      *   "entries": ["DDDEF"],
-     *   "subentries": ["ENAME,DATASET,DATACLAS,MGMTCLAS,STORCLAS,DIR,DISP,INITDISP,DSNTYPE,SPACE,UNITS,UNIT,VOLUME"],
+     *   "subentries": ["CONCAT,DATACLAS,DATASET,DISP,DSNTYPE,INITDISP,MGMTCLAS,PATH,STORCLAS"],
      *   "filter": "RELATED!=''|ENAME='dddef1'|ENAME='dddef2'"
      * }
      */
@@ -203,14 +206,17 @@ export class ZosmfClient {
             filterString += `|ENAME='${df}'`;
         }
 
+        const subentries = 'CONCAT,DATACLAS,DATASET,DISP,DSNTYPE,INITDISP,MGMTCLAS,PATH,STORCLAS';
+
         const body = {
             zones: zones,
             entries: ['DDDEF'],
-            subentries: ['ENAME,DATASET,PATH,DATACLAS,MGMTCLAS,STORCLAS,DIR,DISP,INITDISP,DSNTYPE,SPACE,UNITS,UNIT,VOLUME'],
+            subentries: [subentries],
             filter: filterString
         };
 
-        return this.executeQuery(server, credentials, body, progress);
+        const result = await this.executeQuery(server, credentials, body, progress);
+        return { ...result, subentries: subentries.split(',') };
     }
 
     /**

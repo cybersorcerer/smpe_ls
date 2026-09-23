@@ -1353,12 +1353,16 @@ export class FreeFormPanel {
 
                 for (const sub of subentries) {
                     const val = subData[sub] || '';
+                    // Cells are cut off at 300px, so the full value is only
+                    // reachable through the tooltip. Fields like PRE or SUPBY
+                    // carry several SYSMOD ids and run past that regularly.
+                    const title = val ? ' title="' + escapeHtml(val) + '"' : '';
                     if (currentEntryType === 'DDDEF' && sub === 'PATH' && val.startsWith('/')) {
-                        html += '<td><a href="#" class="uss-link" data-path="' + escapeHtml(val) + '">' + escapeHtml(val) + '</a></td>';
+                        html += '<td' + title + '><a href="#" class="uss-link" data-path="' + escapeHtml(val) + '">' + escapeHtml(val) + '</a></td>';
                     } else if (currentEntryType === 'DDDEF' && sub === 'DATASET' && val.length > 0) {
-                        html += '<td><a href="#" class="ds-link" data-dataset="' + escapeHtml(val) + '">' + escapeHtml(val) + '</a></td>';
+                        html += '<td' + title + '><a href="#" class="ds-link" data-dataset="' + escapeHtml(val) + '">' + escapeHtml(val) + '</a></td>';
                     } else {
-                        html += '<td>' + escapeHtml(val) + '</td>';
+                        html += '<td' + title + '>' + escapeHtml(val) + '</td>';
                     }
                 }
                 html += '</tr>';
@@ -1406,7 +1410,11 @@ export class FreeFormPanel {
 
         function exportJson() {
             if (currentResult) {
-                vscode.postMessage({ command: 'export', format: 'json', data: currentResult });
+                // Carry the requested subentries along, the way the SYSMOD and
+                // DDDEF queries do, so both JSON exports have the same shape
+                // and the file records what was asked for.
+                const data = Object.assign({}, currentResult, { subentries: currentSubentries });
+                vscode.postMessage({ command: 'export', format: 'json', data: data });
             }
         }
 

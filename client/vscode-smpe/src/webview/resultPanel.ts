@@ -134,33 +134,32 @@ export class ResultPanel {
         // Determine type from first entry
         const firstEntry = entries[0];
         if (firstEntry.entrytype === 'SYSMOD' || entries.some(e => e.entrytype === 'SYSMOD')) {
-            lines.push('Zone,EntryName,Type,FMID,SMODTYPE,RECDATE,RECTIME,ERROR,RELATED');
+            // Same columns as the table: whatever the query asked for.
+            const columns = (result.result.subentries && result.result.subentries.length > 0)
+                ? result.result.subentries
+                : ['RECDATE', 'RECTIME', 'ERROR', 'REWORK'];
+            lines.push(['Zone', 'EntryName', 'Type', ...columns].map(c => this.escapeCsv(c)).join(','));
             for (const entry of entries) {
                 const subData = this.extractSubentryData(entry.subentries);
                 lines.push([
                     this.escapeCsv(entry.zonename),
                     this.escapeCsv(entry.entryname),
                     this.escapeCsv(entry.entrytype),
-                    this.escapeCsv(subData['FMID'] || ''),
-                    this.escapeCsv(subData['SMODTYPE'] || ''),
-                    this.escapeCsv(subData['RECDATE'] || ''),
-                    this.escapeCsv(subData['RECTIME'] || ''),
-                    this.escapeCsv(subData['ERROR'] || ''),
-                    this.escapeCsv(subData['RELATED'] || '')
+                    ...columns.map(col => this.escapeCsv(subData[col] || ''))
                 ].join(','));
             }
         } else if (firstEntry.entrytype === 'DDDEF' || entries.some(e => e.entrytype === 'DDDEF')) {
-            lines.push('Zone,DDNAME,DATASET,DISP,DATACLAS,MGMTCLAS,STORCLAS');
+            // Same columns as the table: whatever the query asked for.
+            const columns = (result.result.subentries && result.result.subentries.length > 0)
+                ? result.result.subentries
+                : ['DATASET', 'DISP', 'DATACLAS', 'MGMTCLAS', 'STORCLAS'];
+            lines.push(['Zone', 'DDNAME', ...columns].map(c => this.escapeCsv(c)).join(','));
             for (const entry of entries) {
                 const subData = this.extractSubentryData(entry.subentries);
                 lines.push([
                     this.escapeCsv(entry.zonename),
                     this.escapeCsv(entry.entryname),
-                    this.escapeCsv(subData['DATASET'] || ''),
-                    this.escapeCsv(subData['DISP'] || ''),
-                    this.escapeCsv(subData['DATACLAS'] || ''),
-                    this.escapeCsv(subData['MGMTCLAS'] || ''),
-                    this.escapeCsv(subData['STORCLAS'] || '')
+                    ...columns.map(col => this.escapeCsv(subData[col] || ''))
                 ].join(','));
             }
         } else if (firstEntry.entrytype === 'GLOBALZONE' || entries.some(e => e.entrytype === 'GLOBALZONE')) {
@@ -246,7 +245,7 @@ export class ResultPanel {
         if (entries.length === 0) {
             tableHtml = '<p class="no-results">No results found</p>';
         } else {
-            tableHtml = this.renderEntriesTable(entries, result.queryType, result.requestedIds);
+            tableHtml = this.renderEntriesTable(entries, result.queryType, result.requestedIds, result.result.subentries);
         }
 
         const messagesHtml = result.result.messages && result.result.messages.length > 0
@@ -486,18 +485,30 @@ export class ResultPanel {
 </html>`;
     }
 
-    private renderEntriesTable(entries: ZosmfEntry[], queryType: string, requestedIds?: string[]): string {
+    private renderEntriesTable(entries: ZosmfEntry[], queryType: string, requestedIds?: string[], subentries?: string[]): string {
         // Determine columns based on query type and entry types
         if (queryType === 'zone') {
             return this.renderZoneIndexTable(entries);
         } else if (queryType === 'dddef') {
-            return this.renderDddefTable(entries, requestedIds);
+            return this.renderDddefTable(entries, requestedIds, subentries);
         } else {
-            return this.renderSysmodTable(entries, requestedIds);
+            return this.renderSysmodTable(entries, requestedIds, subentries);
         }
     }
 
-    private renderSysmodTable(entries: ZosmfEntry[], requestedIds?: string[]): string {
+    /**
+     * Render the SYSMOD result table.
+     *
+     * The columns follow the subentries the query asked for, the way the Free
+     * Form Query builds its table: whatever was requested is shown, in the
+     * order it was requested. A result without that list - an older cached one,
+     * for instance - falls back to the fields the table has always shown.
+     */
+    private renderSysmodTable(entries: ZosmfEntry[], requestedIds?: string[], subentries?: string[]): string {
+        const columns = (subentries && subentries.length > 0)
+            ? subentries
+            : ['RECDATE', 'RECTIME', 'ERROR', 'REWORK'];
+
         const sorted = [...entries].sort((a, b) =>
             a.zonename.localeCompare(b.zonename) || a.entryname.localeCompare(b.entryname)
         );
@@ -509,24 +520,33 @@ export class ResultPanel {
         const rows = sorted.map(entry => {
             const subData = this.extractSubentryData(entry.subentries);
             const entryClass = `entry-${entry.entrytype.toLowerCase()}`;
-            const errorClass = subData['ERROR'] === 'NO' ? 'error-no' : (subData['ERROR'] ? 'error-yes' : '');
+
+            const cells = columns.map(col => {
+                const value = subData[col] || '';
+                // Cells are cut off at 300px, so the full value is only
+                // reachable through the tooltip. Fields like PRE or SUPBY
+                // carry several SYSMOD ids and run past that regularly.
+                const title = value ? ` title="${this.escapeHtml(value)}"` : '';
+                // ERROR keeps its colour coding: NO is the good case.
+                if (col === 'ERROR') {
+                    const errorClass = value === 'NO' ? 'error-no' : (value ? 'error-yes' : '');
+                    return `<td class="${errorClass}"${title}>${this.escapeHtml(value)}</td>`;
+                }
+                return `<td${title}>${this.escapeHtml(value)}</td>`;
+            }).join('');
 
             return `<tr>
                 <td>${this.escapeHtml(entry.zonename)}</td>
                 <td class="${entryClass}">${this.escapeHtml(entry.entryname)}</td>
                 <td>${this.escapeHtml(entry.entrytype)}</td>
-                <td>${this.escapeHtml(subData['SMODTYPE'] || subData['RELATED'] || '')}</td>
-                <td>${this.escapeHtml(subData['FMID'] || '')}</td>
-                <td>${this.escapeHtml(subData['RECDATE'] || '')}</td>
-                <td>${this.escapeHtml(subData['RECTIME'] || '')}</td>
-                <td class="${errorClass}">${this.escapeHtml(subData['ERROR'] || '')}</td>
-                <td>${this.escapeHtml(subData['REWORK'] || '')}</td>
+                ${cells}
             </tr>`;
         }).join('');
 
         // Add rows for requested SYSMODs not found in results
         const zones = [...new Set(sorted.map(e => e.zonename))].sort();
         const zoneName = zones.length > 0 ? zones.join(', ') : dot;
+        const emptyCells = columns.map(() => `<td>${dot}</td>`).join('');
         const missingRows = (requestedIds || [])
             .filter(id => !foundNames.has(id))
             .sort()
@@ -534,14 +554,11 @@ export class ResultPanel {
                 <td>${this.escapeHtml(zoneName)}</td>
                 <td>${this.escapeHtml(id)}</td>
                 <td>${dot}</td>
-                <td>${dot}</td>
-                <td>${dot}</td>
-                <td>${dot}</td>
-                <td>${dot}</td>
-                <td>${dot}</td>
-                <td>${dot}</td>
+                ${emptyCells}
             </tr>`)
             .join('');
+
+        const headers = columns.map(col => `<th>${this.escapeHtml(col)}</th>`).join('');
 
         return `<table>
             <thead>
@@ -549,46 +566,51 @@ export class ResultPanel {
                     <th>Zone</th>
                     <th>Entry</th>
                     <th>Type</th>
-                    <th>SMODTYPE/Related</th>
-                    <th>FMID</th>
-                    <th>RECDATE</th>
-                    <th>RECTIME</th>
-                    <th>ERROR</th>
-                    <th>REWORK</th>
+                    ${headers}
                 </tr>
             </thead>
             <tbody>${rows}${missingRows}</tbody>
         </table>`;
     }
 
-    private renderDddefTable(entries: ZosmfEntry[], requestedIds?: string[]): string {
+    /**
+     * Render the DDDEF result table.
+     *
+     * Like the SYSMOD table, the columns follow the subentries the query asked
+     * for. Two of them are more than text: a DATASET opens in the dataset
+     * browser and a PATH starting with "/" in the USS browser, provided a
+     * z/OSMF connection is available.
+     */
+    private renderDddefTable(entries: ZosmfEntry[], requestedIds?: string[], subentries?: string[]): string {
+        const columns = (subentries && subentries.length > 0)
+            ? subentries
+            : ['DATASET', 'PATH', 'INITDISP', 'DISP', 'DATACLAS', 'MGMTCLAS', 'STORCLAS'];
+
         const filtered = entries.filter(e => e.entrytype === 'DDDEF').sort((a, b) =>
             a.zonename.localeCompare(b.zonename) || a.entryname.localeCompare(b.entryname)
         );
         const hasZosmf = !!(this.zosmfClient && this.zosmfServer && this.zosmfCredentials);
         const rows = filtered.map(entry => {
             const subData = this.extractSubentryData(entry.subentries);
-            const ussPath = subData['PATH'] || '';
-            const datasetName = subData['DATASET'] || '';
-            const isUssPath = hasZosmf && ussPath.startsWith('/');
-            const isDataset = hasZosmf && datasetName.length > 0;
-            const pathCell = isUssPath
-                ? `<td><a href="#" class="uss-link" data-path="${this.escapeHtml(ussPath)}">${this.escapeHtml(ussPath)}</a></td>`
-                : `<td>${this.escapeHtml(ussPath)}</td>`;
-            const datasetCell = isDataset
-                ? `<td><a href="#" class="ds-link" data-dataset="${this.escapeHtml(datasetName)}">${this.escapeHtml(datasetName)}</a></td>`
-                : `<td>${this.escapeHtml(datasetName)}</td>`;
+
+            const cells = columns.map(col => {
+                const value = subData[col] || '';
+                // See renderSysmodTable: the cell is cut off at 300px, the
+                // tooltip carries the full value.
+                const title = value ? ` title="${this.escapeHtml(value)}"` : '';
+                if (col === 'PATH' && hasZosmf && value.startsWith('/')) {
+                    return `<td${title}><a href="#" class="uss-link" data-path="${this.escapeHtml(value)}">${this.escapeHtml(value)}</a></td>`;
+                }
+                if (col === 'DATASET' && hasZosmf && value.length > 0) {
+                    return `<td${title}><a href="#" class="ds-link" data-dataset="${this.escapeHtml(value)}">${this.escapeHtml(value)}</a></td>`;
+                }
+                return `<td${title}>${this.escapeHtml(value)}</td>`;
+            }).join('');
 
             return `<tr>
                 <td>${this.escapeHtml(entry.zonename)}</td>
                 <td class="entry-dddef">${this.escapeHtml(entry.entryname)}</td>
-                ${datasetCell}
-                ${pathCell}
-                <td>${this.escapeHtml(subData['INITDISP'] || '')}</td>
-                <td>${this.escapeHtml(subData['DISP'] || '')}</td>
-                <td>${this.escapeHtml(subData['DATACLAS'] || '')}</td>
-                <td>${this.escapeHtml(subData['MGMTCLAS'] || '')}</td>
-                <td>${this.escapeHtml(subData['STORCLAS'] || '')}</td>
+                ${cells}
             </tr>`;
         }).join('');
 
@@ -596,34 +618,25 @@ export class ResultPanel {
         const dot = '.';
         const zones = [...new Set(filtered.map(e => e.zonename))].sort();
         const zoneName = zones.length > 0 ? zones.join(', ') : dot;
+        const emptyCells = columns.map(() => `<td>${dot}</td>`).join('');
         const missingRows = (requestedIds || [])
             .filter(id => !foundNames.has(id))
             .sort()
             .map(id => `<tr>
                 <td>${this.escapeHtml(zoneName)}</td>
                 <td>${this.escapeHtml(id)}</td>
-                <td>${dot}</td>
-                <td>${dot}</td>
-                <td>${dot}</td>
-                <td>${dot}</td>
-                <td>${dot}</td>
-                <td>${dot}</td>
-                <td>${dot}</td>
+                ${emptyCells}
             </tr>`)
             .join('');
+
+        const headers = columns.map(col => `<th>${this.escapeHtml(col)}</th>`).join('');
 
         return `<table>
             <thead>
                 <tr>
                     <th>Zone</th>
                     <th>DDNAME</th>
-                    <th>DATASET</th>
-                    <th>PATH</th>
-                    <th>INITDISP</th>
-                    <th>DISP</th>
-                    <th>DATACLAS</th>
-                    <th>MGMTCLAS</th>
-                    <th>STORCLAS</th>
+                    ${headers}
                 </tr>
             </thead>
             <tbody>${rows}${missingRows}</tbody>

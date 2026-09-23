@@ -113,6 +113,12 @@ export interface ZosmfSubentry {
 export interface QueryResult {
     entries?: ZosmfEntry[];
     messages?: string[];
+    /**
+     * The subentries this query asked for, in the order they were requested.
+     * The result table derives its columns from them, so asking for a
+     * subentry and showing it cannot drift apart.
+     */
+    subentries?: string[];
 }
 
 // ============================================================================
