@@ -2,6 +2,27 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.16] - 2026-09-24
+
+### Fixed
+
+- **No completions inside comments** - Writing prose in a `/* ... */` comment no longer opens the suggestion list, and every space no longer reopens it. This covers a finished comment as well as one still being typed, where no closing `*/` exists yet and the parser therefore records nothing. Element data is unaffected: a `/* REXX */` opening an inline program is not an MCS comment, and the check keeps them apart.
+- **Multiline parameter values keep their highlighting** - A value written across lines lost its colour entirely:
+
+  ```
+  SUP(
+      LBCP034
+  )
+  ```
+
+  A semantic token cannot span a line break - the protocol encodes it as a line plus a column and a length - so the token covering everything between the parentheses was malformed and the editor dropped it. Such a value now gets one token per line, on the value itself rather than the indentation. Lists were unaffected because they are already broken down into one node per element.
+- **SYSMOD and DDDEF results show every requested subentry** - The queries behind the CodeLens asked for fifteen respectively nine subentries but displayed only a handful; the rest were fetched and thrown away. Table columns, CSV and JSON export now follow the requested list, the way the Free Form Query has always built its table. Values too long for a column are reachable through the cell tooltip, in both result views.
+
+### Changed
+
+- **The space bar no longer opens the completion list** - Indenting a continuation line or separating operands stays quiet. The list opens once an operand name is actually begun, which every letter triggers - upper and lower case alike, since the offered names are upper case either way. `+` still opens the statement list and Ctrl+Space still asks explicitly.
+- **SYSMOD and DDDEF queries use the Free Form defaults** - Both now ask for the same subentries the Free Form Query offers for that entry type, so the two ways of querying a CSI return the same fields.
+
 ## [1.3.15] - 2026-09-19
 
 ### Fixed

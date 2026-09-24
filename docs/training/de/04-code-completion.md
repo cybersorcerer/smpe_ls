@@ -31,11 +31,14 @@ Jeder Eintrag zeigt eine kurze Beschreibung aus der IBM-Dokumentation.
 
 ## Wann die Vervollständigung erscheint
 
-Ausgelöst wird sie durch `+`, durch Buchstaben und — innerhalb eines Statements —
-durch ein Leerzeichen. Auf einer ansonsten leeren Zeile öffnet ein Leerzeichen
-bewusst nichts: dort würde die Liste beim Einrücken nur stören. Wer die
-Statement-Liste ohne Tippen sehen will, fordert die Vervollständigung mit
-`Ctrl+Space` explizit an.
+Ausgelöst wird sie durch `+` und durch Buchstaben, groß wie klein geschrieben.
+Ein Leerzeichen löst sie nicht aus: beim Einrücken einer Fortsetzungszeile oder
+zwischen zwei Operanden würde die Liste nur stören. Sie erscheint, sobald ein
+Name tatsächlich begonnen wird. Wer die Statement-Liste ohne Tippen sehen will,
+fordert die Vervollständigung mit `Ctrl+Space` explizit an.
+
+Innerhalb eines Kommentars bleibt die Vervollständigung still — dort steht
+Fließtext, kein MCS.
 
 > Unter macOS belegt das System `Ctrl+Space` für den Wechsel der Eingabequelle,
 > sodass die Tastenkombination den Editor womöglich nie erreicht. Entweder in den

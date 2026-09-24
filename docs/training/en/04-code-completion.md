@@ -31,10 +31,13 @@ Each entry shows a short description from the IBM documentation.
 
 ## When Completion Opens
 
-Completion is triggered by `+`, by letters, and — inside a statement — by a space.
-A space on an otherwise empty line deliberately opens nothing: there it would
-only get in the way while you indent. To see the statement list without typing,
-request completion explicitly with `Ctrl+Space`.
+Completion is triggered by `+` and by letters, upper or lower case. A space does
+not trigger it: while indenting a continuation line or separating two operands
+the list would only get in the way. It opens once a name is actually begun. To
+see the statement list without typing, request completion explicitly with
+`Ctrl+Space`.
+
+Inside a comment completion stays quiet — that is prose, not MCS.
 
 > On macOS `Ctrl+Space` is claimed by the system for switching the input source,
 > so it may never reach the editor. Either free it up in System Settings →

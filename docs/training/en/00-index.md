@@ -1,6 +1,6 @@
 # SMP/E Language Server — Training Materials
 
-**Version:** 1.3.15  
+**Version:** 1.3.16  
 **Target Audience:** SMP/E developers new to VSCode
 
 ## Prerequisites
