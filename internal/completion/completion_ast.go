@@ -18,14 +18,20 @@ type Provider struct {
 	statements map[string]data.MCSStatement
 }
 
-// isUpperOnly reports whether s consists only of uppercase A-Z letters.
+// isLettersOnly reports whether s consists only of letters.
 // Used to detect that the cursor sits at the end of a typed MCS-statement
 // prefix (`++`, `++S`, `++SR`, `++SRC`, …). A trailing space, paren, etc.
 // would fail the check and fall through to operand completion.
-func isUpperOnly(s string) bool {
+//
+// Lower case counts too. The statement names are upper case and so are the
+// offered items, but someone typing "++s" is just as clearly writing a
+// statement name as someone typing "++S" - and the check decides whether the
+// range to replace is computed at all. Without it the typed prefix stays in
+// the line and the accepted item is appended to it.
+func isLettersOnly(s string) bool {
 	for i := 0; i < len(s); i++ {
 		c := s[i]
-		if c < 'A' || c > 'Z' {
+		if (c < 'A' || c > 'Z') && (c < 'a' || c > 'z') {
 			return false
 		}
 	}
@@ -34,13 +40,14 @@ func isUpperOnly(s string) bool {
 
 // isTypingMCSPrefix reports whether textBefore (the line content up to the
 // cursor) consists of optional leading whitespace followed by one or two
-// `+` characters and then zero or more uppercase A-Z letters — i.e. the
-// user is typing or about to type an MCS statement name and the cursor is
-// directly at the end of that prefix.
+// `+` characters and then zero or more letters — i.e. the user is typing or
+// about to type an MCS statement name and the cursor is directly at the end
+// of that prefix.
 //
 //	"+"          → true
 //	"++"         → true
 //	"++S"        → true
+//	"++s"        → true
 //	"++ASSIGN"   → true
 //	"++ASSIGN "  → false (trailing space)
 //	"++++"       → false (too many +)
@@ -57,7 +64,7 @@ func isTypingMCSPrefix(textBefore string) bool {
 	if plusCount < 1 || plusCount > 2 {
 		return false
 	}
-	return isUpperOnly(leftTrimmed[plusCount:])
+	return isLettersOnly(leftTrimmed[plusCount:])
 }
 
 // NewProvider creates a new completion provider with shared data
@@ -85,6 +92,14 @@ func (p *Provider) GetCompletionsAST(doc *parser.Document, text string, line, ch
 	}
 
 	logger.Debug("GetCompletionsAST - line: %d, character: %d", line, character)
+
+	// Comment text is prose, not MCS. Offering statements or operands in it
+	// puts a popup in front of someone writing a sentence, and every space
+	// reopens it.
+	if isInsideComment(doc, lines, line, character) {
+		logger.Debug("Cursor is inside a comment - no completions")
+		return nil
+	}
 
 	// Check if we're at line start or typing ++
 	textBefore := currentLine[:character]
@@ -130,14 +145,15 @@ func (p *Provider) GetCompletionsAST(doc *parser.Document, text string, line, ch
 		}
 
 		// Compute the range we want the client to replace when an item is
-		// accepted: the leading `+` chars PLUS any uppercase letters
-		// already typed after them. Without including the letters the
-		// inserted statement would be appended instead of replacing the
-		// in-progress prefix.
+		// accepted: the leading `+` chars PLUS any letters already typed
+		// after them. Without including the letters the inserted statement
+		// would be appended instead of replacing the in-progress prefix.
+		// Lower case counts, so "++src" is replaced whole rather than
+		// leaving "++src" in front of the inserted name.
 		startChar := character
 		for startChar > 0 {
 			c := currentLine[startChar-1]
-			if c == '+' || (c >= 'A' && c <= 'Z') {
+			if c == '+' || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') {
 				startChar--
 			} else {
 				break
@@ -998,4 +1014,85 @@ func (p *Provider) getMCSCompletions(replaceRange *lsp.Range) []lsp.CompletionIt
 	}
 
 	return items
+}
+
+// isInsideComment reports whether the cursor sits inside a /* ... */ comment.
+//
+// Two cases have to be told apart. A finished comment is in the AST, and the
+// parser has already kept inline data out of that list - a "/* REXX */" in
+// element data is not an MCS comment. A comment that is still being typed has
+// no closing "*/" yet, so the parser never records it; that is the common case
+// while someone writes one, and it is found by scanning the statement's own
+// lines up to the cursor.
+func isInsideComment(doc *parser.Document, lines []string, line, character int) bool {
+	for _, c := range doc.Comments {
+		if positionInComment(c, line, character) {
+			return true
+		}
+	}
+	return inUnterminatedComment(doc, lines, line, character)
+}
+
+// positionInComment reports whether line/character falls inside a comment node.
+func positionInComment(c *parser.Node, line, character int) bool {
+	startLine := c.Position.Line
+	valueLines := strings.Split(c.Value, "\n")
+	endLine := startLine + len(valueLines) - 1
+
+	if line < startLine || line > endLine {
+		return false
+	}
+	if line == startLine && character < c.Position.Character {
+		return false
+	}
+	if line == endLine {
+		endChar := len([]rune(valueLines[len(valueLines)-1]))
+		if len(valueLines) == 1 {
+			endChar += c.Position.Character
+		}
+		// The position right after "*/" is outside again.
+		if character >= endChar {
+			return false
+		}
+	}
+	return true
+}
+
+// inUnterminatedComment scans from the start of the statement the cursor
+// belongs to up to the cursor, tracking whether a "/*" is still open. The scan
+// starts at the statement rather than at the top of the file so that an
+// unbalanced "/*" inside some earlier element data cannot silence completion
+// for the rest of the document.
+func inUnterminatedComment(doc *parser.Document, lines []string, line, character int) bool {
+	start := line
+	for _, stmt := range doc.Statements {
+		if stmt.Position.Line <= line && stmt.Position.Line > start-1 {
+			if stmt.Position.Line < start || start == line {
+				start = stmt.Position.Line
+			}
+		}
+	}
+
+	inComment := false
+	for i := start; i <= line && i < len(lines); i++ {
+		runes := []rune(lines[i])
+		limit := len(runes)
+		if i == line {
+			if character < limit {
+				limit = character
+			}
+		}
+		for j := 0; j < limit; j++ {
+			if !inComment && j+1 < len(runes) && runes[j] == '/' && runes[j+1] == '*' {
+				inComment = true
+				j++
+				continue
+			}
+			if inComment && j+1 < len(runes) && runes[j] == '*' && runes[j+1] == '/' {
+				inComment = false
+				j++
+			}
+		}
+	}
+	return inComment
 }

@@ -206,8 +206,17 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 	// Note: '(' is intentionally NOT a completion trigger — it is the signature-help trigger. Letting '(' trigger
 	// completion opened the completion widget on '(' and suppressed VSCode's automatic signature-help request.
 	// Operand-value completion still fires on the first typed letter after '('.
-	triggerChars := []string{"+", " "}
+	// A space is not a trigger either: indenting or separating operands would
+	// open the list on every blank, while the letters below already open it the
+	// moment an operand name is actually begun.
+	// Lower case letters trigger as well: the offered items are upper case
+	// either way, and whether the list opens should not depend on how the
+	// name is being typed.
+	triggerChars := []string{"+"}
 	for ch := 'A'; ch <= 'Z'; ch++ {
+		triggerChars = append(triggerChars, string(ch))
+	}
+	for ch := 'a'; ch <= 'z'; ch++ {
 		triggerChars = append(triggerChars, string(ch))
 	}
 
