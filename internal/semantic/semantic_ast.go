@@ -17,9 +17,11 @@ func (p *Provider) BuildTokensFromAST(doc *parser.Document, text string) []int {
 	commentTokens := p.expandComments(doc.Comments, text)
 	tokens = append(tokens, commentTokens...)
 
-	// Traverse AST and build tokens for statements
+	// Traverse AST and build tokens for statements. The lines are needed to
+	// split a value written across lines into one token per line.
+	lines := strings.Split(text, "\n")
 	for _, stmt := range doc.Statements {
-		tokens = append(tokens, p.traverseNode(stmt)...)
+		tokens = append(tokens, p.traverseNode(stmt, lines)...)
 	}
 
 	// Sort tokens by line, then by character (required by LSP semantic tokens spec)
@@ -120,7 +122,7 @@ func (p *Provider) expandComments(comments []*parser.Node, text string) []Token 
 }
 
 // traverseNode recursively traverses an AST node and creates tokens
-func (p *Provider) traverseNode(node *parser.Node) []Token {
+func (p *Provider) traverseNode(node *parser.Node, lines []string) []Token {
 	if node == nil {
 		return []Token{}
 	}
@@ -153,20 +155,97 @@ func (p *Provider) traverseNode(node *parser.Node) []Token {
 
 	case parser.NodeTypeParameter:
 		// Parameter node -> Parameter token (orange)
-		tokens = append(tokens, Token{
-			Line:      node.Position.Line,
-			StartChar: node.Position.Character,
-			Length:    node.Position.Length,
-			Type:      TokenTypeParameter,
-			Modifiers: TokenModifierNone,
-		})
+		tokens = append(tokens, parameterTokens(node, lines)...)
 		logger.Debug("AST Token: Parameter '%s' at line %d, char %d", node.Value, node.Position.Line, node.Position.Character)
 	}
 
 	// Recursively process children
 	for _, child := range node.Children {
-		tokens = append(tokens, p.traverseNode(child)...)
+		tokens = append(tokens, p.traverseNode(child, lines)...)
 	}
 
 	return tokens
+}
+
+// parameterTokens turns a parameter node into the tokens that describe it.
+//
+// A semantic token cannot span a line break: the LSP wire format encodes each
+// token as a line plus a start column and a length, so a token whose length
+// reaches past the end of its line is malformed and VS Code drops it. That is
+// what happened to a value written across lines,
+//
+//	SUP(
+//	    LBCP034
+//	)
+//
+// where the node covers everything between the parentheses, newlines included.
+// The value lost its colour while a value on one line kept it.
+//
+// A parameter that holds a list is already broken down into one child node per
+// element, and those children carry their own tokens. Splitting the parent as
+// well would put two tokens on the same text, so in that case the parent is
+// left out and the children speak for it.
+func parameterTokens(node *parser.Node, lines []string) []Token {
+	line, start, length := node.Position.Line, node.Position.Character, node.Position.Length
+	if line >= len(lines) {
+		return nil
+	}
+
+	// Fits on its own line: one token, as before.
+	if start+length <= len([]rune(lines[line])) {
+		return []Token{{
+			Line:      line,
+			StartChar: start,
+			Length:    length,
+			Type:      TokenTypeParameter,
+			Modifiers: TokenModifierNone,
+		}}
+	}
+
+	// The children already cover the individual values.
+	if len(node.Children) > 0 {
+		return nil
+	}
+
+	var tokens []Token
+	remaining := length
+	for ln := line; ln < len(lines) && remaining > 0; ln++ {
+		runes := []rune(lines[ln])
+		from := 0
+		if ln == line {
+			from = start
+		}
+		if from > len(runes) {
+			from = len(runes)
+		}
+		to := len(runes)
+		if from+remaining < to {
+			to = from + remaining
+		}
+		// What is left after this line, counting the newline that joins it
+		// to the next one.
+		remaining -= (to - from) + 1
+
+		// Emit the value only, not the indentation around it.
+		for from < to && isSpace(runes[from]) {
+			from++
+		}
+		for to > from && isSpace(runes[to-1]) {
+			to--
+		}
+		if to > from {
+			tokens = append(tokens, Token{
+				Line:      ln,
+				StartChar: from,
+				Length:    to - from,
+				Type:      TokenTypeParameter,
+				Modifiers: TokenModifierNone,
+			})
+		}
+	}
+	return tokens
+}
+
+func isSpace(r rune) bool {
+	return r == ' ' || r == '\t' || r == '\r'
 }
