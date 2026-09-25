@@ -2,7 +2,7 @@
 
 A modern Language Server Protocol (LSP) implementation for IBM SMP/E (System Modification Program/Extended) written in Go.
 
-[![Version](https://img.shields.io/badge/version-1.3.16-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
+[![Version](https://img.shields.io/badge/version-1.3.17-blue.svg)](https://github.com/cybersorcerer/smpe_ls/releases)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
@@ -35,7 +35,7 @@ Alternatively, install a platform-specific `.vsix` from the [releases page](http
 - **📄 Document Symbols** - Outline view and quick navigation (`Cmd+Shift+O`)
 - **🔍 Workspace Symbols** - Search for SYSMOD definitions across all `.smpe` files (`Cmd+T`)
 - **📐 Folding Ranges** - Collapse/expand MCS statements and multi-line comments
-- **📝 Document Formatting** - Auto-format SMP/E statements
+- **📝 Document Formatting** - Auto-format SMP/E statements, and close a comment the moment it is opened
 - **🔭 CodeLens** - Inline z/OSMF CSI queries for SYSMODs and DDDEFs
 - **🌐 z/OSMF Integration** - Query CSI, browse USS directories and MVS datasets via z/OSMF REST API
 - **📥 Check Missing Input Members** - Scan the workspace for missing MCS input files, results shown in a filterable/sortable Webview table

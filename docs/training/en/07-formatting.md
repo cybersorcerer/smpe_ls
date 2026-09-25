@@ -51,6 +51,28 @@ Enable automatic formatting on save:
 }
 ```
 
+## Comments Close Themselves
+
+Typing `/*` followed by a space gets you the closing `*/` as well — on the same
+line, with the cursor left in between:
+
+```smpe
+++USERMOD(U1) /* │ */
+```
+
+You can write on without having to add the end yourself. Three cases are left
+alone:
+
+- The `*/` would come to rest beyond column 72. SMP/E stops reading there, so a
+  marker out in that area would only look as if it closed the comment.
+- The line already carries a `*/` further to the right.
+- The line belongs to inline data. A `/*` opens a REXX program there and
+  belongs to the element, not to the MCS syntax.
+
+The insertion depends on `editor.formatOnType`, which the extension turns on
+for `.smpe` by default. Turning it off in your own settings turns off the
+closing as well.
+
 ## Settings
 
 | Setting | Default | Description |

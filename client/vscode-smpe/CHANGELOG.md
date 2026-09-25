@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.3.17] - 2026-09-25
+
+### Added
+
+- **A comment is closed when it is opened** - Typing `/*` followed by a space appends the closing marker on the same line and leaves the cursor between the two, so you can write straight on:
+
+  ```smpe
+  ++USERMOD(U1) /* | */
+  ```
+
+  It is left out in three cases: when the marker would come to rest beyond column 72, where SMP/E stops reading and a marker would only look as if it closed the comment; when the line already carries one further to the right; and in inline data, where a `/*` opens a REXX program and belongs to the element rather than to the MCS text. The insertion rides on `editor.formatOnType`, which the extension now turns on for `.smpe` by default - switching it off in your own settings switches the closing off as well.
+
+### Fixed
+
+- **Accepting a suggestion replaces what was typed** - Typing `s` and accepting `SUP` produced `sSUP`, while `S` worked. Suggestions now state which text they replace instead of leaving it to the editor, whose fallback only recognises the typed fragment when it matches the item case-sensitively. Filtering is case insensitive, so the item was offered either way and only the replacement went wrong. Operand values were affected in the same manner - `CLASS(e` followed by `ERREL` would have produced `eERREL`. Shipped in 1.3.16.
+
 ## [1.3.16] - 2026-09-24
 
 ### Fixed

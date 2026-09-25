@@ -51,6 +51,28 @@ Automatisches Formatieren beim Speichern aktivieren:
 }
 ```
 
+## Kommentare schließen sich selbst
+
+Wer `/*` gefolgt von einem Leerzeichen tippt, bekommt das schließende `*/`
+gleich dazu — auf derselben Zeile, und der Cursor bleibt dazwischen stehen:
+
+```smpe
+++USERMOD(U1) /* │ */
+```
+
+Damit lässt sich weiterschreiben, ohne das Ende nachzutragen. Drei Fälle bleiben
+unberührt:
+
+- Das `*/` käme jenseits von Spalte 72 zu liegen. SMP/E liest dort nicht mehr,
+  ein Marker außerhalb würde also nur so aussehen, als schlösse er den Kommentar.
+- Die Zeile hat weiter rechts bereits ein `*/`.
+- Die Zeile gehört zu Inline-Daten. Ein `/*` eröffnet dort eine REXX und gehört
+  dem Element, nicht der MCS-Syntax.
+
+Das Einfügen hängt an `editor.formatOnType`, das die Extension für `.smpe`
+standardmäßig einschaltet. Wer es in den eigenen Einstellungen abschaltet,
+schaltet auch das Schließen ab.
+
 ## Einstellungen
 
 | Einstellung | Standard | Beschreibung |

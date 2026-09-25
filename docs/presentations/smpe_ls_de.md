@@ -574,6 +574,17 @@ Klick auf die Glühbirne (oder `Cmd+.` / `Ctrl+.`) öffnet das Quick-Fix-Menü.
 | `smpe.formatting.wrapListsAfterN` | `2` | Listen umbrechen nach N Einträgen |
 | `smpe.formatting.formatOnSave` | `false` | Beim Speichern formatieren |
 
+## Kommentare schließen sich selbst
+
+`/*` plus Leerzeichen — das `*/` kommt von allein, der Cursor bleibt dazwischen:
+
+```smpe
+++USERMOD(U1) /* │ */
+```
+
+Nicht, wenn das `*/` hinter Spalte 72 landen würde, wenn die Zeile schon eines
+hat, oder in Inline-Daten.
+
 > 🎬 **Live Demo**
 
 ---

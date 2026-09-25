@@ -16,7 +16,7 @@ und stellt alle Language-Server-Features bereit.
 Die passende VSIX-Datei befindet sich auf der
 [GitHub Releases Seite](https://github.com/cybersorcerer/smpe_ls/releases/latest):
 
-`<version>` steht dabei für die Versionsnummer des Releases, z.B. `1.3.16`.
+`<version>` steht dabei für die Versionsnummer des Releases, z.B. `1.3.17`.
 
 | Plattform | Datei |
 |-----------|-------|

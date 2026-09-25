@@ -16,7 +16,7 @@ all language server features.
 Download the correct VSIX file from the
 [GitHub Releases page](https://github.com/cybersorcerer/smpe_ls/releases/latest):
 
-`<version>` stands for the release's version number, e.g. `1.3.16`.
+`<version>` stands for the release's version number, e.g. `1.3.17`.
 
 | Platform | File |
 |----------|------|

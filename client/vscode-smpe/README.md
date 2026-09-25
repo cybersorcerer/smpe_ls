@@ -23,7 +23,7 @@ or in the Changelog tab next to this page in VS Code.
 - **CodeLens** - Inline z/OSMF CSI queries for SYSMODs and DDDEFs
 - **z/OSMF Integration** - Query CSI, browse USS directories and MVS datasets
 - **Column Rulers** - Visual guides at columns 72 and 80 (mainframe card boundaries)
-- **Document Formatting** - Auto-format SMP/E statements
+- **Document Formatting** - Auto-format SMP/E statements, and close a comment the moment it is opened
 
 ## Supported Statements
 
