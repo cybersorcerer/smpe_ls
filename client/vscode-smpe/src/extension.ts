@@ -567,6 +567,45 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	log('Missing Input Member Checker registered');
+
+	keepCursorInsideClosedComment(context);
+}
+
+/**
+ * Keep the cursor inside a comment the server just closed.
+ *
+ * Opening a comment makes the server append the closing marker through
+ * onTypeFormatting, so the comment is closed right away. That protocol has no
+ * way to say where the cursor should end up, and the editor moves it behind an
+ * edit that inserts at its position - writing would continue after the closing
+ * marker instead of inside the comment. This puts it back in front of it.
+ *
+ * The check is narrow on purpose: exactly one insertion, exactly the marker,
+ * and only where the text in front of it ends with the opening marker.
+ * Anything else - including pasting the same three characters somewhere - is
+ * left alone.
+ */
+function keepCursorInsideClosedComment(context: vscode.ExtensionContext): void {
+	const marker = ' */';
+	const opening = '/* ';
+
+	context.subscriptions.push(
+		vscode.workspace.onDidChangeTextDocument(event => {
+			const editor = vscode.window.activeTextEditor;
+			if (!editor || editor.document !== event.document) { return; }
+			if (event.document.languageId !== 'smpe') { return; }
+			if (event.contentChanges.length !== 1) { return; }
+
+			const change = event.contentChanges[0];
+			if (change.text !== marker || change.rangeLength !== 0) { return; }
+
+			const start = change.range.start;
+			const line = event.document.lineAt(start.line).text;
+			if (!line.slice(0, start.character).endsWith(opening)) { return; }
+
+			editor.selection = new vscode.Selection(start, start);
+		})
+	);
 }
 
 export function deactivate(): Thenable<void> | undefined {

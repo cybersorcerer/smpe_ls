@@ -30,6 +30,7 @@ type Handler interface {
 	TextDocumentSemanticTokensFull(params SemanticTokensParams) (*SemanticTokens, error)
 	TextDocumentFormatting(params DocumentFormattingParams) ([]TextEdit, error)
 	TextDocumentRangeFormatting(params DocumentRangeFormattingParams) ([]TextEdit, error)
+	TextDocumentOnTypeFormatting(params DocumentOnTypeFormattingParams) ([]TextEdit, error)
 	TextDocumentDocumentSymbol(params DocumentSymbolParams) ([]DocumentSymbol, error)
 	TextDocumentDefinition(params DefinitionParams) (*Location, error)
 	TextDocumentReferences(params ReferenceParams) ([]Location, error)
@@ -325,9 +326,19 @@ func (s *Server) handleRequest(req *Request) error {
 		}
 		return s.sendResponse(req.ID, result)
 
+	case "textDocument/onTypeFormatting":
+		var params DocumentOnTypeFormattingParams
+		if err := json.Unmarshal(req.Params, &params); err != nil {
+			return s.sendErrorResponse(req.ID, InvalidParams, "Invalid params")
+		}
+		result, err := s.handler.TextDocumentOnTypeFormatting(params)
+		if err != nil {
+			return s.sendErrorResponse(req.ID, InternalError, err.Error())
+		}
+		return s.sendResponse(req.ID, result)
+
 	// Optional capabilities - respond with null to indicate not supported
-	case "textDocument/onTypeFormatting",
-		"textDocument/rename",
+	case "textDocument/rename",
 		"textDocument/documentHighlight",
 		"workspace/executeCommand":
 		logger.Debug("Unsupported method: %s", req.Method)

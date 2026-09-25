@@ -187,13 +187,16 @@ type ServerCapabilities struct {
 	DocumentFormattingProvider      bool                   `json:"documentFormattingProvider,omitempty"`
 	SignatureHelpProvider           *SignatureHelpOptions  `json:"signatureHelpProvider,omitempty"`
 	DocumentRangeFormattingProvider bool                   `json:"documentRangeFormattingProvider,omitempty"`
-	DocumentSymbolProvider          bool                   `json:"documentSymbolProvider,omitempty"`
-	DefinitionProvider              bool                   `json:"definitionProvider,omitempty"`
-	ReferencesProvider              bool                   `json:"referencesProvider,omitempty"`
-	CodeActionProvider              bool                   `json:"codeActionProvider,omitempty"`
-	CodeLensProvider                *CodeLensOptions       `json:"codeLensProvider,omitempty"`
-	FoldingRangeProvider            bool                   `json:"foldingRangeProvider,omitempty"`
-	WorkspaceSymbolProvider         bool                   `json:"workspaceSymbolProvider,omitempty"`
+
+	DocumentOnTypeFormattingProvider *DocumentOnTypeFormattingOptions `json:"documentOnTypeFormattingProvider,omitempty"`
+
+	DocumentSymbolProvider  bool             `json:"documentSymbolProvider,omitempty"`
+	DefinitionProvider      bool             `json:"definitionProvider,omitempty"`
+	ReferencesProvider      bool             `json:"referencesProvider,omitempty"`
+	CodeActionProvider      bool             `json:"codeActionProvider,omitempty"`
+	CodeLensProvider        *CodeLensOptions `json:"codeLensProvider,omitempty"`
+	FoldingRangeProvider    bool             `json:"foldingRangeProvider,omitempty"`
+	WorkspaceSymbolProvider bool             `json:"workspaceSymbolProvider,omitempty"`
 }
 
 // TextDocumentSyncKind values
@@ -338,6 +341,22 @@ type DocumentRangeFormattingParams struct {
 	TextDocument TextDocumentIdentifier   `json:"textDocument"`
 	Range        Range                    `json:"range"`
 	Options      FormattingRequestOptions `json:"options"`
+}
+
+// DocumentOnTypeFormattingParams represents textDocument/onTypeFormatting request
+// params. The client sends it right after the user typed Ch at Position.
+type DocumentOnTypeFormattingParams struct {
+	TextDocument TextDocumentIdentifier   `json:"textDocument"`
+	Position     Position                 `json:"position"`
+	Ch           string                   `json:"ch"`
+	Options      FormattingRequestOptions `json:"options"`
+}
+
+// DocumentOnTypeFormattingOptions declares which characters the server wants to
+// be told about. The first one is registered separately from the rest.
+type DocumentOnTypeFormattingOptions struct {
+	FirstTriggerCharacter string   `json:"firstTriggerCharacter"`
+	MoreTriggerCharacter  []string `json:"moreTriggerCharacter,omitempty"`
 }
 
 // DocumentSymbolParams represents textDocument/documentSymbol request params

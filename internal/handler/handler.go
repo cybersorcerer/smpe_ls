@@ -230,13 +230,18 @@ func (h *Handler) Initialize(params lsp.InitializeParams) (*lsp.InitializeResult
 			SignatureHelpProvider:           &lsp.SignatureHelpOptions{TriggerCharacters: []string{"("}},
 			DocumentFormattingProvider:      true,
 			DocumentRangeFormattingProvider: true,
-			DocumentSymbolProvider:          true,
-			DefinitionProvider:              true,
-			ReferencesProvider:              true,
-			CodeLensProvider:                &lsp.CodeLensOptions{},
-			FoldingRangeProvider:            true,
-			CodeActionProvider:              true,
-			WorkspaceSymbolProvider:         true,
+			// A typed space is the only thing worth reacting to: after "/* "
+			// it closes the comment right away.
+			DocumentOnTypeFormattingProvider: &lsp.DocumentOnTypeFormattingOptions{
+				FirstTriggerCharacter: " ",
+			},
+			DocumentSymbolProvider:  true,
+			DefinitionProvider:      true,
+			ReferencesProvider:      true,
+			CodeLensProvider:        &lsp.CodeLensOptions{},
+			FoldingRangeProvider:    true,
+			CodeActionProvider:      true,
+			WorkspaceSymbolProvider: true,
 			SemanticTokensProvider: &lsp.SemanticTokensOptions{
 				Legend: lsp.SemanticTokensLegend{
 					TokenTypes: []string{
@@ -596,6 +601,37 @@ func (h *Handler) TextDocumentFormatting(params lsp.DocumentFormattingParams) ([
 	edits := h.formattingProvider.FormatDocument(doc, text)
 	logger.Debug("Formatting returned %d edits", len(edits))
 
+	return edits, nil
+}
+
+// TextDocumentOnTypeFormatting handles textDocument/onTypeFormatting.
+//
+// The client sends it after every typed trigger character. The only one
+// registered is the space, which closes a comment that was just opened.
+func (h *Handler) TextDocumentOnTypeFormatting(params lsp.DocumentOnTypeFormattingParams) ([]lsp.TextEdit, error) {
+	h.documentsMutex.RLock()
+	text, textExists := h.documents[params.TextDocument.URI]
+	doc, hasDoc := h.parsedDocuments[params.TextDocument.URI]
+	h.documentsMutex.RUnlock()
+
+	if !textExists {
+		return []lsp.TextEdit{}, nil
+	}
+
+	if !hasDoc {
+		h.documentsMutex.Lock()
+		doc = h.parser.Parse(text)
+		h.parsedDocuments[params.TextDocument.URI] = doc
+		h.documentsMutex.Unlock()
+	}
+
+	edits := h.formattingProvider.CloseComment(doc, text, params.Position, params.Ch)
+	if edits == nil {
+		// Answer with a list, never null - same reason as the completion and
+		// code action providers.
+		return []lsp.TextEdit{}, nil
+	}
+	logger.Debug("onTypeFormatting: closing a comment at %d:%d", params.Position.Line, params.Position.Character)
 	return edits, nil
 }
 

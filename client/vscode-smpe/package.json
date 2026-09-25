@@ -235,7 +235,8 @@
             "color": "#3a3a3a"
           }
         ],
-        "editor.wordWrap": "off"
+        "editor.wordWrap": "off",
+        "editor.formatOnType": true
       }
     },
     "commands": [
