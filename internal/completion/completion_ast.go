@@ -195,7 +195,7 @@ func (p *Provider) GetCompletionsAST(doc *parser.Document, text string, line, ch
 	case ContextOperandParameter:
 		// Cursor inside operand parameter - offer value completions if available
 		logger.Debug("Cursor in operand parameter: %s", node.Name)
-		return p.getOperandValueCompletionsAST(node, text, line, character)
+		return replaceTypedWord(p.getOperandValueCompletionsAST(node, text, line, character), text, line, character)
 
 	case ContextOperandName:
 		// Cursor in or after operand name - offer operand completions
@@ -203,16 +203,16 @@ func (p *Provider) GetCompletionsAST(doc *parser.Document, text string, line, ch
 		if node.Type == parser.NodeTypeStatement {
 			// After statement, offer operand completions
 			stmt := node
-			return p.getOperandCompletionsAST(stmt, text, line, character)
+			return replaceTypedWord(p.getOperandCompletionsAST(stmt, text, line, character), text, line, character)
 		}
 		// Within an operand name, offer operand completions
-		return p.getOperandCompletionsAST(node.Parent, text, line, character)
+		return replaceTypedWord(p.getOperandCompletionsAST(node.Parent, text, line, character), text, line, character)
 
 	case ContextBetweenOperands:
 		// Cursor between operands - offer operand completions
 		logger.Debug("Cursor between operands")
 		if node.Type == parser.NodeTypeStatement {
-			return p.getOperandCompletionsAST(node, text, line, character)
+			return replaceTypedWord(p.getOperandCompletionsAST(node, text, line, character), text, line, character)
 		}
 		return nil
 
@@ -533,6 +533,67 @@ func (p *Provider) getLastLine(node *parser.Node, currentMax int) int {
 }
 
 // getOperandCompletionsAST returns operand completions for a statement using AST
+// typedWordRange returns the range covering the name fragment already typed in
+// front of the cursor, or nil when there is none.
+//
+// A completion item has to say which text it replaces. Without a range the
+// editor guesses, and it only recognises the fragment when it matches the item
+// case-sensitively: typing "S" and accepting SUP replaces the "S", while
+// typing "s" leaves it in place and yields "sSUP". Filtering is case
+// insensitive, so the item is offered either way - only the replacement goes
+// wrong.
+func typedWordRange(text string, line, character int) *lsp.Range {
+	lines := strings.Split(text, "\n")
+	if line < 0 || line >= len(lines) {
+		return nil
+	}
+	runes := []rune(lines[line])
+	if character > len(runes) {
+		character = len(runes)
+	}
+
+	start := character
+	for start > 0 {
+		c := runes[start-1]
+		if (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') {
+			start--
+			continue
+		}
+		break
+	}
+	if start == character {
+		return nil
+	}
+	return &lsp.Range{
+		Start: lsp.Position{Line: line, Character: start},
+		End:   lsp.Position{Line: line, Character: character},
+	}
+}
+
+// replaceTypedWord makes every item replace the name fragment already typed in
+// front of the cursor, rather than leaving the editor to work it out.
+//
+// Statement completion computes its own range because it has to cover the
+// leading "+" characters as well. Operand and value completion had none, and
+// the editor's fallback only recognises the fragment when it matches the item
+// case-sensitively: typing "S" and accepting SUP replaced the "S", typing "s"
+// kept it and produced "sSUP". Filtering is case insensitive, so the item was
+// offered either way - only the replacement went wrong.
+func replaceTypedWord(items []lsp.CompletionItem, text string, line, character int) []lsp.CompletionItem {
+	r := typedWordRange(text, line, character)
+	if r == nil {
+		return items
+	}
+	for i := range items {
+		newText := items[i].InsertText
+		if newText == "" {
+			newText = items[i].Label
+		}
+		items[i].TextEdit = &lsp.TextEdit{Range: *r, NewText: newText}
+	}
+	return items
+}
+
 func (p *Provider) getOperandCompletionsAST(stmt *parser.Node, text string, line, character int) []lsp.CompletionItem {
 	logger.Debug("getOperandCompletionsAST called for statement: %s, StatementDef=%v", stmt.Name, stmt.StatementDef != nil)
 	if stmt.StatementDef == nil {
